@@ -44,3 +44,4 @@ test('User Store & Authentication Suite', async (t) => {
     assert.equal((user as any).passwordHash, undefined);
   });
 });
+

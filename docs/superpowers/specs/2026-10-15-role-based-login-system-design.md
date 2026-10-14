@@ -205,3 +205,4 @@ User visits /login
   - `test/auth-users.test.ts`: Tests user credential validation and password hashing.
   - `npm test`: 100% pass across all test suites in `<150ms`.
   - `npm run build`: Zero TypeScript or lint errors.
+

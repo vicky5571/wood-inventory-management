@@ -50,3 +50,4 @@ test('Middleware Route Guard Suite', async (t) => {
     assert.equal(res.headers.get('location'), null);
   });
 });
+

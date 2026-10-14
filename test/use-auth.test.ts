@@ -31,3 +31,4 @@ test('useAuth Permissions Logic Suite', async (t) => {
     assert.equal(perms.isMonitorOnly, false);
   });
 });
+

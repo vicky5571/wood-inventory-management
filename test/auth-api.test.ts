@@ -73,3 +73,4 @@ test('Auth API Route Handlers Suite', async (t) => {
     assert.equal(res.status, 401);
   });
 });
+
