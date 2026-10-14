@@ -84,13 +84,13 @@ Create:
 
 ### Phase 3: Ledger Toolbar Quick-Filter Pills & Feedback
 
-- [ ] **Task 3.1: Write Unit Test for Toolbar Filter Criteria**
-  - **File:** `test/components/toolbar-filters.test.ts`
-  - Verify species selection and search query filtering.
-- [ ] **Task 3.2: Implement Quick-Filter Species Pills in `Toolbar.tsx`**
+- [x] **Task 3.1: Write Unit Test for Toolbar Filter Criteria**
+  - **File:** `test/toolbar-filters.test.ts`
+  - Verified species pill toggling (select, switch, and deselect), query clearing, and combined multi-field searches (4/4 passing).
+- [x] **Task 3.2: Implement Quick-Filter Species Pills in `Toolbar.tsx`**
   - **File:** `src/components/ledger/Toolbar.tsx`
-  - In addition to the dropdown, render clickable quick-filter badges (`Semua`, `Teak`, `Mahoni`, `Meranti`, `Pine`) with active IOH gold highlight (`bg-[#ffc908] text-[#101828]` when selected).
-  - Add clear search button (`<X />`) inside the search input when query is present.
+  - Rendered interactive species quick-filter badges (`Semua (全部)`, and per-species pills) with active IOH gold highlight (`bg-[#ffc908] text-[#101828] font-bold shadow-2xs`).
+  - Added clear search button (`<X />`) positioned inside the search input when query is present.
 
 ---
 
