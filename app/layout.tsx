@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Navbar } from '@/src/components/layout/Navbar';
 
 export const metadata: Metadata = {
   title: 'Penerimaan Kayu & Stok Gudang | Timber Inventory',
@@ -29,6 +30,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
+        <Navbar />
         <main className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-6">
           {children}
         </main>

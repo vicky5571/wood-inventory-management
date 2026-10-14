@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useWoodRecords } from '@/src/hooks/useWoodRecords';
 import { useAuth } from '@/src/hooks/useAuth';
-import { UserNav } from '@/src/components/layout/UserNav';
 import { KpiCards } from '@/src/components/dashboard/KpiCards';
 import { SpeciesBar } from '@/src/components/dashboard/SpeciesBar';
 import { Toolbar } from '@/src/components/ledger/Toolbar';
@@ -43,27 +42,34 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header with Title and UserNav */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+      {/* Page Title & Operational Status Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Penerimaan Kayu & Manajemen Stok (木材入库与库存管理)
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            Ringkasan Operasional & Buku Besar (运营概况与总账)
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Bilingual Timber Gate Receiving, Tally Discrepancy & Material Ledger
+          <p className="text-xs text-slate-500 mt-0.5">
+            Pencatatan kayu masuk, verifikasi tally fisik, dan pelaporan logistik material pabrik.
           </p>
         </div>
-        <UserNav />
-      </header>
+        <div className="flex items-center gap-2 self-start sm:self-auto px-2.5 py-1 bg-white rounded-lg border border-slate-200 text-xs text-slate-600 shadow-2xs">
+          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-medium text-slate-700">Sinkronisasi Realtime Aktif</span>
+        </div>
+      </div>
 
-      {/* KPI Cards */}
-      <KpiCards metrics={metrics} />
+      {/* KPI Cards Section */}
+      <section id="dashboard" className="scroll-mt-24">
+        <KpiCards metrics={metrics} />
+      </section>
 
-      {/* Species Distribution Chart */}
-      <SpeciesBar
-        breakdown={metrics.speciesVolumeBreakdown}
-        totalVolume={metrics.totalTallyVolumeM3}
-      />
+      {/* Species Distribution Chart Section */}
+      <section id="species" className="scroll-mt-24">
+        <SpeciesBar
+          breakdown={metrics.speciesVolumeBreakdown}
+          totalVolume={metrics.totalTallyVolumeM3}
+        />
+      </section>
 
       {/* Conditional Rendering based on Role Level */}
       {isMonitorOnly ? (
@@ -79,7 +85,7 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        <>
+        <section id="ledger" className="scroll-mt-24 flex flex-col gap-6">
           {/* Toolbar with Role Gating */}
           <Toolbar
             filters={filters}
@@ -98,7 +104,7 @@ export default function DashboardPage() {
             onEdit={handleEdit}
             onDelete={deleteRecord}
           />
-        </>
+        </section>
       )}
 
       {/* Add / Edit Modal (Level 1 only) */}
