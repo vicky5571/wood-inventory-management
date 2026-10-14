@@ -8,6 +8,16 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function renderToolbar(
   container: HTMLElement,
   speciesList: string[],
@@ -16,7 +26,7 @@ export function renderToolbar(
   onExportCsv: () => void
 ): void {
   const speciesOptions = speciesList
-    .map((s) => `<option value="${s}">${s}</option>`)
+    .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`)
     .join('');
 
   container.innerHTML = `
@@ -68,19 +78,22 @@ export function renderRecordTable(
 
   const rows = records.map((r) => {
     const volDiff = Number((r.tallyVolumeM3 - r.deliveredVolumeM3).toFixed(2));
+    const volText = Math.abs(volDiff) < 0.001
+      ? '0.00'
+      : (volDiff > 0 ? `+${volDiff.toFixed(2)}` : volDiff.toFixed(2));
     const volBadge = volDiff >= 0
-      ? `<span class="badge badge-match">+${volDiff}</span>`
-      : `<span class="badge badge-alert">${volDiff}</span>`;
+      ? `<span class="badge badge-match">${volText}</span>`
+      : `<span class="badge badge-alert">${volText}</span>`;
 
     return `
       <tr>
-        <td><strong>${r.receiptDate}</strong></td>
-        <td>${r.truckPlateNumber}</td>
-        <td><code>${r.forestryDocNumber}</code></td>
-        <td>${r.contractNumber}</td>
-        <td>${r.supplierName}</td>
-        <td><strong>${r.woodSpecies}</strong></td>
-        <td><span style="font-weight:600; color:var(--wood-primary);">${r.kavlingNumber}</span></td>
+        <td><strong>${escapeHtml(r.receiptDate)}</strong></td>
+        <td>${escapeHtml(r.truckPlateNumber)}</td>
+        <td><code>${escapeHtml(r.forestryDocNumber)}</code></td>
+        <td>${escapeHtml(r.contractNumber)}</td>
+        <td>${escapeHtml(r.supplierName)}</td>
+        <td><strong>${escapeHtml(r.woodSpecies)}</strong></td>
+        <td><span style="font-weight:600; color:var(--wood-primary);">${escapeHtml(r.kavlingNumber)}</span></td>
         <td>${r.deliveredPieces} / <strong>${r.tallyPieces}</strong></td>
         <td>${r.deliveredVolumeM3.toFixed(2)} / <strong>${r.tallyVolumeM3.toFixed(2)}</strong></td>
         <td>${volBadge}</td>
@@ -88,8 +101,8 @@ export function renderRecordTable(
         <td>${formatRupiah(r.freightNetPayable)}</td>
         <td style="font-weight:700; color:var(--wood-primary);">${formatRupiah(r.grandNetPayable)}</td>
         <td>
-          <button class="btn btn-secondary btn-edit" data-id="${r.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Edit</button>
-          <button class="btn btn-danger btn-delete" data-id="${r.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Hapus</button>
+          <button class="btn btn-secondary btn-edit" data-id="${escapeHtml(r.id)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Edit</button>
+          <button class="btn btn-danger btn-delete" data-id="${escapeHtml(r.id)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Hapus</button>
         </td>
       </tr>
     `;
