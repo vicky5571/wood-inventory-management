@@ -163,7 +163,7 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     const container = new MockElement('container');
     let savedRecord: WoodReceivingRecord | null = null;
 
-    openRecordModal(container as any, null, (record) => {
+    openRecordModal(container as any, null, (record: WoodReceivingRecord) => {
       savedRecord = record;
     });
 

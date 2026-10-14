@@ -43,18 +43,18 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Page Title & Operational Status Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/80">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-[#101828] tracking-tight">
             Ringkasan Operasional & Buku Besar (运营概况与总账)
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5">
             Pencatatan kayu masuk, verifikasi tally fisik, dan pelaporan logistik material pabrik.
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto px-2.5 py-1 bg-white rounded-lg border border-slate-200 text-xs text-slate-600 shadow-2xs">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-slate-700">Sinkronisasi Realtime Aktif</span>
+        <div className="flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 bg-white rounded-xl border border-gray-200/80 text-xs text-gray-700 shadow-2xs">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#00bb7f] animate-pulse" />
+          <span className="font-semibold text-gray-800">Sinkronisasi Realtime Aktif</span>
         </div>
       </div>
 
@@ -73,13 +73,13 @@ export default function DashboardPage() {
 
       {/* Conditional Rendering based on Role Level */}
       {isMonitorOnly ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-900 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="bg-amber-50/60 border border-[#ffc908]/60 rounded-2xl p-5 text-gray-900 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
+            <h3 className="text-sm font-bold text-[#101828] flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#ffc908]" />
               Mode Monitor Eksekutif (Level 3 - 高管监控)
             </h3>
-            <p className="text-xs text-amber-700 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Anda memiliki akses pemantauan metrik KPI dan komposisi spesies kayu. Buku besar penerimaan terperinci dan aksi pengeditan data hanya tersedia untuk otorisasi Level 1 (Manager) & Level 2 (Admin).
             </p>
           </div>

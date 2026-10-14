@@ -60,20 +60,20 @@ export function Navbar() {
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Left: Brand & Facility Identity */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-            <Trees className="w-5 h-5 text-emerald-600" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#ffc908]/20 text-[#101828] border border-[#ffc908]/40 shadow-2xs">
+            <Trees className="w-5 h-5 text-[#b38600]" />
           </div>
 
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 tracking-tight text-base leading-none">
+              <span className="font-bold text-[#101828] tracking-tight text-base leading-none">
                 TimberGuard
               </span>
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100/70 text-emerald-800 border border-emerald-200">
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#00bb7f] border border-emerald-200">
                 TPK-01 • Yard Active
               </span>
             </div>
-            <span className="text-[11px] text-slate-500 font-medium mt-0.5">
+            <span className="text-[11px] text-gray-500 font-medium mt-0.5">
               Penerimaan Kayu & Stok (木材入库与库存管理)
             </span>
           </div>
@@ -82,7 +82,7 @@ export function Navbar() {
         {/* Center: Section Navigation Tabs (Desktop) */}
         <nav
           aria-label="Section Navigation"
-          className="hidden md:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60"
+          className="hidden md:flex items-center gap-1 bg-gray-100/80 p-1 rounded-xl border border-gray-200/70"
         >
           {NAV_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
@@ -93,14 +93,14 @@ export function Navbar() {
                 key={item.id}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs transition-all ${
                   isActive
-                    ? 'bg-white text-emerald-900 font-semibold shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium border border-transparent'
+                    ? 'bg-white text-[#101828] font-bold shadow-xs border border-gray-200/90'
+                    : 'text-gray-600 hover:text-[#101828] hover:bg-white/60 font-medium border border-transparent'
                 }`}
               >
                 {Icon && (
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#b38600]' : 'text-gray-400'}`} />
                 )}
                 <span>{item.labelId}</span>
                 <span className="text-[10px] opacity-60">({item.labelZh})</span>

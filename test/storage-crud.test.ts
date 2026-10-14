@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { MemoryStorageAdapter } from '../src/persistence/storage.js';
 import { WoodRecordRepository } from '../src/persistence/record-repository.js';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.js';
+import type { WoodReceivingRecord } from '../src/types/index.js';
 
 test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
   const storage = new MemoryStorageAdapter();
@@ -17,7 +18,7 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
   await t.test('filters records by species and query', async () => {
     const teakOnly = await repo.getFiltered({ species: 'Teak / Jati (柚木)' });
     assert.ok(teakOnly.length > 0);
-    assert.ok(teakOnly.every((r) => r.woodSpecies.includes('Teak')));
+    assert.ok(teakOnly.every((r: WoodReceivingRecord) => r.woodSpecies.includes('Teak')));
 
     const querySearch = await repo.getFiltered({ searchQuery: 'SKSHHK-2026-001' });
     assert.strictEqual(querySearch.length, 1);
@@ -35,7 +36,7 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
     assert.ok(dateFiltered.length > 0);
     assert.ok(
       dateFiltered.every(
-        (r) => r.receiptDate >= '2026-10-02' && r.receiptDate <= '2026-10-06'
+        (r: WoodReceivingRecord) => r.receiptDate >= '2026-10-02' && r.receiptDate <= '2026-10-06'
       )
     );
   });
