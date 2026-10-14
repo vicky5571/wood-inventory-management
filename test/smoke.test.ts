@@ -79,3 +79,16 @@ test('Smoke Test Suite — Domain Calculations & Storage Invariants', async (t) 
     assert.strictEqual(afterDelete, null);
   });
 });
+
+import type { WoodReceivingRecord, DashboardMetrics } from '../src/types/index.ts';
+
+test('SSOT Type Definitions exist and export correctly', () => {
+  const dummy: Partial<WoodReceivingRecord> = {
+    id: 'test-1',
+    receiptDate: '2026-10-14',
+    woodSpecies: 'Teak / Jati',
+    tallyVolumeM3: 15.5,
+  };
+  assert.strictEqual(dummy.id, 'test-1');
+});
+

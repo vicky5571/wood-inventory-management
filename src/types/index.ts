@@ -124,3 +124,82 @@ export interface VolumeCalculationResult {
   boardFeetPerPiece: number;
   totalBoardFeet: number;
 }
+
+/**
+ * Operational Work Item: Timber Inbound Delivery and Gate Tally Record.
+ * Directly maps to bilingual factory receiving ledgers.
+ */
+export interface WoodReceivingRecord {
+  id: string;
+
+  // Delivery & Legal Document Identifiers
+  receiptDate: string;           // Penerimaan / 到货日期 (YYYY-MM-DD)
+  docDate?: string;              // Dokumen Tanggal / 发货时间
+  truckPlateNumber: string;      // No. Pol / 车牌号
+  forestryDocNumber: string;     // SKSHHK / DKP / SLK (Official Forestry Permit)
+  receiptNumber: string;         // Nomor Kwitansi / 订货单号
+  contractNumber: string;        // No Kontrak / 合同编号
+  supplierName: string;          // Nama Pemilik Hasil Hutan / 供应商
+
+  // Wood Specifications & Yard Location
+  woodSpecies: string;           // Jenis Kayu / 树种 (e.g. Teak, Merbau, Mahoni, Sengon)
+  woodLengthM: number;           // Panjang Kayu (in meters)
+  kavlingNumber: string;         // Nomer Kav / 进厂批号 (Yard Lot / Stack ID)
+  storageYard: string;           // TPK / 木堆场地
+
+  // Quantities & Measurements (Delivered vs Tally)
+  deliveredPieces: number;       // Jumlah Batang / 送货根数
+  deliveredVolumeM3: number;     // Volume Delivery / 送货立方 (m³)
+  tallyPieces: number;           // Batang Tally / 检尺根数
+  tallyVolumeM3: number;         // Volume Tally / 检尺立方 (m³)
+
+  // Financials — Timber Material (Pembayaran Kayu)
+  timberPricePerM3: number;      // Harga / m³
+  timberGrossTotal: number;      // Total Harga = tallyVolumeM3 * timberPricePerM3
+  timberPphRate: number;         // PPh rate % (e.g. 0.5% or 1.5%)
+  timberPphAmount: number;       // PPh Tax Amount
+  timberNetPayable: number;      // Net Timber = timberGrossTotal - timberPphAmount
+
+  // Financials — Freight / Logistics (Pembayaran Ongkos Kirim)
+  freightRatePerM3: number;      // Ongkir / m³
+  freightGrossTotal: number;     // Total Ongkir = tallyVolumeM3 * freightRatePerM3
+  freightPphAmount: number;      // PPh Tax Ongkir (PPh 23)
+  freightNetPayable: number;     // Net Ongkir = freightGrossTotal - freightPphAmount
+
+  // Broker & Overall Summary
+  brokerFee: number;             // Broker fee
+  grandNetPayable: number;       // timberNetPayable + freightNetPayable + brokerFee
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Filter & Search Criteria for Wood Receiving Records
+ */
+export interface RecordFilterCriteria {
+  searchQuery?: string;
+  species?: string;
+  kavling?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+/**
+ * Executive Dashboard Aggregate Metrics
+ */
+export interface DashboardMetrics {
+  totalDeliveredVolumeM3: number;
+  totalTallyVolumeM3: number;
+  volumeDiscrepancyM3: number;
+  totalDeliveredPieces: number;
+  totalTallyPieces: number;
+  pieceDiscrepancy: number;
+  totalNetTimberPayable: number;
+  totalNetFreightPayable: number;
+  totalGrandExpenditure: number;
+  totalRecordsCount: number;
+  activeKavlingCount: number;
+  speciesVolumeBreakdown: Record<string, number>;
+}
+
