@@ -13,8 +13,8 @@ import {
   computeVolumetricMetrics,
   generateWoodSku,
   estimateBatchWeight,
-} from '../src/utils/calculator.js';
-import { MemoryStorageAdapter } from '../src/persistence/storage.js';
+} from '../src/utils/calculator.ts';
+import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
 import type { WoodReceivingRecord, DashboardMetrics } from '../src/types/index.ts';
 
 test('Smoke Test Suite — Domain Calculations & Storage Invariants', async (t) => {

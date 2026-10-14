@@ -36,10 +36,11 @@ This modernization targets the underlying **pure domain layer**, **persistence e
 
 ### Phase 1: Pure Domain Calculator Modernization
 
-- [ ] **Task 1.1: Migrate `src/utils/calculator.js` to `src/utils/calculator.ts`**
-  - Add explicit types for thickness, width, length, quantity, and volumetric metric bundles (`VolumetricMeasurementResult`).
-  - Strict input guards and `RangeError` safety for negative dimensions.
-  - Verify with `test/smoke.test.ts`.
+- [x] **Task 1.1: Migrate `src/utils/calculator.js` to `src/utils/calculator.ts`**
+  - Created strongly typed `src/utils/calculator.ts` importing `VolumeCalculationResult` from `src/types/index.ts`.
+  - Converted `src/utils/calculator.js` into backward-compatibility re-export stub.
+  - Updated `test/smoke.test.ts` to import directly from `src/utils/calculator.ts`.
+  - Verified with `node --test test/smoke.test.ts` (9/9 passing).
 
 ---
 
