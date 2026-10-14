@@ -4,6 +4,7 @@ import { Search, Download, RotateCcw, Plus } from 'lucide-react';
 export function Toolbar({
   filters,
   speciesList,
+  canWrite = true,
   onFilterChange,
   onResetDemo,
   onExportCsv,
@@ -11,6 +12,7 @@ export function Toolbar({
 }: {
   filters: RecordFilterCriteria;
   speciesList: string[];
+  canWrite?: boolean;
   onFilterChange: (filters: RecordFilterCriteria) => void;
   onResetDemo: () => void;
   onExportCsv: () => void;
@@ -50,24 +52,26 @@ export function Toolbar({
         </button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onResetDemo}
-          title="Muat ulang data demo awal"
-          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>Reset Demo</span>
-        </button>
+      {canWrite && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onResetDemo}
+            title="Muat ulang data demo awal"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Reset Demo</span>
+          </button>
 
-        <button
-          onClick={onNewEntry}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-amber-700 hover:bg-amber-800 rounded-lg shadow-sm transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Input Penerimaan (新增入库)</span>
-        </button>
-      </div>
+          <button
+            onClick={onNewEntry}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-amber-700 hover:bg-amber-800 rounded-lg shadow-sm transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Input Penerimaan (新增入库)</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

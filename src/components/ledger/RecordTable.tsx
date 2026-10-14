@@ -11,10 +11,12 @@ function formatRupiah(num: number): string {
 
 export function RecordTable({
   records,
+  canWrite = true,
   onEdit,
   onDelete,
 }: {
   records: WoodReceivingRecord[];
+  canWrite?: boolean;
   onEdit: (record: WoodReceivingRecord) => void;
   onDelete: (id: string) => void;
 }) {
@@ -45,7 +47,7 @@ export function RecordTable({
               <th className="p-3 whitespace-nowrap">Net Kayu<span className="block text-[10px] text-slate-400 font-normal">木材应付</span></th>
               <th className="p-3 whitespace-nowrap">Net Ongkir<span className="block text-[10px] text-slate-400 font-normal">运费应付</span></th>
               <th className="p-3 whitespace-nowrap">Total Bayar<span className="block text-[10px] text-slate-400 font-normal">应付金额</span></th>
-              <th className="p-3 whitespace-nowrap text-center">Aksi<span className="block text-[10px] text-slate-400 font-normal">操作</span></th>
+              {canWrite && <th className="p-3 whitespace-nowrap text-center">Aksi<span className="block text-[10px] text-slate-400 font-normal">操作</span></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -73,28 +75,30 @@ export function RecordTable({
                   <td className="p-3 whitespace-nowrap">{formatRupiah(r.timberNetPayable)}</td>
                   <td className="p-3 whitespace-nowrap">{formatRupiah(r.freightNetPayable)}</td>
                   <td className="p-3 font-bold text-amber-800 whitespace-nowrap">{formatRupiah(r.grandNetPayable)}</td>
-                  <td className="p-3 whitespace-nowrap text-center">
-                    <div className="inline-flex items-center gap-1">
-                      <button
-                        onClick={() => onEdit(r)}
-                        className="p-1 text-slate-500 hover:text-amber-700 hover:bg-slate-100 rounded transition"
-                        title="Edit data"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Apakah Anda yakin ingin menghapus data penerimaan ini?')) {
-                            onDelete(r.id);
-                          }
-                        }}
-                        className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"
-                        title="Hapus data"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
+                  {canWrite && (
+                    <td className="p-3 whitespace-nowrap text-center">
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          onClick={() => onEdit(r)}
+                          className="p-1 text-slate-500 hover:text-amber-700 hover:bg-slate-100 rounded transition"
+                          title="Edit data"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Apakah Anda yakin ingin menghapus data penerimaan ini?')) {
+                              onDelete(r.id);
+                            }
+                          }}
+                          className="p-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"
+                          title="Hapus data"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
