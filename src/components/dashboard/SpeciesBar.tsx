@@ -20,7 +20,7 @@ export function SpeciesBar({
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-4 overflow-hidden">
       {/* Header ala lms-isat */}
-      <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-amber-50/40 to-white px-5 py-3.5 -mx-5 -mt-5">
+      <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-br from-amber-50/40 to-white px-5 py-3.5 -mx-5 -mt-5">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-[#ffc908]/20 flex items-center justify-center text-[#b38600] shrink-0">
             <PieChart className="w-4 h-4" />

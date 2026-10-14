@@ -19,7 +19,7 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
         <div className="h-1 w-full bg-[#ffc908]" />
         
         {/* Card Header ala lms-isat */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-amber-50/50 to-white px-4.5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-br from-amber-50/50 to-white px-4.5 py-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#ffc908]/20 flex items-center justify-center text-[#b38600] shrink-0">
               <Box className="w-4 h-4" />
@@ -70,7 +70,7 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
       {/* 2. Total Batang Tally */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
         {/* Card Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-blue-50/50 to-white px-4.5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-br from-blue-50/50 to-white px-4.5 py-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
               <Layers className="w-4 h-4" />
@@ -116,7 +116,7 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
       {/* 3. Total Outlay */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
         {/* Card Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-emerald-50/50 to-white px-4.5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-br from-emerald-50/50 to-white px-4.5 py-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-[#00bb7f] shrink-0">
               <Wallet className="w-4 h-4" />
@@ -159,7 +159,7 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
       {/* 4. Active Lots */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
         {/* Card Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-purple-50/50 to-white px-4.5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-100 bg-gradient-to-br from-purple-50/50 to-white px-4.5 py-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
               <Building2 className="w-4 h-4" />

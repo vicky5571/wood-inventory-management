@@ -104,7 +104,7 @@ export function RecordModal({
     <div className="fixed inset-0 z-50 bg-[#101828]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-gray-100 overflow-hidden">
         {/* Brand Accent Bar (LMS IOH Gold & Red) */}
-        <div className="h-1.5 w-full bg-linear-to-r from-[#ffc908] via-[#ffc908] to-[#ed1c24]" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#ffc908] via-[#ffc908] to-[#ed1c24]" />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">

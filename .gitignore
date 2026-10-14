@@ -95,6 +95,7 @@ pids/
 
 # Framework-specific caches (Next.js, Nuxt, Vite, Svelte, Astro, Docusaurus)
 .next/
+.next*/
 .nuxt/
 .svelte-kit/
 .docusaurus/
