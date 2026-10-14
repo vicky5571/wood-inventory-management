@@ -46,12 +46,14 @@ This modernization targets the underlying **pure domain layer**, **persistence e
 
 ### Phase 2: Persistence & Repository Type Hardening
 
-- [ ] **Task 2.1: Migrate `src/persistence/record-repository.js` to `src/persistence/record-repository.ts`**
-  - Type repository constructor with `StorageAdapter`.
-  - Type `getAll()`, `getById(id: string)`, `save(record: WoodReceivingRecord)`, `delete(id: string)`, and `filter(criteria: RecordFilterCriteria)`.
-  - Verify with `test/storage-crud.test.ts` and `test/wood-record-repository.test.ts`.
-- [ ] **Task 2.2: Clean Up Legacy Persistence Re-Export Stubs**
-  - Update `test/storage-crud.test.ts`, `test/smoke.test.ts`, and `test/app-coordinator.test.ts` to import directly from `.ts` files.
+- [x] **Task 2.1: Migrate `src/persistence/record-repository.js` to `src/persistence/record-repository.ts`**
+  - Typed repository constructor with `StorageAdapter`.
+  - Typed `getAll()`, `getById(id: string)`, `save(record: WoodReceivingRecord)`, `delete(id: string)`, `getFiltered(criteria: RecordFilterCriteria)`, and `resetToSeed()`.
+  - Added backward-compatible re-export stub in `src/persistence/record-repository.js`.
+  - Verified with `test/storage-crud.test.ts` (8/8 passing).
+- [x] **Task 2.2: Clean Up Legacy Persistence Re-Export Stubs**
+  - Updated `test/storage-crud.test.ts`, `test/smoke.test.ts`, and `test/app-coordinator.test.ts` to import directly from `.ts` files.
+  - Verified 0 type errors via `npx tsc --noEmit` and 106/106 unit tests passing.
 
 ---
 

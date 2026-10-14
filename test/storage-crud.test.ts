@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MemoryStorageAdapter } from '../src/persistence/storage.js';
-import { WoodRecordRepository } from '../src/persistence/record-repository.js';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.js';
-import type { WoodReceivingRecord } from '../src/types/index.js';
+import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
+import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import type { WoodReceivingRecord } from '../src/types/index.ts';
 
 test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
   const storage = new MemoryStorageAdapter();

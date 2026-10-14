@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { AppCoordinator } from '../src/app.js';
-import { MemoryStorageAdapter } from '../src/persistence/storage.js';
-import { WoodRecordRepository } from '../src/persistence/record-repository.js';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.js';
+import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
+import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { MockDOMElement, MockDOMDocument, MockFormData } from './helpers/mock-dom.ts';
 
