@@ -142,3 +142,4 @@ export function aggregateDashboardMetrics(records) {
     speciesVolumeBreakdown,
   };
 }
+

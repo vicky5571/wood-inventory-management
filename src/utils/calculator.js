@@ -111,3 +111,4 @@ export function estimateBatchWeight(volumeM3, densityKgM3) {
   }
   return Number((volumeM3 * densityKgM3).toFixed(2));
 }
+

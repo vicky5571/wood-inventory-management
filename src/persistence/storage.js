@@ -95,3 +95,4 @@ export class LocalStorageAdapter {
 }
 
 export const defaultStorage = new LocalStorageAdapter();
+

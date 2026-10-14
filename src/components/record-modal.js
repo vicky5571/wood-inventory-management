@@ -224,3 +224,4 @@ export function openRecordModal(container, initialRecord, onSave) {
     container.innerHTML = '';
   });
 }
+

@@ -140,3 +140,4 @@ export function renderRecordTable(container, records, onEdit, onDelete) {
     });
   });
 }
+

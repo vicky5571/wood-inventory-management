@@ -97,3 +97,4 @@ export function renderSpeciesBar(container, breakdown, totalVolume) {
     </div>
   `;
 }
+
