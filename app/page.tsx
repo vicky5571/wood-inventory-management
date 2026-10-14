@@ -103,6 +103,7 @@ export default function DashboardPage() {
             canWrite={canWrite}
             onEdit={handleEdit}
             onDelete={deleteRecord}
+            onResetFilters={() => setFilters({})}
           />
         </section>
       )}

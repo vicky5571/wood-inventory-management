@@ -96,12 +96,14 @@ Create:
 
 ### Phase 4: Ledger Table Ergonomics & Sorting
 
-- [ ] **Task 4.1: Column Header Sorting (Date, Volume, Total)**
+- [x] **Task 4.1: Column Header Sorting (Date, Volume, Total)**
   - **File:** `src/components/ledger/RecordTable.tsx`
-  - Add interactive sort toggles on `Penerimaan`, `Vol Tally`, and `Total Bayar`.
-  - Maintain tabular monospace alignment and bilingual subheadings.
-- [ ] **Task 4.2: Empty Search Result State Matching `lms-isat`**
-  - Add clean empty state container with icon and "Reset Filter" quick action button.
+  - Added interactive ascending/descending sort toggles on `Penerimaan` (`receiptDate`), `Vol m³ (Del / Tally)` (`tallyVolumeM3`), and `Total Bayar` (`grandNetPayable`).
+  - Added dynamic sort indicators (`ArrowUpDown`, `ArrowUp`, `ArrowDown`).
+  - Added unit test suite in `test/record-table-sorting.test.ts` verifying monotonic ascending/descending ordering across date, volume, and currency (5/5 passing).
+- [x] **Task 4.2: Empty Search Result State Matching `lms-isat`**
+  - **File:** `src/components/ledger/RecordTable.tsx` & `app/page.tsx`
+  - Added refined empty state container with `SearchX` gold icon, bilingual explanation, and an interactive "Reset Semua Filter (重置筛选)" CTA button triggering `onResetFilters`.
 
 ---
 
