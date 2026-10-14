@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { openRecordModal } from '../src/components/record-modal.js';
+import { openRecordModal } from '../src/components/record-modal.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { MockFormData } from './helpers/mock-dom.ts';
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AppCoordinator } from '../src/app.js';
+import { AppCoordinator } from '../src/app.ts';
 import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
 import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';

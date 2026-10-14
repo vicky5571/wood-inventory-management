@@ -4,7 +4,7 @@
 **Goal:** Transition domain utilities, repositories, and legacy coordinators to 100% strict TypeScript (`.ts`), eliminating redundant stubs and establishing type safety across all unit test suites.  
 **Date:** 2026-10-15  
 **Branch:** `vicky`  
-**Status:** Ready to Execute  
+**Status:** Complete  
 
 ---
 
@@ -59,24 +59,28 @@ This modernization targets the underlying **pure domain layer**, **persistence e
 
 ### Phase 3: Legacy DOM Modules & App Coordinator Typing
 
-- [ ] **Task 3.1: Migrate `src/components/record-modal.js` -> `.ts`**
-  - Type `openRecordModal(container: HTMLElement, initialRecord: WoodReceivingRecord | null, onSave: (rec: WoodReceivingRecord) => void): void`.
-- [ ] **Task 3.2: Migrate `src/components/record-table.js` & `kpi-dashboard.js` -> `.ts`**
-  - Type container parameters and event listener signatures.
-- [ ] **Task 3.3: Migrate `src/app.js` -> `src/app.ts`**
-  - Type `AppCoordinator` class and element references (`HTMLInputElement`, `HTMLSelectElement`, etc.).
-  - Verify with `test/app-coordinator.test.ts`.
+- [x] **Task 3.1: Migrate `src/components/record-modal.js` -> `.ts`**
+  - Created strongly typed `src/components/record-modal.ts` with `HTMLElement` containers and `WoodReceivingRecord` callback signatures.
+  - Converted `src/components/record-modal.js` into backward-compatible re-export stub.
+  - Updated `test/record-modal.test.ts` to import directly from `.ts` (7/7 passing).
+- [x] **Task 3.2: Migrate `src/components/record-table.js` & `kpi-dashboard.js` -> `.ts`**
+  - Created strongly typed `src/components/record-table.ts` and `src/components/kpi-dashboard.ts`.
+  - Converted `.js` counterparts into backward-compatible re-export stubs.
+- [x] **Task 3.3: Migrate `src/app.js` -> `src/app.ts`**
+  - Created strongly typed `AppCoordinator` in `src/app.ts` with typed DOM element references (`HTMLInputElement`, `HTMLSelectElement`, etc.) and event handlers.
+  - Converted `src/app.js` into backward-compatible re-export stub.
+  - Verified with `node --test test/app-coordinator.test.ts` (6/6 passing).
 
 ---
 
 ### Phase 4: Full System Verification & Clean Build
 
-- [ ] **Task 4.1: Run Full Node Test Suite**
+- [x] **Task 4.1: Run Full Node Test Suite**
   - Command: `npm test`
-  - Target: 106 tests passing, 0 failures.
-- [ ] **Task 4.2: Run Strict TypeScript Typecheck**
+  - Target: 106 tests passing, 0 failures. (Verified: 106 pass, 0 fail).
+- [x] **Task 4.2: Run Strict TypeScript Typecheck**
   - Command: `npx tsc --noEmit`
-  - Target: 0 type errors.
-- [ ] **Task 4.3: Verify Next.js Isolated Production Build**
+  - Target: 0 type errors. (Verified: clean exit 0).
+- [x] **Task 4.3: Verify Next.js Isolated Production Build**
   - Command: `npm run build:check`
-  - Target: Clean build without interfering with active development server.
+  - Target: Clean build without interfering with active development server. (Verified: compiled in 7.8s, static generation 10/10, active dev CSS 200 OK).
