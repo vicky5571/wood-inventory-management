@@ -109,10 +109,11 @@ Create:
 
 ### Phase 5: Intake & Inspection Modal Precision & Tally Matrix
 
-- [ ] **Task 5.1: Physical Tally Dimension Calculator in `RecordModal.tsx`**
-  - **File:** `src/components/ledger/RecordModal.tsx`
-  - Add quick helper for dimensional calculation ($T \times L \times P \times \text{Batang} \div 1,000,000 = m^3$) to assist field operators entering raw log measurements.
-  - Ensure real-time reconciliation banner dynamically recalculates timber gross, freight, tax deductions, and grand net payable.
+- [x] **Task 5.1: Physical Tally Dimension Calculator in `RecordModal.tsx`**
+  - **File:** `src/components/ledger/RecordModal.tsx`, `src/components/ledger/TallyDimensionCalculator.tsx`, and `src/utils/timber-calc.ts`
+  - Created modular atomic helper `TallyDimensionCalculator.tsx` with expandable UI, dimension inputs ($T \times L \times P \times \text{Batang}$), live volume calculation in $m^3$, and a 1-click apply button.
+  - Exported pure mathematical calculation helper `calculateCubicFromCentimeters` in `src/utils/timber-calc.ts`.
+  - Added unit test suite in `test/tally-calculator.test.ts` verifying accuracy, decimal precision, zero-division, and negative RangeError guarding (5/5 passing).
 
 ---
 

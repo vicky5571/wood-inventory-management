@@ -138,3 +138,20 @@ export function aggregateDashboardMetrics(
     speciesVolumeBreakdown,
   };
 }
+
+/**
+ * Calculates cubic meters (m³) from log/timber dimensions measured in centimeters.
+ * Formula: (T_cm * L_cm * P_cm * pieces) / 1,000,000
+ */
+export function calculateCubicFromCentimeters(
+  thicknessCm: number,
+  widthCm: number,
+  lengthCm: number,
+  pieces: number = 1
+): number {
+  if (thicknessCm < 0 || widthCm < 0 || lengthCm < 0 || pieces < 0) {
+    throw new RangeError('Dimensions and pieces must be non-negative values');
+  }
+  const total = (thicknessCm * widthCm * lengthCm * pieces) / 1000000;
+  return Number(total.toFixed(4));
+}

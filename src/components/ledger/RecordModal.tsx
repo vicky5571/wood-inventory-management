@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
 import { computeRecordCalculations } from '@/src/utils/timber-calc';
+import { TallyDimensionCalculator } from './TallyDimensionCalculator';
 import {
   X,
   Calculator,
@@ -344,6 +345,12 @@ export function RecordModal({
                 />
               </div>
             </div>
+
+            {/* Dimensional Calculation Helper */}
+            <TallyDimensionCalculator
+              tallyPieces={form.tallyPieces}
+              onApplyVolume={(vol) => setForm((prev) => ({ ...prev, tallyVolumeM3: vol }))}
+            />
           </div>
 
           {/* Section 4: Harga Kayu, Ongkir & Pajak */}
