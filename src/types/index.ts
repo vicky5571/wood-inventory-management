@@ -241,4 +241,31 @@ export interface RecordCalculationOutput {
   grandNetPayable: number;
 }
 
+export type UserRoleLevel = 1 | 2 | 3;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  roleLevel: UserRoleLevel;
+  title: string;
+}
+
+export interface AuthSession {
+  user: AuthUser;
+  expiresAt: number;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthApiResponse {
+  success: boolean;
+  user?: AuthUser;
+  error?: string;
+}
+
+
 
