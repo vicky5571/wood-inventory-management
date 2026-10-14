@@ -1,5 +1,4 @@
-import React from 'react';
-import type { WoodReceivingRecord } from '../../types/index.ts';
+import type { WoodReceivingRecord } from '@/src/types';
 import { Pencil, Trash2 } from 'lucide-react';
 
 function formatRupiah(num: number): string {

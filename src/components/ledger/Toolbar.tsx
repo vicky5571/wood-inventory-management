@@ -1,5 +1,4 @@
-import React from 'react';
-import type { RecordFilterCriteria } from '../../types/index.ts';
+import type { RecordFilterCriteria } from '@/src/types';
 import { Search, Download, RotateCcw, Plus } from 'lucide-react';
 
 export function Toolbar({

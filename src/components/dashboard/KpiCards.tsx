@@ -1,5 +1,4 @@
-import React from 'react';
-import type { DashboardMetrics } from '../../types/index.ts';
+import type { DashboardMetrics } from '@/src/types';
 import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown } from 'lucide-react';
 
 function formatRupiah(num: number): string {

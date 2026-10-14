@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { WoodReceivingRecord } from '../../types/index.ts';
-import { computeRecordCalculations } from '../../utils/timber-calc.ts';
+import type { WoodReceivingRecord } from '@/src/types';
+import { computeRecordCalculations } from '@/src/utils/timber-calc';
 import { X, Calculator } from 'lucide-react';
 
 const formatRupiah = (num: number): string =>
@@ -28,7 +28,7 @@ export function RecordModal({
   const [form, setForm] = useState<Partial<WoodReceivingRecord>>({});
 
   useEffect(() => {
-    setForm(initialRecord ? initialRecord : defaultRecord());
+    setForm(initialRecord ? { ...initialRecord } : defaultRecord());
   }, [initialRecord, isOpen]);
 
   // Live Math Preview
@@ -188,3 +188,4 @@ export function RecordModal({
     </div>
   );
 }
+
