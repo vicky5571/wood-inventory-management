@@ -7,7 +7,8 @@
   "scripts": {
     "test": "node --test",
     "test:smoke": "node --test test/smoke.test.ts",
-    "test:watch": "node --test --watch"
+    "test:watch": "node --test --watch",
+    "start": "npx -y serve ."
   },
   "engines": {
     "node": ">=22.0.0"
