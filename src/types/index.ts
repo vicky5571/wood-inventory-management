@@ -203,3 +203,42 @@ export interface DashboardMetrics {
   speciesVolumeBreakdown: Record<string, number>;
 }
 
+/**
+ * Financial calculation result for timber material or freight payments.
+ */
+export interface PaymentCalculationResult {
+  gross: number;
+  pphAmount: number;
+  netPayable: number;
+}
+
+/**
+ * Raw input parameters required to compute financial and discrepancy metrics for a receiving record.
+ */
+export interface RecordCalculationInput {
+  tallyVolumeM3: number;
+  deliveredVolumeM3: number;
+  tallyPieces: number;
+  deliveredPieces: number;
+  timberPricePerM3: number;
+  timberPphRate?: number;
+  freightRatePerM3: number;
+  freightPphAmount?: number;
+  brokerFee?: number;
+}
+
+/**
+ * Computed financial and discrepancy fields output for a receiving record.
+ */
+export interface RecordCalculationOutput {
+  volumeDiscrepancyM3: number;
+  pieceDiscrepancy: number;
+  timberGrossTotal: number;
+  timberPphAmount: number;
+  timberNetPayable: number;
+  freightGrossTotal: number;
+  freightNetPayable: number;
+  grandNetPayable: number;
+}
+
+

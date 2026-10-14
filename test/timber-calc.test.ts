@@ -5,8 +5,15 @@ import {
   calculateFreightPayment,
   computeRecordCalculations,
   aggregateDashboardMetrics,
-} from '../src/utils/timber-calc.js';
-import type { WoodReceivingRecord } from '../src/types/index.ts';
+} from '../src/utils/timber-calc.ts';
+import type {
+  WoodReceivingRecord,
+  DashboardMetrics,
+  PaymentCalculationResult,
+  RecordCalculationInput,
+  RecordCalculationOutput,
+} from '../src/types/index.ts';
+
 
 test('Timber Calculations & Aggregation Test Suite', async (t) => {
   await t.test('calculateTimberPayment computes gross, tax, and net accurately', () => {
@@ -203,4 +210,22 @@ test('Timber Calculations & Aggregation Test Suite', async (t) => {
     assert.strictEqual(metrics.speciesVolumeBreakdown['Teak / Jati'], 4.8);
     assert.strictEqual(metrics.speciesVolumeBreakdown['Unknown'], 2.2);
   });
+
+  await t.test('SSOT domain calculation types and results conform to interface contracts', () => {
+    const input: RecordCalculationInput = {
+      tallyVolumeM3: 10,
+      deliveredVolumeM3: 10,
+      tallyPieces: 50,
+      deliveredPieces: 50,
+      timberPricePerM3: 1000000,
+      freightRatePerM3: 100000,
+    };
+    const output: RecordCalculationOutput = computeRecordCalculations(input);
+    const payment: PaymentCalculationResult = calculateTimberPayment(10, 1000000, 0);
+
+    assert.strictEqual(output.timberGrossTotal, payment.gross);
+    assert.strictEqual(output.timberNetPayable, payment.netPayable);
+    assert.strictEqual(typeof output.grandNetPayable, 'number');
+  });
 });
+
