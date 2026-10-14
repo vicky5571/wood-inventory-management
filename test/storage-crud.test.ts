@@ -20,6 +20,9 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
     assert.ok(teakOnly.length > 0);
     assert.ok(teakOnly.every((r: WoodReceivingRecord) => r.woodSpecies.includes('Teak')));
 
+    const teakFilterAlias = await repo.filter({ species: 'Teak / Jati (柚木)' });
+    assert.deepStrictEqual(teakFilterAlias, teakOnly);
+
     const querySearch = await repo.getFiltered({ searchQuery: 'SKSHHK-2026-001' });
     assert.strictEqual(querySearch.length, 1);
   });

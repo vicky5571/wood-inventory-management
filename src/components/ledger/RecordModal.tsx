@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
-import { computeRecordCalculations } from '@/src/utils/timber-calc';
+import { computeRecordCalculations } from '@/src/utils/timber-calc.ts';
 import { TallyDimensionCalculator } from './TallyDimensionCalculator';
 import {
   X,

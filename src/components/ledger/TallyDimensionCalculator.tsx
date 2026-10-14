@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Calculator, Check, ChevronDown, ChevronUp } from 'lucide-react';
-import { calculateCubicFromCentimeters } from '@/src/utils/timber-calc';
+import { calculateCubicFromCentimeters } from '@/src/utils/timber-calc.ts';
 
 export function TallyDimensionCalculator({
   tallyPieces = 1,

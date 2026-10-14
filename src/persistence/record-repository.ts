@@ -28,6 +28,10 @@ export class WoodRecordRepository {
     return stored;
   }
 
+  async filter(criteria: RecordFilterCriteria = {}): Promise<WoodReceivingRecord[]> {
+    return this.getFiltered(criteria);
+  }
+
   async getFiltered(criteria: RecordFilterCriteria = {}): Promise<WoodReceivingRecord[]> {
     const records = await this.getAll();
     return records.filter((r) => {
