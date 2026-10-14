@@ -1,5 +1,5 @@
 import type { DashboardMetrics } from '@/src/types';
-import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown, CheckCircle2 } from 'lucide-react';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -14,97 +14,196 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Total Volume Hero Card */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden group">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-[#ffc908]" />
-        <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase tracking-wider">
-          <span>Total Volume Tally (检尺立方)</span>
-          <div className="w-8 h-8 rounded-xl bg-[#ffc908]/15 flex items-center justify-center text-[#b38600]">
-            <Box className="w-4 h-4" />
+      {/* 1. Total Volume Hero Card */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group">
+        <div className="h-1 w-full bg-[#ffc908]" />
+        
+        {/* Card Header ala lms-isat */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-amber-50/50 to-white px-4.5 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#ffc908]/20 flex items-center justify-center text-[#b38600] shrink-0">
+              <Box className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#101828] uppercase tracking-wider">
+              Total Volume Tally (检尺立方)
+            </span>
           </div>
         </div>
-        <div className="my-3">
-          <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
-            {metrics.totalTallyVolumeM3.toFixed(2)}
-          </span>
-          <span className="text-sm font-semibold text-gray-500 ml-1.5">m³</span>
+
+        {/* Hero Figure */}
+        <div className="px-4.5 pt-3.5 pb-2">
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
+              {metrics.totalTallyVolumeM3.toFixed(2)}
+            </span>
+            <span className="text-sm font-semibold text-gray-500 ml-1.5">m³</span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500 flex items-center justify-between pt-2 border-t border-gray-100">
-          <span className="font-mono tabular-nums">SJ: {metrics.totalDeliveredVolumeM3.toFixed(2)} m³</span>
-          <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold font-mono tabular-nums text-[11px] ${
-              isMatchOrSurplus
-                ? 'bg-emerald-50 text-[#00bb7f] border border-emerald-200/80'
-                : 'bg-rose-50 text-[#ed1c24] border border-rose-200/80'
-            }`}
-          >
-            {isMatchOrSurplus ? <TrendingUp className="w-3 h-3 text-[#00bb7f]" /> : <TrendingDown className="w-3 h-3 text-[#ed1c24]" />}
-            {isMatchOrSurplus && '+'}{metrics.volumeDiscrepancyM3.toFixed(2)} m³
-          </span>
+
+        {/* Sub-Metric Mini Boxes ala lms-isat/resources/js/pages/summary */}
+        <div className="px-4.5 pb-4 pt-1 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Surat Jalan
+            </span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-700 mt-0.5">
+              {metrics.totalDeliveredVolumeM3.toFixed(2)} m³
+            </span>
+          </div>
+
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Selisih Fisik
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 font-bold font-mono tabular-nums text-xs mt-0.5 ${
+                isMatchOrSurplus ? 'text-[#00bb7f]' : 'text-[#ed1c24]'
+              }`}
+            >
+              {isMatchOrSurplus ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {isMatchOrSurplus && '+'}{metrics.volumeDiscrepancyM3.toFixed(2)} m³
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Total Stems */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
-        <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase tracking-wider">
-          <span>Total Batang Tally (检尺根数)</span>
-          <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-            <Layers className="w-4 h-4" />
+      {/* 2. Total Batang Tally */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+        {/* Card Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-blue-50/50 to-white px-4.5 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+              <Layers className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#101828] uppercase tracking-wider">
+              Batang Tally (检尺根数)
+            </span>
           </div>
         </div>
-        <div className="my-3">
-          <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
-            {metrics.totalTallyPieces.toLocaleString('id-ID')}
-          </span>
-          <span className="text-sm font-semibold text-gray-500 ml-1.5">Btg</span>
+
+        {/* Hero Figure */}
+        <div className="px-4.5 pt-3.5 pb-2">
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
+              {metrics.totalTallyPieces.toLocaleString('id-ID')}
+            </span>
+            <span className="text-sm font-semibold text-gray-500 ml-1.5">Btg</span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500 flex justify-between items-center pt-2 border-t border-gray-100 font-mono tabular-nums">
-          <span>SJ: {metrics.totalDeliveredPieces.toLocaleString('id-ID')} Btg</span>
-          <span className="font-semibold text-gray-700">
-            Selisih: {metrics.pieceDiscrepancy >= 0 ? `+${metrics.pieceDiscrepancy}` : metrics.pieceDiscrepancy}
-          </span>
+
+        {/* Sub-Metric Mini Boxes */}
+        <div className="px-4.5 pb-4 pt-1 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              SJ Batang
+            </span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-700 mt-0.5">
+              {metrics.totalDeliveredPieces.toLocaleString('id-ID')} Btg
+            </span>
+          </div>
+
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Selisih Batang
+            </span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-900 mt-0.5">
+              {metrics.pieceDiscrepancy >= 0 ? `+${metrics.pieceDiscrepancy}` : metrics.pieceDiscrepancy} Btg
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Total Outlay */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
-        <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase tracking-wider">
-          <span>Total Pengeluaran (总应付金额)</span>
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-[#00bb7f]">
-            <Wallet className="w-4 h-4" />
+      {/* 3. Total Outlay */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+        {/* Card Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-emerald-50/50 to-white px-4.5 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-[#00bb7f] shrink-0">
+              <Wallet className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#101828] uppercase tracking-wider">
+              Total Pengeluaran (总应付金额)
+            </span>
           </div>
         </div>
-        <div className="my-3">
+
+        {/* Hero Figure */}
+        <div className="px-4.5 pt-3.5 pb-2">
           <span className="text-2xl font-bold font-mono tracking-tight text-[#101828]">
             {formatRupiah(metrics.totalGrandExpenditure)}
           </span>
         </div>
-        <div className="text-xs text-gray-500 flex justify-between items-center pt-2 border-t border-gray-100 font-mono tabular-nums">
-          <span>Kayu: <strong className="text-gray-700">{formatRupiah(metrics.totalNetTimberPayable)}</strong></span>
-          <span>Ongkir: <strong className="text-gray-700">{formatRupiah(metrics.totalNetFreightPayable)}</strong></span>
+
+        {/* Sub-Metric Mini Boxes */}
+        <div className="px-4.5 pb-4 pt-1 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Net Kayu
+            </span>
+            <span className="text-[11px] font-bold font-mono tabular-nums text-gray-800 mt-0.5 truncate">
+              {formatRupiah(metrics.totalNetTimberPayable)}
+            </span>
+          </div>
+
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Net Ongkir
+            </span>
+            <span className="text-[11px] font-bold font-mono tabular-nums text-gray-800 mt-0.5 truncate">
+              {formatRupiah(metrics.totalNetFreightPayable)}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Active Lots */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
-        <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase tracking-wider">
-          <span>Kavling & Total Batch (批号统计)</span>
-          <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-            <Building2 className="w-4 h-4" />
+      {/* 4. Active Lots */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden">
+        {/* Card Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-linear-to-br from-purple-50/50 to-white px-4.5 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#101828] uppercase tracking-wider">
+              Kavling & Batch (批号统计)
+            </span>
           </div>
         </div>
-        <div className="my-3 flex items-baseline gap-2">
-          <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
-            {metrics.activeKavlingCount}
-          </span>
-          <span className="text-xs font-semibold text-gray-500">Kavling Aktif</span>
+
+        {/* Hero Figure */}
+        <div className="px-4.5 pt-3.5 pb-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold font-mono tracking-tight text-[#101828]">
+              {metrics.activeKavlingCount}
+            </span>
+            <span className="text-xs font-semibold text-gray-500">Kavling Terpakai</span>
+          </div>
         </div>
-        <div className="text-xs text-gray-500 pt-2 border-t border-gray-100 flex items-center justify-between">
-          <span className="font-semibold text-gray-700">{metrics.totalRecordsCount} Pengiriman Tercatat</span>
-          <span className="inline-block w-2 h-2 rounded-full bg-[#00bb7f]" />
+
+        {/* Sub-Metric Mini Boxes */}
+        <div className="px-4.5 pb-4 pt-1 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Total Rit
+            </span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-800 mt-0.5">
+              {metrics.totalRecordsCount} Pengiriman
+            </span>
+          </div>
+
+          <div className="rounded-xl bg-gray-50/80 p-2.5 border border-gray-100 flex flex-col justify-between">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+              Status Lapangan
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00bb7f] mt-0.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#00bb7f]" />
+              Aktif TPK
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 

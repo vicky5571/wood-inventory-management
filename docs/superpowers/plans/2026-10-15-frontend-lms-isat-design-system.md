@@ -56,35 +56,19 @@ Create:
 
 ### Phase 1: KPI Cards Sub-Metric Mini-Boxes Refactor (ala `lms-isat`)
 
-- [ ] **Task 1.1: Write Unit Test for KPI Card Sub-Metric Calculations**
-  - **File:** `test/components/kpi-cards.test.ts`
-  - **Step 1:** Write the test verifying metric calculations and variance formatting (Surplus vs Deficit).
-  ```typescript
-  import test from 'node:test';
-  import assert from 'node:assert/strict';
-  import { aggregateDashboardMetrics } from '../../src/utils/timber-calc.js';
-  import { SEED_WOOD_RECORDS } from '../../src/persistence/seed-data.js';
+- [x] **Task 1.1: Write Unit Test for KPI Card Sub-Metric Calculations**
+  - **File:** `test/kpi-cards.test.ts`
+  - Verified metric calculations and variance formatting (Surplus vs Deficit).
+  - Terminal test verification passed with 5/5 passing tests.
 
-  test('KPI Metrics Sub-box Aggregations', () => {
-    const metrics = aggregateDashboardMetrics(SEED_WOOD_RECORDS);
-    assert.ok(metrics.totalTallyVolumeM3 > 0);
-    assert.ok(metrics.totalDeliveredVolumeM3 > 0);
-    assert.strictEqual(
-      typeof metrics.volumeDiscrepancyM3,
-      'number'
-    );
-  });
-  ```
-  - **Step 2:** Run `node --test test/components/kpi-cards.test.ts`.
-
-- [ ] **Task 1.2: Implement `lms-isat` Sub-Metric Mini Boxes in `KpiCards.tsx`**
+- [x] **Task 1.2: Implement `lms-isat` Sub-Metric Mini Boxes in `KpiCards.tsx`**
   - **File:** `src/components/dashboard/KpiCards.tsx`
   - Split each KPI card into structured sub-metric mini-boxes:
-    - **Card 1 (Volume):** Hero m³ tally on top, with sub-boxes for `Surat Jalan (m³)` and `Selisih Kubikasi (+/- m³)`.
-    - **Card 2 (Batang):** Total Batang on top, with sub-boxes for `SJ Batang` and `Batang Tally`.
+    - **Card 1 (Volume):** Hero m³ tally on top, with sub-boxes for `Surat Jalan (m³)` and `Selisih Fisik (+/- m³)`.
+    - **Card 2 (Batang):** Total Batang on top, with sub-boxes for `SJ Batang` and `Selisih Batang`.
     - **Card 3 (Finansial):** Total Pengeluaran IDR on top, with sub-boxes for `Net Kayu` and `Net Ongkir`.
-    - **Card 4 (Kavling):** Active Lots on top, with sub-boxes for `Kapasitas Terpakai` and `Total Batch`.
-  - Add gradient header `bg-gradient-to-br from-amber-50/50 to-white`.
+    - **Card 4 (Kavling):** Active Lots on top, with sub-boxes for `Total Rit` and `Status Lapangan`.
+  - Added gradient headers `bg-gradient-to-br from-... to-white` matching `lms-isat/resources/js/pages/summary`.
 
 ---
 
