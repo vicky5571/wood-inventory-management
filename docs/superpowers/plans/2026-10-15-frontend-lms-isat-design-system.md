@@ -74,11 +74,11 @@ Create:
 
 ### Phase 2: Species Volume Breakdown & Tooltip Enhancements
 
-- [ ] **Task 2.1: Enhance `SpeciesBar.tsx` Interaction & Monospace Precision**
+- [x] **Task 2.1: Enhance `SpeciesBar.tsx` Interaction & Monospace Precision**
   - **File:** `src/components/dashboard/SpeciesBar.tsx`
-  - Add visual segment dividers and hover state illumination (`hover:brightness-105 hover:scale-y-110 transition-all`).
-  - Add tabular-nums percentage badges.
-  - Test with zero records and multi-species datasets.
+  - Added visual segment dividers, hover state illumination (`hover:brightness-110 hover:scale-y-110 transition-all`), and dimming of non-hovered segments.
+  - Added sub-metric species cards matching `lms-isat` summary styling with tabular-nums percentage badges.
+  - Added unit test suite in `test/species-bar.test.ts` verifying proportional distribution, multi-species datasets, and zero-record handling (3/3 passing).
 
 ---
 
