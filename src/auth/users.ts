@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import type { AuthUser, LoginCredentials } from '../types/index.ts';
 
 interface UserRecord extends AuthUser {

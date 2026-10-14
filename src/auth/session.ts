@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import type { AuthUser, UserRoleLevel } from '../types/index.ts';
 
 export const COOKIE_NAME = 'wood_session';
