@@ -1,6 +1,4 @@
-import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
-
-function formatRupiah(num: number): string {
+function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -8,7 +6,7 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
-function escapeHtml(str: string | null | undefined): string {
+function escapeHtml(str) {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -18,13 +16,7 @@ function escapeHtml(str: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
-export function renderToolbar(
-  container: HTMLElement,
-  speciesList: string[],
-  onFilterChange: (filters: RecordFilterCriteria) => void,
-  onResetDemo: () => void,
-  onExportCsv: () => void
-): void {
+export function renderToolbar(container, speciesList, onFilterChange, onResetDemo, onExportCsv) {
   const speciesOptions = speciesList
     .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`)
     .join('');
@@ -45,8 +37,8 @@ export function renderToolbar(
     </div>
   `;
 
-  const searchInput = container.querySelector('#filter-search') as HTMLInputElement;
-  const speciesSelect = container.querySelector('#filter-species') as HTMLSelectElement;
+  const searchInput = container.querySelector('#filter-search');
+  const speciesSelect = container.querySelector('#filter-species');
 
   const trigger = () => {
     onFilterChange({
@@ -61,12 +53,7 @@ export function renderToolbar(
   container.querySelector('#btn-export-csv')?.addEventListener('click', onExportCsv);
 }
 
-export function renderRecordTable(
-  container: HTMLElement,
-  records: WoodReceivingRecord[],
-  onEdit: (record: WoodReceivingRecord) => void,
-  onDelete: (id: string) => void
-): void {
+export function renderRecordTable(container, records, onEdit, onDelete) {
   if (records.length === 0) {
     container.innerHTML = `
       <div class="table-wrapper" style="padding: 2.5rem; text-align: center; color: var(--wood-text-muted);">

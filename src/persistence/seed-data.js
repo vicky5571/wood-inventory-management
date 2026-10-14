@@ -1,6 +1,10 @@
-import type { WoodReceivingRecord } from '../types/index.ts';
+/**
+ * src/persistence/seed-data.js
+ *
+ * Seed data representing timber receiving records for demonstration.
+ */
 
-export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
+export const SEED_WOOD_RECORDS = [
   {
     id: 'rec-2026-10-01',
     receiptDate: '2026-10-01',

@@ -1,44 +1,37 @@
 /**
- * src/persistence/storage.ts
+ * src/persistence/storage.js
  *
  * Persistence Adapter & State Synchronization Layer
  * Provides resilient offline/local memory fallback with remote synchronization contracts.
  */
 
-import type { WoodItem, InventoryTransaction } from '../types/index.ts';
-
-export interface StorageAdapter {
-  getItem<T>(key: string): Promise<T | null>;
-  setItem<T>(key: string, value: T): Promise<void>;
-  removeItem(key: string): Promise<void>;
-  clear(): Promise<void>;
-}
-
 /**
  * In-memory fallback adapter for environments without window.localStorage or server runtimes.
  */
-export class MemoryStorageAdapter implements StorageAdapter {
-  private store = new Map<string, string>();
+export class MemoryStorageAdapter {
+  constructor() {
+    this.store = new Map();
+  }
 
-  async getItem<T>(key: string): Promise<T | null> {
+  async getItem(key) {
     const data = this.store.get(key);
     if (!data) return null;
     try {
-      return JSON.parse(data) as T;
+      return JSON.parse(data);
     } catch {
       return null;
     }
   }
 
-  async setItem<T>(key: string, value: T): Promise<void> {
+  async setItem(key, value) {
     this.store.set(key, JSON.stringify(value));
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key) {
     this.store.delete(key);
   }
 
-  async clear(): Promise<void> {
+  async clear() {
     this.store.clear();
   }
 }
@@ -46,37 +39,39 @@ export class MemoryStorageAdapter implements StorageAdapter {
 /**
  * LocalStorage wrapper with graceful fallback to MemoryStorageAdapter.
  */
-export class LocalStorageAdapter implements StorageAdapter {
-  private memoryFallback = new MemoryStorageAdapter();
+export class LocalStorageAdapter {
+  constructor() {
+    this.memoryFallback = new MemoryStorageAdapter();
+  }
 
-  private isLocalStorageAvailable(): boolean {
+  isLocalStorageAvailable() {
     return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
   }
 
-  async getItem<T>(key: string): Promise<T | null> {
+  async getItem(key) {
     if (!this.isLocalStorageAvailable()) {
-      return this.memoryFallback.getItem<T>(key);
+      return this.memoryFallback.getItem(key);
     }
     try {
       const raw = window.localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : null;
+      return raw ? JSON.parse(raw) : null;
     } catch {
-      return this.memoryFallback.getItem<T>(key);
+      return this.memoryFallback.getItem(key);
     }
   }
 
-  async setItem<T>(key: string, value: T): Promise<void> {
+  async setItem(key, value) {
     if (!this.isLocalStorageAvailable()) {
-      return this.memoryFallback.setItem<T>(key, value);
+      return this.memoryFallback.setItem(key, value);
     }
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      await this.memoryFallback.setItem<T>(key, value);
+      await this.memoryFallback.setItem(key, value);
     }
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key) {
     if (!this.isLocalStorageAvailable()) {
       return this.memoryFallback.removeItem(key);
     }
@@ -87,7 +82,7 @@ export class LocalStorageAdapter implements StorageAdapter {
     }
   }
 
-  async clear(): Promise<void> {
+  async clear() {
     if (!this.isLocalStorageAvailable()) {
       return this.memoryFallback.clear();
     }

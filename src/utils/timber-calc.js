@@ -1,14 +1,19 @@
-import type { WoodReceivingRecord, DashboardMetrics } from '../types/index.ts';
+/**
+ * src/utils/timber-calc.js
+ *
+ * Financial and tally calculation helpers for timber receiving records.
+ */
 
 /**
  * Calculates gross, PPh tax, and net payable for timber material.
  * Volume is typically the measured tally volume in cubic meters (m³).
+ *
+ * @param {number} volumeM3
+ * @param {number} pricePerM3
+ * @param {number} [pphRatePercent=0]
+ * @returns {{ gross: number, pphAmount: number, netPayable: number }}
  */
-export function calculateTimberPayment(
-  volumeM3: number,
-  pricePerM3: number,
-  pphRatePercent = 0
-): { gross: number; pphAmount: number; netPayable: number } {
+export function calculateTimberPayment(volumeM3, pricePerM3, pphRatePercent = 0) {
   if (volumeM3 < 0 || pricePerM3 < 0 || pphRatePercent < 0) {
     throw new RangeError('Values must be non-negative');
   }
@@ -21,12 +26,13 @@ export function calculateTimberPayment(
 /**
  * Calculates gross, PPh tax, and net payable for freight/logistics.
  * Volume is typically the measured tally volume in cubic meters (m³).
+ *
+ * @param {number} volumeM3
+ * @param {number} freightRatePerM3
+ * @param {number} [pphAmount=0]
+ * @returns {{ gross: number, pphAmount: number, netPayable: number }}
  */
-export function calculateFreightPayment(
-  volumeM3: number,
-  freightRatePerM3: number,
-  pphAmount = 0
-): { gross: number; pphAmount: number; netPayable: number } {
+export function calculateFreightPayment(volumeM3, freightRatePerM3, pphAmount = 0) {
   if (volumeM3 < 0 || freightRatePerM3 < 0 || pphAmount < 0) {
     throw new RangeError('Values must be non-negative');
   }
@@ -37,18 +43,20 @@ export function calculateFreightPayment(
 
 /**
  * Auto-computes calculated financial totals and measurement discrepancies from raw inputs.
+ *
+ * @param {{
+ *   tallyVolumeM3: number,
+ *   deliveredVolumeM3: number,
+ *   tallyPieces: number,
+ *   deliveredPieces: number,
+ *   timberPricePerM3: number,
+ *   timberPphRate?: number,
+ *   freightRatePerM3: number,
+ *   freightPphAmount?: number,
+ *   brokerFee?: number
+ * }} input
  */
-export function computeRecordCalculations(input: {
-  tallyVolumeM3: number;
-  deliveredVolumeM3: number;
-  tallyPieces: number;
-  deliveredPieces: number;
-  timberPricePerM3: number;
-  timberPphRate?: number;
-  freightRatePerM3: number;
-  freightPphAmount?: number;
-  brokerFee?: number;
-}) {
+export function computeRecordCalculations(input) {
   const timber = calculateTimberPayment(
     input.tallyVolumeM3,
     input.timberPricePerM3,
@@ -84,8 +92,11 @@ export function computeRecordCalculations(input: {
 
 /**
  * Aggregates high-level executive dashboard metrics across wood receiving records.
+ *
+ * @param {Array<any>} records
+ * @returns {object}
  */
-export function aggregateDashboardMetrics(records: WoodReceivingRecord[]): DashboardMetrics {
+export function aggregateDashboardMetrics(records) {
   let totalDeliveredVolumeM3 = 0;
   let totalTallyVolumeM3 = 0;
   let totalDeliveredPieces = 0;
@@ -94,8 +105,8 @@ export function aggregateDashboardMetrics(records: WoodReceivingRecord[]): Dashb
   let totalNetFreightPayable = 0;
   let totalGrandExpenditure = 0;
 
-  const kavlingSet = new Set<string>();
-  const speciesVolumeBreakdown: Record<string, number> = {};
+  const kavlingSet = new Set();
+  const speciesVolumeBreakdown = {};
 
   for (const r of records) {
     totalDeliveredVolumeM3 += r.deliveredVolumeM3;

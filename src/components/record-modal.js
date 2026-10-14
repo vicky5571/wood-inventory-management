@@ -1,7 +1,6 @@
-import type { WoodReceivingRecord } from '../types/index.ts';
-import { computeRecordCalculations } from '../utils/timber-calc.ts';
+import { computeRecordCalculations } from '../utils/timber-calc.js';
 
-function formatRupiah(num: number): string {
+function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -9,7 +8,7 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
-function escapeHtml(str: string | null | undefined): string {
+function escapeHtml(str) {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -19,11 +18,7 @@ function escapeHtml(str: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
-export function openRecordModal(
-  container: HTMLElement,
-  initialRecord: WoodReceivingRecord | null,
-  onSave: (record: WoodReceivingRecord) => void
-): void {
+export function openRecordModal(container, initialRecord, onSave) {
   const isEdit = initialRecord !== null;
   const recordId = initialRecord?.id || `rec-${Date.now()}`;
 
@@ -34,7 +29,6 @@ export function openRecordModal(
           ${isEdit ? 'Edit Penerimaan Kayu (编辑入库)' : 'Input Penerimaan Kayu Baru (新增木材入库)'}
         </h2>
         <form id="record-form">
-          <!-- Dokumen & Pengiriman -->
           <fieldset class="form-fieldset">
             <legend class="form-legend">1. Dokumen & Pengiriman (发货单据与物流)</legend>
             <div class="form-grid">
@@ -61,7 +55,6 @@ export function openRecordModal(
             </div>
           </fieldset>
 
-          <!-- Spesifikasi Kayu & Lokasi -->
           <fieldset class="form-fieldset">
             <legend class="form-legend">2. Spesifikasi Kayu & Lokasi Gudang (材种与批号)</legend>
             <div class="form-grid">
@@ -84,7 +77,6 @@ export function openRecordModal(
             </div>
           </fieldset>
 
-          <!-- Pengukuran Fisik / Tally -->
           <fieldset class="form-fieldset">
             <legend class="form-legend">3. Pengukuran Batang & Volume (送货 vs 检尺)</legend>
             <div class="form-grid">
@@ -107,7 +99,6 @@ export function openRecordModal(
             </div>
           </fieldset>
 
-          <!-- Keuangan & Pajak -->
           <fieldset class="form-fieldset">
             <legend class="form-legend">4. Harga Kayu, Ongkir & Pajak (货款、运费与税金)</legend>
             <div class="form-grid">
@@ -132,10 +123,7 @@ export function openRecordModal(
                 <input class="input-control" type="number" name="brokerFee" value="${initialRecord?.brokerFee ?? 0}" />
               </div>
             </div>
-
-            <!-- Dynamic Live Calculation Preview -->
-            <div id="live-calculation-summary" style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); font-size: 0.8125rem;">
-            </div>
+            <div id="live-calculation-summary" style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-sm); font-size: 0.8125rem;"></div>
           </fieldset>
 
           <div class="modal-actions">
@@ -147,20 +135,20 @@ export function openRecordModal(
     </div>
   `;
 
-  const form = container.querySelector('#record-form') as HTMLFormElement;
-  const summaryBox = container.querySelector('#live-calculation-summary') as HTMLElement;
+  const form = container.querySelector('#record-form');
+  const summaryBox = container.querySelector('#live-calculation-summary');
 
   const extractFormValues = () => {
     const data = new FormData(form);
-    const tallyVol = parseFloat(data.get('tallyVolumeM3') as string) || 0;
-    const delVol = parseFloat(data.get('deliveredVolumeM3') as string) || 0;
-    const tallyPcs = parseInt(data.get('tallyPieces') as string, 10) || 0;
-    const delPcs = parseInt(data.get('deliveredPieces') as string, 10) || 0;
-    const timberPrice = parseFloat(data.get('timberPricePerM3') as string) || 0;
-    const timberPph = parseFloat(data.get('timberPphRate') as string) || 0;
-    const freightRate = parseFloat(data.get('freightRatePerM3') as string) || 0;
-    const freightPph = parseFloat(data.get('freightPphAmount') as string) || 0;
-    const broker = parseFloat(data.get('brokerFee') as string) || 0;
+    const tallyVol = parseFloat(data.get('tallyVolumeM3')) || 0;
+    const delVol = parseFloat(data.get('deliveredVolumeM3')) || 0;
+    const tallyPcs = parseInt(data.get('tallyPieces'), 10) || 0;
+    const delPcs = parseInt(data.get('deliveredPieces'), 10) || 0;
+    const timberPrice = parseFloat(data.get('timberPricePerM3')) || 0;
+    const timberPph = parseFloat(data.get('timberPphRate')) || 0;
+    const freightRate = parseFloat(data.get('freightRatePerM3')) || 0;
+    const freightPph = parseFloat(data.get('freightPphAmount')) || 0;
+    const broker = parseFloat(data.get('brokerFee')) || 0;
 
     const calc = computeRecordCalculations({
       tallyVolumeM3: Math.max(0, tallyVol),
@@ -200,19 +188,19 @@ export function openRecordModal(
     e.preventDefault();
     const { data, tallyVol, delVol, tallyPcs, delPcs, timberPrice, timberPph, freightRate, freightPph, broker, calc } = extractFormValues();
 
-    const fullRecord: WoodReceivingRecord = {
+    const fullRecord = {
       id: recordId,
-      receiptDate: (data.get('receiptDate') as string) || new Date().toISOString().slice(0, 10),
-      docDate: (data.get('docDate') as string) || initialRecord?.docDate || undefined,
-      truckPlateNumber: (data.get('truckPlateNumber') as string) || '',
-      forestryDocNumber: (data.get('forestryDocNumber') as string) || '',
-      receiptNumber: (data.get('receiptNumber') as string) || initialRecord?.receiptNumber || `KW-${Date.now().toString().slice(-4)}`,
-      contractNumber: (data.get('contractNumber') as string) || '',
-      supplierName: (data.get('supplierName') as string) || '',
-      woodSpecies: (data.get('woodSpecies') as string) || '',
-      woodLengthM: parseFloat(data.get('woodLengthM') as string) || 0,
-      kavlingNumber: (data.get('kavlingNumber') as string) || 'KAV-01',
-      storageYard: (data.get('storageYard') as string) || 'TPK-1',
+      receiptDate: data.get('receiptDate') || new Date().toISOString().slice(0, 10),
+      docDate: data.get('docDate') || initialRecord?.docDate || undefined,
+      truckPlateNumber: data.get('truckPlateNumber') || '',
+      forestryDocNumber: data.get('forestryDocNumber') || '',
+      receiptNumber: data.get('receiptNumber') || initialRecord?.receiptNumber || `KW-${Date.now().toString().slice(-4)}`,
+      contractNumber: data.get('contractNumber') || '',
+      supplierName: data.get('supplierName') || '',
+      woodSpecies: data.get('woodSpecies') || '',
+      woodLengthM: parseFloat(data.get('woodLengthM')) || 0,
+      kavlingNumber: data.get('kavlingNumber') || 'KAV-01',
+      storageYard: data.get('storageYard') || 'TPK-1',
       deliveredPieces: delPcs,
       deliveredVolumeM3: delVol,
       tallyPieces: tallyPcs,

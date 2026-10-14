@@ -1,11 +1,9 @@
 /**
- * src/utils/calculator.ts
+ * src/utils/calculator.js
  *
  * Pure volumetric, imperial/metric, and inventory calculation helpers
  * for Wood & Timber inventory management.
  */
-
-import type { VolumeCalculationResult } from '../types/index.ts';
 
 const MM_TO_METERS = 0.001;
 const MM_TO_INCHES = 1 / 25.4;
@@ -15,18 +13,13 @@ const MM_TO_FEET = 1 / 304.8;
  * Calculates cubic meters (m³) for a lumber dimension set and quantity.
  * Formula: (thickness_mm * width_mm * length_mm) / 1,000,000,000 * quantity
  *
- * @param thicknessMm Thickness in millimeters
- * @param widthMm Width in millimeters
- * @param lengthMm Length in millimeters
- * @param quantity Number of pieces (default: 1)
- * @returns Total cubic meters rounded to 4 decimal places
+ * @param {number} thicknessMm Thickness in millimeters
+ * @param {number} widthMm Width in millimeters
+ * @param {number} lengthMm Length in millimeters
+ * @param {number} [quantity=1] Number of pieces (default: 1)
+ * @returns {number} Total cubic meters rounded to 4 decimal places
  */
-export function calculateCubicMeters(
-  thicknessMm: number,
-  widthMm: number,
-  lengthMm: number,
-  quantity = 1
-): number {
+export function calculateCubicMeters(thicknessMm, widthMm, lengthMm, quantity = 1) {
   if (thicknessMm < 0 || widthMm < 0 || lengthMm < 0 || quantity < 0) {
     throw new RangeError('Dimensions and quantity must be non-negative values');
   }
@@ -41,18 +34,13 @@ export function calculateCubicMeters(
  * Calculates board feet (BF) for imperial or converted metric dimensions.
  * Formula: (Thickness(in) * Width(in) * Length(ft)) / 12 * quantity
  *
- * @param thicknessInches Nominal thickness in inches
- * @param widthInches Nominal width in inches
- * @param lengthFeet Nominal length in feet
- * @param quantity Number of pieces (default: 1)
- * @returns Board feet value rounded to 2 decimal places
+ * @param {number} thicknessInches Nominal thickness in inches
+ * @param {number} widthInches Nominal width in inches
+ * @param {number} lengthFeet Nominal length in feet
+ * @param {number} [quantity=1] Number of pieces (default: 1)
+ * @returns {number} Board feet value rounded to 2 decimal places
  */
-export function calculateBoardFeet(
-  thicknessInches: number,
-  widthInches: number,
-  lengthFeet: number,
-  quantity = 1
-): number {
+export function calculateBoardFeet(thicknessInches, widthInches, lengthFeet, quantity = 1) {
   if (thicknessInches < 0 || widthInches < 0 || lengthFeet < 0 || quantity < 0) {
     throw new RangeError('Dimensions and quantity must be non-negative values');
   }
@@ -66,18 +54,13 @@ export function calculateBoardFeet(
 /**
  * Converts metric lumber specifications directly to Board Feet and Cubic Meters.
  *
- * @param thicknessMm Metric thickness
- * @param widthMm Metric width
- * @param lengthMm Metric length
- * @param quantity Number of pieces
- * @returns Full volumetric calculation result
+ * @param {number} thicknessMm Metric thickness
+ * @param {number} widthMm Metric width
+ * @param {number} lengthMm Metric length
+ * @param {number} [quantity=1] Number of pieces
+ * @returns {{cubicMetersPerPiece: number, totalCubicMeters: number, boardFeetPerPiece: number, totalBoardFeet: number}}
  */
-export function computeVolumetricMetrics(
-  thicknessMm: number,
-  widthMm: number,
-  lengthMm: number,
-  quantity = 1
-): VolumeCalculationResult {
+export function computeVolumetricMetrics(thicknessMm, widthMm, lengthMm, quantity = 1) {
   const m3PerPiece = calculateCubicMeters(thicknessMm, widthMm, lengthMm, 1);
   const totalM3 = calculateCubicMeters(thicknessMm, widthMm, lengthMm, quantity);
 
@@ -101,14 +84,14 @@ export function computeVolumetricMetrics(
  * Format: [SPECIES]-[THICKNESS]X[WIDTH]X[LENGTH]-[GRADE]
  *
  * @example generateWoodSku('TEAK', 50, 200, 2400, 'FAS') => "TEAK-50X200X2400-FAS"
+ * @param {string} speciesCode
+ * @param {number} thicknessMm
+ * @param {number} widthMm
+ * @param {number} lengthMm
+ * @param {string} grade
+ * @returns {string}
  */
-export function generateWoodSku(
-  speciesCode: string,
-  thicknessMm: number,
-  widthMm: number,
-  lengthMm: number,
-  grade: string
-): string {
+export function generateWoodSku(speciesCode, thicknessMm, widthMm, lengthMm, grade) {
   const cleanCode = speciesCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
   const cleanGrade = grade.trim().toUpperCase().replace(/\s+/g, '');
 
@@ -118,11 +101,11 @@ export function generateWoodSku(
 /**
  * Estimates gross weight in kilograms given volume (m³) and species density (kg/m³).
  *
- * @param volumeM3 Total cubic meters
- * @param densityKgM3 Nominal density at equilibrium moisture content
- * @returns Total estimated weight in kg rounded to 2 decimal places
+ * @param {number} volumeM3 Total cubic meters
+ * @param {number} densityKgM3 Nominal density at equilibrium moisture content
+ * @returns {number} Total estimated weight in kg rounded to 2 decimal places
  */
-export function estimateBatchWeight(volumeM3: number, densityKgM3: number): number {
+export function estimateBatchWeight(volumeM3, densityKgM3) {
   if (volumeM3 < 0 || densityKgM3 < 0) {
     throw new RangeError('Volume and density must be non-negative');
   }

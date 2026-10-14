@@ -5,7 +5,7 @@ import {
   calculateFreightPayment,
   computeRecordCalculations,
   aggregateDashboardMetrics,
-} from '../src/utils/timber-calc.ts';
+} from '../src/utils/timber-calc.js';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
 test('Timber Calculations & Aggregation Test Suite', async (t) => {

@@ -1,26 +1,22 @@
-import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
-import type { StorageAdapter } from './storage.ts';
-import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import { SEED_WOOD_RECORDS } from './seed-data.js';
 
 const STORAGE_KEY = 'wood_receiving_records_v1';
 
 export class WoodRecordRepository {
-  private storage: StorageAdapter;
-
-  constructor(storage: StorageAdapter) {
+  constructor(storage) {
     this.storage = storage;
   }
 
-  async getAll(): Promise<WoodReceivingRecord[]> {
-    let records = await this.storage.getItem<WoodReceivingRecord[]>(STORAGE_KEY);
-    if (!records || !Array.isArray(records) || records.length === 0) {
-      records = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS)) as WoodReceivingRecord[];
+  async getAll() {
+    let records = await this.storage.getItem(STORAGE_KEY);
+    if (records === null || records === undefined || !Array.isArray(records)) {
+      records = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
       await this.storage.setItem(STORAGE_KEY, records);
     }
     return records;
   }
 
-  async getFiltered(criteria: RecordFilterCriteria): Promise<WoodReceivingRecord[]> {
+  async getFiltered(criteria = {}) {
     const records = await this.getAll();
     return records.filter((r) => {
       if (criteria.species && r.woodSpecies !== criteria.species) {
@@ -59,12 +55,12 @@ export class WoodRecordRepository {
     });
   }
 
-  async getById(id: string): Promise<WoodReceivingRecord | null> {
+  async getById(id) {
     const records = await this.getAll();
     return records.find((r) => r.id === id) ?? null;
   }
 
-  async save(record: WoodReceivingRecord): Promise<void> {
+  async save(record) {
     const records = await this.getAll();
     const index = records.findIndex((r) => r.id === record.id);
     if (index >= 0) {
@@ -79,14 +75,14 @@ export class WoodRecordRepository {
     await this.storage.setItem(STORAGE_KEY, records);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id) {
     const records = await this.getAll();
     const filtered = records.filter((r) => r.id !== id);
     await this.storage.setItem(STORAGE_KEY, filtered);
   }
 
-  async resetToSeed(): Promise<WoodReceivingRecord[]> {
-    const fresh = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS)) as WoodReceivingRecord[];
+  async resetToSeed() {
+    const fresh = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
     await this.storage.setItem(STORAGE_KEY, fresh);
     return fresh;
   }

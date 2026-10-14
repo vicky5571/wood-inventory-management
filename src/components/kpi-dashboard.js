@@ -1,8 +1,6 @@
-import type { DashboardMetrics } from '../types/index.ts';
-
 const PALETTE = ['#b45309', '#0284c7', '#10b981', '#6366f1', '#ec4899', '#f59e0b'];
 
-function formatRupiah(num: number): string {
+function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -10,7 +8,17 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
-export function renderKpiDashboard(container: HTMLElement, metrics: DashboardMetrics): void {
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function renderKpiDashboard(container, metrics) {
   const discrepancyBadge = metrics.volumeDiscrepancyM3 >= 0
     ? `<span class="badge badge-match">+${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Surplus/Match)</span>`
     : `<span class="badge badge-alert">${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Shortage)</span>`;
@@ -55,11 +63,7 @@ export function renderKpiDashboard(container: HTMLElement, metrics: DashboardMet
   `;
 }
 
-export function renderSpeciesBar(
-  container: HTMLElement,
-  breakdown: Record<string, number>,
-  totalVolume: number
-): void {
+export function renderSpeciesBar(container, breakdown, totalVolume) {
   const entries = Object.entries(breakdown).filter(([_, vol]) => vol > 0);
   if (entries.length === 0 || totalVolume <= 0) {
     container.innerHTML = '';
@@ -69,7 +73,7 @@ export function renderSpeciesBar(
   const segments = entries.map(([species, vol], index) => {
     const pct = ((vol / totalVolume) * 100).toFixed(1);
     const color = PALETTE[index % PALETTE.length];
-    return `<div style="width: ${pct}%; background-color: ${color};" title="${species}: ${vol.toFixed(2)} m³ (${pct}%)"></div>`;
+    return `<div style="width: ${pct}%; background-color: ${color};" title="${escapeHtml(species)}: ${vol.toFixed(2)} m³ (${pct}%)"></div>`;
   }).join('');
 
   const legends = entries.map(([species, vol], index) => {
@@ -78,7 +82,7 @@ export function renderSpeciesBar(
     return `
       <div class="legend-item">
         <div class="legend-dot" style="background-color: ${color};"></div>
-        <span><strong>${species}</strong>: ${vol.toFixed(2)} m³ (${pct}%)</span>
+        <span><strong>${escapeHtml(species)}</strong>: ${vol.toFixed(2)} m³ (${pct}%)</span>
       </div>
     `;
   }).join('');

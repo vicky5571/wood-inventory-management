@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
-import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { MemoryStorageAdapter } from '../src/persistence/storage.js';
+import { WoodRecordRepository } from '../src/persistence/record-repository.js';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.js';
 
 test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
   const storage = new MemoryStorageAdapter();
@@ -66,12 +66,16 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
     assert.strictEqual(retrieved, null);
   });
 
-  await t.test('resetToSeed resets repository back to fresh seed data', async () => {
-    // Delete one item
-    await repo.delete(SEED_WOOD_RECORDS[0].id);
-    const current = await repo.getAll();
-    assert.strictEqual(current.length, SEED_WOOD_RECORDS.length - 1);
+  await t.test('deleting all records preserves empty state without resurrecting seed data', async () => {
+    const all = await repo.getAll();
+    for (const r of all) {
+      await repo.delete(r.id);
+    }
+    const empty = await repo.getAll();
+    assert.deepStrictEqual(empty, []);
+  });
 
+  await t.test('resetToSeed resets repository back to fresh seed data', async () => {
     const fresh = await repo.resetToSeed();
     assert.strictEqual(fresh.length, SEED_WOOD_RECORDS.length);
     const reloaded = await repo.getAll();

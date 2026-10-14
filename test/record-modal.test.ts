@@ -1,14 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { openRecordModal } from '../src/components/record-modal.ts';
+import { openRecordModal } from '../src/components/record-modal.js';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
+import { MockFormData } from './helpers/mock-dom.ts';
 
-// Lightweight mock environment for DOM interactions in Node.js
+// Lightweight mock element for modal DOM tests
 class MockElement {
   public id: string;
   private _html: string = '';
   public eventListeners: Record<string, ((e?: any) => void)[]> = {};
   public _fields: Record<string, string> = {};
+  public _form?: MockElement;
+  public _summary?: MockElement;
+  public _btnCancel?: MockElement;
+
+  constructor(id: string = '') {
+    this.id = id;
+  }
 
   get innerHTML(): string {
     return this._html;
@@ -17,7 +25,9 @@ class MockElement {
   set innerHTML(val: string) {
     this._html = val;
     if (val) {
-      this.initChildren();
+      this._form = new MockElement('record-form');
+      this._summary = new MockElement('live-calculation-summary');
+      this._btnCancel = new MockElement('btn-modal-cancel');
     } else {
       this._form = undefined;
       this._summary = undefined;
@@ -25,62 +35,20 @@ class MockElement {
     }
   }
 
-  constructor(id: string = '') {
-    this.id = id;
-  }
-
   addEventListener(event: string, callback: (e?: any) => void) {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
-    }
+    if (!this.eventListeners[event]) this.eventListeners[event] = [];
     this.eventListeners[event].push(callback);
   }
 
   dispatchEvent(event: string, eventData: any = {}) {
-    const handlers = this.eventListeners[event] || [];
-    for (const h of handlers) {
-      h(eventData);
-    }
-  }
-
-  public _form?: MockElement;
-  public _summary?: MockElement;
-  public _btnCancel?: MockElement;
-
-  initChildren() {
-    this._form = new MockElement('record-form');
-    this._summary = new MockElement('live-calculation-summary');
-    this._btnCancel = new MockElement('btn-modal-cancel');
+    for (const h of this.eventListeners[event] || []) h(eventData);
   }
 
   querySelector(selector: string): any {
-    if (selector === '#record-form') {
-      return this._form;
-    }
-    if (selector === '#live-calculation-summary') {
-      return this._summary;
-    }
-    if (selector === '#btn-modal-cancel') {
-      return this._btnCancel;
-    }
+    if (selector === '#record-form') return this._form;
+    if (selector === '#live-calculation-summary') return this._summary;
+    if (selector === '#btn-modal-cancel') return this._btnCancel;
     return null;
-  }
-}
-
-class MockFormData {
-  private map = new Map<string, string>();
-  constructor(form?: any) {
-    if (form && form._fields) {
-      for (const [k, v] of Object.entries(form._fields)) {
-        this.map.set(k, String(v));
-      }
-    }
-  }
-  get(key: string): string | null {
-    return this.map.get(key) ?? null;
-  }
-  set(key: string, value: string) {
-    this.map.set(key, value);
   }
 }
 
@@ -164,7 +132,7 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     openRecordModal(container as any, null, () => {});
 
     assert.ok(container.innerHTML.length > 0);
-    container._btnCancel.dispatchEvent('click');
+    container._btnCancel!.dispatchEvent('click');
     assert.strictEqual(container.innerHTML, '');
   });
 
@@ -172,8 +140,7 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     const container = new MockElement('container');
     openRecordModal(container as any, null, () => {});
 
-    // Set field values in mock form
-    container._form._fields = {
+    container._form!._fields = {
       tallyVolumeM3: '10.0',
       deliveredVolumeM3: '9.5',
       tallyPieces: '20',
@@ -185,12 +152,11 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
       brokerFee: '100000',
     };
 
-    container._form.dispatchEvent('input');
+    container._form!.dispatchEvent('input');
 
-    // Check summary calculation updates
-    assert.ok(container._summary.innerHTML.includes('Selisih Vol: <strong>+0.50 m³</strong>'));
-    assert.ok(container._summary.innerHTML.includes('Net Kayu: <strong>Rp'));
-    assert.ok(container._summary.innerHTML.includes('Total Yang Harus Dibayar:'));
+    assert.ok(container._summary!.innerHTML.includes('Selisih Vol: <strong>+0.50 m³</strong>'));
+    assert.ok(container._summary!.innerHTML.includes('Net Kayu: <strong>Rp'));
+    assert.ok(container._summary!.innerHTML.includes('Total Yang Harus Dibayar:'));
   });
 
   await t.test('form submit computes and triggers onSave with full WoodReceivingRecord', () => {
@@ -201,7 +167,7 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
       savedRecord = record;
     });
 
-    container._form._fields = {
+    container._form!._fields = {
       receiptDate: '2026-10-15',
       truckPlateNumber: 'DK 1234 AB',
       forestryDocNumber: 'DKP-2026-99',
@@ -223,7 +189,7 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     };
 
     let prevented = false;
-    container._form.dispatchEvent('submit', {
+    container._form!.dispatchEvent('submit', {
       preventDefault: () => {
         prevented = true;
       },
@@ -233,14 +199,6 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     assert.ok(savedRecord !== null, 'onSave should have been called');
     assert.strictEqual((savedRecord as any).supplierName, 'UD Rimba Mas');
     assert.strictEqual((savedRecord as any).woodSpecies, 'Merbau');
-    // Calculations:
-    // Timber gross: 10 * 6,000,000 = 60,000,000
-    // Timber PPh: 0.5% * 60,000,000 = 300,000
-    // Timber Net: 59,700,000
-    // Freight gross: 10 * 500,000 = 5,000,000
-    // Freight Net: 5,000,000 - 100,000 = 4,900,000
-    // Broker: 250,000
-    // Grand total: 59,700,000 + 4,900,000 + 250,000 = 64,850,000
     assert.strictEqual((savedRecord as any).timberGrossTotal, 60000000);
     assert.strictEqual((savedRecord as any).timberPphAmount, 300000);
     assert.strictEqual((savedRecord as any).timberNetPayable, 59700000);

@@ -7,16 +7,15 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-
 import {
   calculateCubicMeters,
   calculateBoardFeet,
   computeVolumetricMetrics,
   generateWoodSku,
   estimateBatchWeight,
-} from '../src/utils/calculator.ts';
-
-import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
+} from '../src/utils/calculator.js';
+import { MemoryStorageAdapter } from '../src/persistence/storage.js';
+import type { WoodReceivingRecord, DashboardMetrics } from '../src/types/index.ts';
 
 test('Smoke Test Suite — Domain Calculations & Storage Invariants', async (t) => {
   await t.test('calculateCubicMeters accurately computes volume for 10 beams', () => {
@@ -80,8 +79,6 @@ test('Smoke Test Suite — Domain Calculations & Storage Invariants', async (t) 
   });
 });
 
-import type { WoodReceivingRecord, DashboardMetrics } from '../src/types/index.ts';
-
 test('SSOT Type Definitions exist and export correctly', () => {
   const dummy: Partial<WoodReceivingRecord> = {
     id: 'test-1',
@@ -91,4 +88,3 @@ test('SSOT Type Definitions exist and export correctly', () => {
   };
   assert.strictEqual(dummy.id, 'test-1');
 });
-

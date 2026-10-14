@@ -1,33 +1,29 @@
-import { defaultStorage } from './persistence/storage.ts';
-import { WoodRecordRepository } from './persistence/record-repository.ts';
-import { aggregateDashboardMetrics } from './utils/timber-calc.ts';
-import { renderKpiDashboard, renderSpeciesBar } from './components/kpi-dashboard.ts';
-import { renderToolbar, renderRecordTable } from './components/record-table.ts';
-import { openRecordModal } from './components/record-modal.ts';
-import type { RecordFilterCriteria, WoodReceivingRecord } from './types/index.ts';
+import { defaultStorage } from './persistence/storage.js';
+import { WoodRecordRepository } from './persistence/record-repository.js';
+import { aggregateDashboardMetrics } from './utils/timber-calc.js';
+import { renderKpiDashboard, renderSpeciesBar } from './components/kpi-dashboard.js';
+import { renderToolbar, renderRecordTable } from './components/record-table.js';
+import { openRecordModal } from './components/record-modal.js';
 
 export class AppCoordinator {
-  private repo: WoodRecordRepository;
-  private currentFilters: RecordFilterCriteria = {};
-
-  private kpiSection: HTMLElement | null = null;
-  private speciesSection: HTMLElement | null = null;
-  private toolbarSection: HTMLElement | null = null;
-  private tableSection: HTMLElement | null = null;
-  private modalContainer: HTMLElement | null = null;
-  private btnNewEntry: HTMLButtonElement | null = null;
-
-  constructor(repo?: WoodRecordRepository) {
+  constructor(repo) {
     this.repo = repo ?? new WoodRecordRepository(defaultStorage);
+    this.currentFilters = {};
+    this.kpiSection = null;
+    this.speciesSection = null;
+    this.toolbarSection = null;
+    this.tableSection = null;
+    this.modalContainer = null;
+    this.btnNewEntry = null;
   }
 
-  async init(): Promise<void> {
+  async init() {
     this.kpiSection = document.getElementById('kpi-section');
     this.speciesSection = document.getElementById('species-chart-section');
     this.toolbarSection = document.getElementById('toolbar-section');
     this.tableSection = document.getElementById('table-section');
     this.modalContainer = document.getElementById('modal-container');
-    this.btnNewEntry = document.getElementById('btn-new-entry') as HTMLButtonElement | null;
+    this.btnNewEntry = document.getElementById('btn-new-entry');
 
     this.btnNewEntry?.addEventListener('click', () => {
       if (!this.modalContainer) return;
@@ -40,7 +36,7 @@ export class AppCoordinator {
     await this.refreshAll();
   }
 
-  async refreshAll(): Promise<void> {
+  async refreshAll() {
     const allRecords = await this.repo.getAll();
     const speciesList = Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean);
 
@@ -69,7 +65,7 @@ export class AppCoordinator {
     await this.refreshTableAndMetrics();
   }
 
-  async refreshTableAndMetrics(): Promise<void> {
+  async refreshTableAndMetrics() {
     const filteredRecords = await this.repo.getFiltered(this.currentFilters);
     const metrics = aggregateDashboardMetrics(filteredRecords);
 
@@ -97,12 +93,12 @@ export class AppCoordinator {
     }
   }
 
-  async refresh(): Promise<void> {
+  async refresh() {
     await this.refreshAll();
   }
 
-  exportCsv(records: WoodReceivingRecord[]): void {
-    const escapeCsv = (str: string | undefined | null) => `"${(str || '').replace(/"/g, '""')}"`;
+  exportCsv(records) {
+    const escapeCsv = (str) => `"${(str || '').replace(/"/g, '""')}"`;
     const headers = [
       'Penerimaan (到货日期)', 'No. Polisi (车牌号)', 'SKSHHK / DKP (送货单号)', 'No. Kontrak (合同编号)',
       'Supplier (供应商)', 'Jenis Kayu (树种)', 'No. Kav (进厂批号)', 'Batang Del (送货根数)',
