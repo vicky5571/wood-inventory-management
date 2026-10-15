@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aggregateDashboardMetrics } from '../src/utils/timber-calc.ts';
+import { aggregateDashboardMetrics, classifyDiscrepancy } from '../src/utils/timber-calc.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import type { DashboardMetrics } from '../src/types/index.ts';
 
@@ -18,6 +18,21 @@ test('KPI Cards Sub-Metric Aggregation & Validation Suite', async (t) => {
       expectedVariance,
       'Volume discrepancy must exactly equal tally minus delivered volume'
     );
+  });
+
+  await t.test('classifies discrepancy into match, surplus, and shortage accurately', () => {
+    // Exact zero / match within tolerance
+    assert.strictEqual(classifyDiscrepancy(0), 'match');
+    assert.strictEqual(classifyDiscrepancy(0.0004), 'match');
+    assert.strictEqual(classifyDiscrepancy(-0.0004), 'match');
+
+    // Positive surplus
+    assert.strictEqual(classifyDiscrepancy(0.05), 'surplus');
+    assert.strictEqual(classifyDiscrepancy(10), 'surplus');
+
+    // Negative shortage/deficit
+    assert.strictEqual(classifyDiscrepancy(-0.05), 'shortage');
+    assert.strictEqual(classifyDiscrepancy(-5), 'shortage');
   });
 
   await t.test('calculates pieces and piece discrepancy correctly', () => {

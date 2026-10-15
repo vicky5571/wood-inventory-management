@@ -155,3 +155,13 @@ export function calculateCubicFromCentimeters(
   const total = (thicknessCm * widthCm * lengthCm * pieces) / 1000000;
   return Number(total.toFixed(4));
 }
+
+export type DiscrepancyStatus = 'match' | 'surplus' | 'shortage';
+
+/**
+ * Classifies volumetric or piece discrepancy into semantic status: match, surplus, or shortage.
+ */
+export function classifyDiscrepancy(diff: number, tolerance: number = 0.001): DiscrepancyStatus {
+  if (Math.abs(diff) < tolerance) return 'match';
+  return diff > 0 ? 'surplus' : 'shortage';
+}
