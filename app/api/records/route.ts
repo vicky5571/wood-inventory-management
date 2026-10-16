@@ -81,10 +81,12 @@ export async function POST(request: Request) {
       !candidate.woodSpecies ||
       typeof candidate.woodSpecies !== 'string' ||
       candidate.woodSpecies.trim() === '' ||
-      typeof candidate.tallyVolumeM3 !== 'number'
+      typeof candidate.tallyVolumeM3 !== 'number' ||
+      !Number.isFinite(candidate.tallyVolumeM3) ||
+      candidate.tallyVolumeM3 <= 0
     ) {
       return NextResponse.json(
-        { success: false, error: 'Validation error: woodSpecies and tallyVolumeM3 are required' },
+        { success: false, error: 'Validation error: woodSpecies and positive tallyVolumeM3 are required' },
         { status: 400 }
       );
     }

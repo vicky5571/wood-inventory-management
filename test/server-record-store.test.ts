@@ -144,6 +144,72 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     const result = await store.delete('non-existent-id-999');
     assert.equal(result, false);
   });
+
+  await t.test('handles concurrent saves and deletes without dropping records (runExclusive mutex)', async () => {
+    await store.reset(); // back to 4 seed records
+
+    // Concurrently save 10 new distinct records
+    const concurrentRecords = Array.from({ length: 10 }, (_, i) => ({
+      id: `rec-concurrent-${i}`,
+      receiptDate: '2026-10-17',
+      truckPlateNumber: `B 100${i} CC`,
+      forestryDocNumber: `DOC-CC-${i}`,
+      receiptNumber: `KW-CC-${i}`,
+      contractNumber: `CTR-CC-${i}`,
+      supplierName: `Supplier ${i}`,
+      woodSpecies: 'Teak / Jati (柚木)',
+      woodLengthM: 4.0,
+      kavlingNumber: `KAV-${i}`,
+      storageYard: 'TPK-1',
+      deliveredPieces: 10,
+      deliveredVolumeM3: 2.5,
+      tallyPieces: 10,
+      tallyVolumeM3: 2.5,
+      timberPricePerM3: 3000000,
+      timberGrossTotal: 7500000,
+      timberPphRate: 0.5,
+      timberPphAmount: 37500,
+      timberNetPayable: 7462500,
+      freightRatePerM3: 200000,
+      freightGrossTotal: 500000,
+      freightPphAmount: 10000,
+      freightNetPayable: 490000,
+      brokerFee: 100000,
+      grandNetPayable: 8052500,
+    } as unknown as WoodReceivingRecord));
+
+    const savedResults = await Promise.all(concurrentRecords.map((r) => store.save(r)));
+    assert.equal(savedResults.length, 10);
+
+    const afterConcurrentSave = await store.getAll();
+    assert.equal(afterConcurrentSave.length, 14, 'Should contain exactly 4 seed records + 10 saved records');
+
+    // Concurrently delete 5 records
+    const toDeleteIds = ['rec-concurrent-0', 'rec-concurrent-2', 'rec-concurrent-4', 'rec-concurrent-6', 'rec-concurrent-8'];
+    const deleteResults = await Promise.all(toDeleteIds.map((id) => store.delete(id)));
+    assert.ok(deleteResults.every((res) => res === true), 'All 5 concurrent delete operations must return true');
+
+    const afterConcurrentDelete = await store.getAll();
+    assert.equal(afterConcurrentDelete.length, 9, 'Should contain exactly 9 records after 5 concurrent deletions');
+    for (const deletedId of toDeleteIds) {
+      assert.ok(!afterConcurrentDelete.some((r) => r.id === deletedId), `Record ${deletedId} must not exist`);
+    }
+  });
+
+  await t.test('honors process.env.WOOD_RECORDS_PATH when custom path is not passed', async () => {
+    const envTestPath = path.join(process.cwd(), 'data', 'test_env_records.json');
+    process.env.WOOD_RECORDS_PATH = envTestPath;
+    try {
+      const envStore = new ServerRecordStore();
+      const records = await envStore.getAll();
+      assert.equal(records.length, 4);
+      const exists = await fs.stat(envTestPath).then(() => true).catch(() => false);
+      assert.ok(exists, 'File at process.env.WOOD_RECORDS_PATH should be created');
+    } finally {
+      delete process.env.WOOD_RECORDS_PATH;
+      await fs.rm(envTestPath, { force: true }).catch(() => {});
+    }
+  });
 });
 
 test('Records API Route Handlers Suite', async (t) => {
@@ -223,6 +289,44 @@ test('Records API Route Handlers Suite', async (t) => {
     assert.equal(res.status, 400);
     const body = await res.json();
     assert.equal(body.success, false);
+  });
+
+  await t.test('POST /api/records validates tallyVolumeM3 must be a positive finite number', async () => {
+    // Negative volume
+    const reqNegative = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ woodSpecies: 'Teak', tallyVolumeM3: -5 }),
+    });
+    const resNegative = await POST(reqNegative);
+    assert.equal(resNegative.status, 400);
+
+    // Zero volume
+    const reqZero = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ woodSpecies: 'Teak', tallyVolumeM3: 0 }),
+    });
+    const resZero = await POST(reqZero);
+    assert.equal(resZero.status, 400);
+
+    // Non-numeric / NaN volume
+    const reqNaN = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ woodSpecies: 'Teak', tallyVolumeM3: NaN }),
+    });
+    const resNaN = await POST(reqNaN);
+    assert.equal(resNaN.status, 400);
   });
 
   await t.test('POST /api/records with roleLevel 1 or 2 saves valid record', async () => {
