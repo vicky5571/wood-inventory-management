@@ -273,6 +273,14 @@ export interface AuthApiResponse {
 export type ToastType = 'success' | 'info' | 'warning' | 'error';
 
 /**
+ * Action button inside a toast notification (e.g. Undo)
+ */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+/**
  * Global toast notification message item
  */
 export interface ToastItem {
@@ -281,6 +289,7 @@ export interface ToastItem {
   title: string;
   description?: string;
   durationMs?: number;
+  action?: ToastAction;
 }
 
 

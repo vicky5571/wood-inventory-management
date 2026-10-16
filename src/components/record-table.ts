@@ -155,7 +155,7 @@ export function renderRecordTable(
   container.querySelectorAll<HTMLButtonElement>('.btn-delete').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      if (id && confirm('Apakah Anda yakin ingin menghapus data penerimaan ini?')) {
+      if (id) {
         onDelete(id);
       }
     });

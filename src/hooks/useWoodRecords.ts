@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics } from '../types/index.ts';
 import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
 import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
+import { toast } from '../utils/toast-store.ts';
 
 const STORAGE_KEY = 'wood_receiving_records_next_v1';
 
@@ -64,13 +65,53 @@ export function useWoodRecords() {
     });
   }, [persist]);
 
-  const deleteRecord = useCallback((id: string) => {
+  const restoreRecord = useCallback((record: WoodReceivingRecord, index?: number) => {
     setAllRecords((prev) => {
-      const next = prev.filter((r) => r.id !== id);
+      if (prev.some((r) => r.id === record.id)) return prev;
+      const next = [...prev];
+      if (typeof index === 'number' && index >= 0 && index <= next.length) {
+        next.splice(index, 0, record);
+      } else {
+        next.unshift(record);
+      }
       persist(next);
       return next;
     });
   }, [persist]);
+
+  const deleteRecord = useCallback((id: string, options?: { showUndoToast?: boolean }) => {
+    setAllRecords((prev) => {
+      const target = prev.find((r) => r.id === id);
+      const targetIndex = prev.findIndex((r) => r.id === id);
+      if (!target) return prev;
+
+      const next = prev.filter((r) => r.id !== id);
+      persist(next);
+
+      if (options?.showUndoToast !== false) {
+        const plate = target.truckPlateNumber ? `Truk ${target.truckPlateNumber}` : 'Penerimaan';
+        const vol = target.tallyVolumeM3 ? `${target.tallyVolumeM3} m³` : '0 m³';
+
+        toast.warning(
+          'Data Penerimaan Dihapus (入库记录已删除)',
+          `${plate} • ${vol} (${target.woodSpecies || 'Kayu'})`,
+          5000,
+          {
+            label: 'Urungkan (撤销)',
+            onClick: () => {
+              restoreRecord(target, targetIndex);
+              toast.success(
+                'Data Penerimaan Dipulihkan (已恢复)',
+                `${plate} berhasil dikembalikan ke buku besar.`
+              );
+            },
+          }
+        );
+      }
+
+      return next;
+    });
+  }, [persist, restoreRecord]);
 
   const resetDemo = useCallback(() => {
     const seed = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
@@ -172,6 +213,7 @@ export function useWoodRecords() {
     setFilters,
     saveRecord,
     deleteRecord,
+    restoreRecord,
     resetDemo,
     exportCsv,
   };

@@ -91,6 +91,13 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     const filtered = prepended.filter((r) => r.id !== 'rec-new-999');
     assert.strictEqual(filtered.length, 4);
     assert.ok(filtered.every((r) => r.id !== 'rec-new-999'));
+
+    // Simulating restoreRecord / undo operation
+    const restored = [...filtered];
+    restored.unshift(newRecord);
+    assert.strictEqual(restored.length, 5);
+    assert.strictEqual(restored[0].id, 'rec-new-999');
+    assert.deepStrictEqual(restored[0], newRecord);
   });
 
   await t.test('Filter criteria logic accurately filters by species, kavling, date, and query', () => {

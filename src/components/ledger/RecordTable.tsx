@@ -188,13 +188,9 @@ export function RecordTable({
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Apakah Anda yakin ingin menghapus data penerimaan ini?')) {
-                              onDelete(r.id);
-                            }
-                          }}
-                          className="p-1.5 text-gray-400 hover:text-[#ed1c24] hover:bg-rose-50 rounded-lg transition"
-                          title="Hapus data"
+                          onClick={() => onDelete(r.id)}
+                          className="p-1.5 text-gray-400 hover:text-[#ed1c24] hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          title="Hapus data (Dapat diurungkan / Undo)"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

@@ -22,7 +22,7 @@
 | **P0** | Usability / Filtering | Date range filtering missing from Toolbar UI | Owners cannot isolate weekly or monthly batches/cash outlays | [Toolbar.tsx:L40-L86](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/Toolbar.tsx#L40-L86) |
 | **P1** | Data Standardization | Free-text timber species input field | Inconsistent naming ("Teak", "teak", "Jati") fragments analytics | [RecordModal.tsx:L228-L240](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/RecordModal.tsx#L228-L240) |
 | **P1** | User Feedback | Silent modal dismissal on submission without toast feedback | RESOLVED: Immediate non-blocking toast notification confirming plate, volume, and species on save/update | [RecordModal.tsx:L87-L115](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/RecordModal.tsx#L87-L115) |
-| **P1** | Data Safety | Unforgiving record deletion with zero undo window | Accidental click in busy factory permanently drops ledger row | [RecordTable.tsx:L191-L195](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/RecordTable.tsx#L191-L195) |
+| **P1** | Data Safety | Unforgiving record deletion with zero undo window | RESOLVED: Soft-delete with immediate 5-second undo toast & position restoration | [RecordTable.tsx:L190-L196](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/RecordTable.tsx#L190-L196) |
 | **P1** | Information Architecture | 14 unprioritized table columns require horizontal scroll | Crucial discrepancy and totals pushed off-screen on laptops | [RecordTable.tsx:L45-L68](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/RecordTable.tsx#L45-L68) |
 | **P2** | Workflow Friction | Tally dimension calculator hidden in collapsed accordion | Users manually calculate volume off-app; unit confusion (cm vs m) | [TallyDimensionCalculator.tsx:L40-L75](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/ledger/TallyDimensionCalculator.tsx#L40-L75) |
 | **P2** | Executive Analytics | Volume-only KPIs with missing business metrics | No average cost/m³, discrepancy rates, or supplier exposure | [KpiCards.tsx:L32-L78](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCards.tsx#L32-L78) |
@@ -91,7 +91,7 @@ div.flex.h-screen.w-screen.overflow-hidden
 ### Phase 2: Workflow Refinement & Data Standardization (P1)
 - [ ] **Species Combobox:** Replace free-text input with a searchable combobox populated with existing timber varieties (Jati, Merbau, Kamper, Bengkirai, etc.) while allowing custom entry.
 - [x] **Save Feedback (Done):** Added non-blocking toast notification system (`Toast.tsx`, `toast-store.ts`) triggered immediately on modal submission with truck plate, tally volume, and timber species breakdown.
-- [ ] **Undo Support:** Implement soft-delete with a 5-second undo toast for record deletions.
+- [x] **Undo Support (Done):** Implemented soft-delete in `useWoodRecords.ts` and `RecordTable.tsx` with non-blocking 5-second undo toast (`Urungkan (撤销)` action) restoring original item index and persistent storage.
 - [ ] **Table Ergonomics:** Make the Date/ID column sticky on the left, make Actions sticky on the right, and add responsive column toggling.
 
 ### Phase 3: Financial Analytics & Physical Utility (P2 - P3)

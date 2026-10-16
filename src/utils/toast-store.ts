@@ -6,7 +6,7 @@
  * and compatible with React 19's useSyncExternalStore.
  */
 
-import type { ToastItem, ToastType } from '../types/index.ts';
+import type { ToastItem, ToastType, ToastAction } from '../types/index.ts';
 
 class ToastStore {
   private toasts: ToastItem[] = [];
@@ -94,17 +94,20 @@ class ToastStore {
 export const toastStore = new ToastStore();
 
 export const toast = {
-  success(title: string, description?: string, durationMs?: number): string {
-    return toastStore.addToast({ type: 'success', title, description, durationMs }, 'success', durationMs ?? 4000);
+  success(title: string, description?: string, durationMs?: number, action?: ToastAction): string {
+    return toastStore.addToast({ type: 'success', title, description, durationMs, action }, 'success', durationMs ?? 4000);
   },
-  error(title: string, description?: string, durationMs?: number): string {
-    return toastStore.addToast({ type: 'error', title, description, durationMs }, 'error', durationMs ?? 5000);
+  error(title: string, description?: string, durationMs?: number, action?: ToastAction): string {
+    return toastStore.addToast({ type: 'error', title, description, durationMs, action }, 'error', durationMs ?? 5000);
   },
-  info(title: string, description?: string, durationMs?: number): string {
-    return toastStore.addToast({ type: 'info', title, description, durationMs }, 'info', durationMs ?? 4000);
+  info(title: string, description?: string, durationMs?: number, action?: ToastAction): string {
+    return toastStore.addToast({ type: 'info', title, description, durationMs, action }, 'info', durationMs ?? 4000);
   },
-  warning(title: string, description?: string, durationMs?: number): string {
-    return toastStore.addToast({ type: 'warning', title, description, durationMs }, 'warning', durationMs ?? 4500);
+  warning(title: string, description?: string, durationMs?: number, action?: ToastAction): string {
+    return toastStore.addToast({ type: 'warning', title, description, durationMs, action }, 'warning', durationMs ?? 4500);
+  },
+  show(options: Omit<ToastItem, 'id'>): string {
+    return toastStore.addToast(options, options.type, options.durationMs ?? 4000);
   },
   remove(id: string): void {
     toastStore.removeToast(id);

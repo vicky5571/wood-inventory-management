@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useSyncExternalStore } from 'react';
-import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X, Undo2 } from 'lucide-react';
 import { toastStore, toast } from '@/src/utils/toast-store';
 import type { ToastItem, ToastType } from '@/src/types';
 
@@ -72,6 +72,21 @@ export function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id
           <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed break-words font-medium">
             {item.description}
           </p>
+        )}
+        {item.action && (
+          <div className="mt-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                item.action?.onClick();
+                onDismiss(item.id);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#101828] text-white hover:bg-[#1f2937] active:scale-95 transition-all shadow-xs cursor-pointer"
+            >
+              <Undo2 className="w-3.5 h-3.5 text-[#ffc908]" />
+              <span>{item.action.label}</span>
+            </button>
+          </div>
         )}
       </div>
 

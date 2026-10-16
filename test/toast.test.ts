@@ -88,4 +88,23 @@ test('Toast Store & Notification Management Suite', async (t) => {
     await new Promise((resolve) => setTimeout(resolve, 80));
     assert.strictEqual(toastStore.getToasts().length, 0);
   });
+
+  await t.test('supports interactive action buttons such as Undo', () => {
+    let actionTriggered = false;
+    const id = toast.warning('Data Dihapus', 'Truk B 1234 CD', 5000, {
+      label: 'Urungkan (Undo)',
+      onClick: () => {
+        actionTriggered = true;
+      },
+    });
+
+    const toasts = toastStore.getToasts();
+    assert.strictEqual(toasts.length, 1);
+    assert.strictEqual(toasts[0].id, id);
+    assert.ok(toasts[0].action);
+    assert.strictEqual(toasts[0].action?.label, 'Urungkan (Undo)');
+
+    toasts[0].action?.onClick();
+    assert.strictEqual(actionTriggered, true);
+  });
 });
