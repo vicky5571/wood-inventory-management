@@ -67,7 +67,10 @@ export function SupplierBarChart({ records }: { records: WoodReceivingRecord[] }
             padding: 10,
             cornerRadius: 10,
             callbacks: {
-              label: (context) => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)} m³`,
+              label: (context) => {
+                const y = context.parsed.y ?? 0;
+                return ` ${context.dataset.label}: ${y.toFixed(2)} m³`;
+              },
             },
           },
         },

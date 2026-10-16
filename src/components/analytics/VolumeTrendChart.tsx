@@ -84,7 +84,10 @@ export function VolumeTrendChart({ records }: { records: WoodReceivingRecord[] }
             titleFont: { size: 12, weight: 600 },
             bodyFont: { size: 11 },
             callbacks: {
-              label: (context) => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)} m³`,
+              label: (context) => {
+                const y = context.parsed.y ?? 0;
+                return ` ${context.dataset.label}: ${y.toFixed(2)} m³`;
+              },
             },
           },
         },
