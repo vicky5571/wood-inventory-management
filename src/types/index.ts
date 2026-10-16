@@ -292,5 +292,55 @@ export interface ToastItem {
   action?: ToastAction;
 }
 
+/**
+ * Supplier / Vendor Performance & Scorecard Summary
+ */
+export interface SupplierSummary {
+  supplierName: string;
+  totalDeliveries: number;
+  totalDeliveredVolumeM3: number;
+  totalTallyVolumeM3: number;
+  volumeDiscrepancyM3: number;
+  discrepancyRatePercent: number; // Discrepancy / Delivered * 100
+  totalGrandNetPayable: number;
+  primarySpecies: string[];
+  lastDeliveryDate: string;
+  status: 'OPTIMAL' | 'ACCEPTABLE' | 'ATTENTION';
+}
 
+/**
+ * Audit trail event action categories
+ */
+export type ActivityActionType =
+  | 'RECORD_CREATED'
+  | 'RECORD_UPDATED'
+  | 'RECORD_DELETED'
+  | 'RECORD_RESTORED'
+  | 'DEMO_RESET'
+  | 'SETTINGS_UPDATED';
 
+/**
+ * Operational audit log entry item
+ */
+export interface ActivityLogEntry {
+  id: string;
+  action: ActivityActionType;
+  entityId?: string;
+  entitySummary: string;
+  operatorName: string;
+  operatorRole: string;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Global warehouse configuration and tax rate settings
+ */
+export interface AppSettings {
+  defaultTimberPphRate: number;
+  defaultFreightPphRate: number;
+  defaultBrokerFee: number;
+  acceptableDiscrepancyThresholdPct: number;
+  yardName: string;
+  yardCode: string;
+}
