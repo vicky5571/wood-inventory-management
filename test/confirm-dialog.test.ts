@@ -15,6 +15,7 @@ test('ConfirmDialog Component & Safeguard Contract Suite', async (t) => {
   const typesPath = path.resolve(process.cwd(), 'src/types/index.ts');
   const ledgerPath = path.resolve(process.cwd(), 'app/ledger/page.tsx');
   const suppliersPath = path.resolve(process.cwd(), 'app/suppliers/page.tsx');
+  const statsGridPath = path.resolve(process.cwd(), 'src/components/suppliers/SupplierStatsGrid.tsx');
 
   await t.test('ConfirmDialog.tsx exists and stays strictly within the 120 LOC ceiling', () => {
     assert.ok(fs.existsSync(dialogPath), 'src/components/ui/ConfirmDialog.tsx must exist');
@@ -26,37 +27,48 @@ test('ConfirmDialog Component & Safeguard Contract Suite', async (t) => {
     );
   });
 
-  await t.test('ConfirmDialog exports component and defines ConfirmDialogProps interface contract', () => {
-    const content = fs.readFileSync(dialogPath, 'utf-8');
-    assert.match(content, /export (function|const) ConfirmDialog/, 'Must export ConfirmDialog component');
-    assert.match(content, /export interface ConfirmDialogProps/, 'Must export ConfirmDialogProps');
-    assert.match(content, /isOpen:\s*boolean/);
-    assert.match(content, /title:\s*string/);
-    assert.match(content, /description:\s*string/);
-    assert.match(content, /confirmLabel\?:\s*string/);
-    assert.match(content, /cancelLabel\?:\s*string/);
-    assert.match(content, /isDestructive\?:\s*boolean/);
-    assert.match(content, /onConfirm:\s*\(\)\s*=>\s*void/);
-    assert.match(content, /onCancel:\s*\(\)\s*=>\s*void/);
-  });
-
-  await t.test('SSOT types definition exports ConfirmDialogProps', () => {
+  await t.test('SSOT types definition exports ConfirmDialogProps and ConfirmDialog re-exports it without duplicate interface', () => {
     assert.ok(fs.existsSync(typesPath), 'src/types/index.ts must exist');
-    const content = fs.readFileSync(typesPath, 'utf-8');
-    assert.match(content, /export interface ConfirmDialogProps/, 'SSOT must export ConfirmDialogProps');
+    const typesContent = fs.readFileSync(typesPath, 'utf-8');
+    assert.match(typesContent, /export interface ConfirmDialogProps/, 'SSOT must export ConfirmDialogProps');
+    assert.match(typesContent, /isOpen:\s*boolean/);
+    assert.match(typesContent, /title:\s*string/);
+    assert.match(typesContent, /description:\s*string/);
+    assert.match(typesContent, /confirmLabel\?:\s*string/);
+    assert.match(typesContent, /cancelLabel\?:\s*string/);
+    assert.match(typesContent, /isDestructive\?:\s*boolean/);
+    assert.match(typesContent, /onConfirm:\s*\(\)\s*=>\s*void/);
+    assert.match(typesContent, /onCancel:\s*\(\)\s*=>\s*void/);
+
+    const dialogContent = fs.readFileSync(dialogPath, 'utf-8');
+    assert.match(dialogContent, /export (function|const) ConfirmDialog/, 'Must export ConfirmDialog component');
+    assert.match(dialogContent, /import type \{ ConfirmDialogProps \} from ['"]@\/src\/types['"]/, 'Must import ConfirmDialogProps from SSOT');
+    assert.match(dialogContent, /export type \{ ConfirmDialogProps \} from ['"]@\/src\/types['"]/, 'Must re-export ConfirmDialogProps from SSOT');
+    assert.doesNotMatch(dialogContent, /export interface ConfirmDialogProps/, 'Must NOT define a duplicate inline interface in component file');
   });
 
-  await t.test('ConfirmDialog implements accessibility standards and Escape key dismissal', () => {
+  await t.test('ConfirmDialog implements accessibility standards, autoFocus on Cancel, and Escape key dismissal', () => {
     const content = fs.readFileSync(dialogPath, 'utf-8');
     assert.match(content, /role=["']dialog["']/, 'Must include ARIA role="dialog"');
     assert.match(content, /aria-modal=["']true["']/, 'Must include aria-modal="true"');
     assert.match(content, /aria-labelledby/, 'Must include aria-labelledby');
     assert.match(content, /aria-describedby/, 'Must include aria-describedby');
+    assert.match(content, /autoFocus=\{true\}/, 'Cancel button must have autoFocus for keyboard focus accessibility');
     assert.match(content, /Escape/, 'Must listen for Escape key');
     assert.match(content, /addEventListener\(['"]keydown['"]/, 'Must bind keydown listener');
     assert.match(content, /removeEventListener\(['"]keydown['"]/, 'Must clean up keydown listener');
     assert.match(content, /z-50/, 'Must have z-50 backdrop');
     assert.match(content, /backdrop-blur/, 'Must have backdrop blur');
+  });
+
+  await t.test('app/suppliers/page.tsx strictly obeys coordinator LOC limit (< 250 LOC) and extracts KPI cards', () => {
+    assert.ok(fs.existsSync(suppliersPath), 'app/suppliers/page.tsx must exist');
+    const content = fs.readFileSync(suppliersPath, 'utf-8');
+    const lines = content.split('\n');
+    assert.ok(lines.length < 250, `app/suppliers/page.tsx LOC (${lines.length}) must be strictly < 250 LOC`);
+
+    assert.ok(fs.existsSync(statsGridPath), 'src/components/suppliers/SupplierStatsGrid.tsx must exist');
+    assert.match(content, /SupplierStatsGrid/, 'Suppliers page must import and render SupplierStatsGrid');
   });
 
   await t.test('app/ledger/page.tsx wires ConfirmDialog for record deletions with undo safeguard notice', () => {

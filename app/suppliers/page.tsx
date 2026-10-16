@@ -9,16 +9,14 @@ import { toast } from '@/src/utils/toast-store';
 import { SupplierCard } from '@/src/components/suppliers/SupplierCard';
 import { SupplierTable } from '@/src/components/suppliers/SupplierTable';
 import { SupplierModal } from '@/src/components/suppliers/SupplierModal';
+import { SupplierStatsGrid } from '@/src/components/suppliers/SupplierStatsGrid';
 import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
 import type { Supplier, SupplierWithMetrics } from '@/src/types';
 import {
   Building2,
-  CheckCircle2,
-  AlertTriangle,
   LayoutGrid,
   List,
   Search,
-  Box,
   Plus,
 } from 'lucide-react';
 
@@ -31,21 +29,15 @@ export default function SuppliersPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    supplier: Partial<Supplier> | null;
-  }>({
+  const [modalState, setModalState] = useState<{ isOpen: boolean; supplier: Partial<Supplier> | null }>({
     isOpen: false,
     supplier: null,
   });
   const [pendingDeleteSupplier, setPendingDeleteSupplier] = useState<{ id: string; name: string } | null>(null);
 
-
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {
-      if (statusFilter !== 'ALL' && s.status !== statusFilter) {
-        return false;
-      }
+      if (statusFilter !== 'ALL' && s.status !== statusFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase().trim();
       const matchName = s.name.toLowerCase().includes(q) || s.supplierName.toLowerCase().includes(q);
@@ -56,17 +48,9 @@ export default function SuppliersPage() {
     });
   }, [suppliers, searchQuery, statusFilter]);
 
-  const handleOpenAdd = () => {
-    setModalState({ isOpen: true, supplier: null });
-  };
-
-  const handleOpenEdit = (supplier: SupplierWithMetrics) => {
-    setModalState({ isOpen: true, supplier });
-  };
-
-  const handleCloseModal = () => {
-    setModalState({ isOpen: false, supplier: null });
-  };
+  const handleOpenAdd = () => setModalState({ isOpen: true, supplier: null });
+  const handleOpenEdit = (supplier: SupplierWithMetrics) => setModalState({ isOpen: true, supplier });
+  const handleCloseModal = () => setModalState({ isOpen: false, supplier: null });
 
   const handleSaveSupplier = (data: Partial<Supplier> & { name: string }) => {
     if (data.id) {
@@ -78,10 +62,7 @@ export default function SuppliersPage() {
         operatorName: user?.name,
         operatorRole: user?.title,
       });
-      toast.success(
-        'Data Pemasok Diperbarui (更新成功)',
-        `${updated.name} (${updated.code}) berhasil disimpan.`
-      );
+      toast.success('Data Pemasok Diperbarui (更新成功)', `${updated.name} (${updated.code}) berhasil disimpan.`);
     } else {
       const created = addSupplier(data);
       addLog({
@@ -91,10 +72,7 @@ export default function SuppliersPage() {
         operatorName: user?.name,
         operatorRole: user?.title,
       });
-      toast.success(
-        'Pemasok Baru Didaftarkan (新增成功)',
-        `${created.name} (${created.code}) berhasil masuk master data.`
-      );
+      toast.success('Pemasok Baru Didaftarkan (新增成功)', `${created.name} (${created.code}) berhasil masuk master data.`);
     }
   };
 
@@ -172,63 +150,8 @@ export default function SuppliersPage() {
       </div>
 
       {/* Supplier Performance KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
-              Total Pemasok Terdaftar
-            </span>
-            <span className="block text-xl font-bold font-mono text-[#101828]">
-              {stats.totalVendors} Rekanan
-            </span>
-          </div>
-        </div>
+      <SupplierStatsGrid stats={stats} />
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
-              Kualitas Optimal (&lt;1%)
-            </span>
-            <span className="block text-xl font-bold font-mono text-emerald-700">
-              {stats.optimalCount} Rekanan
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
-              Perlu Perhatian (&gt;3%)
-            </span>
-            <span className="block text-xl font-bold font-mono text-rose-700">
-              {stats.attentionCount} Rekanan
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <Box className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">
-              Total Volume Pasokan
-            </span>
-            <span className="block text-xl font-bold font-mono text-[#101828]">
-              {stats.totalVolumeM3.toFixed(2)} m³
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Search Bar & Status Filter */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

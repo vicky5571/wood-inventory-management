@@ -2,17 +2,9 @@
 
 import React, { useEffect } from 'react';
 import { AlertTriangle, AlertCircle, X } from 'lucide-react';
+import type { ConfirmDialogProps } from '@/src/types';
 
-export interface ConfirmDialogProps {
-  isOpen: boolean;
-  title: string;
-  description: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  isDestructive?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
+export type { ConfirmDialogProps } from '@/src/types';
 
 export function ConfirmDialog({
   isOpen,
@@ -83,8 +75,9 @@ export function ConfirmDialog({
         <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
           <button
             type="button"
+            autoFocus={true}
             onClick={onCancel}
-            className="px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 active:scale-95 transition shadow-2xs cursor-pointer"
+            className="px-3.5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 active:scale-95 transition shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             {cancelLabel}
           </button>

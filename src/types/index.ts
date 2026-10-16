@@ -350,6 +350,17 @@ export interface SupplierWithMetrics extends Supplier {
 }
 
 /**
+ * Aggregated summary statistics for Supplier Directory KPIs
+ */
+export interface SupplierStats {
+  totalVendors: number;
+  optimalCount: number;
+  attentionCount: number;
+  totalVolumeM3: number;
+  avgDiscrepancyPct?: number;
+}
+
+/**
  * Audit trail event action categories
  */
 export type ActivityActionType =
