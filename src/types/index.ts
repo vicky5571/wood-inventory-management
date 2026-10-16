@@ -337,6 +337,7 @@ export interface SupplierFilterCriteria {
  * Supplier Profile merged with dynamic receiving ledger scorecard metrics
  */
 export interface SupplierWithMetrics extends Supplier {
+  supplierName: string; // Backward compatibility alias to name
   totalDeliveries: number;
   totalDeliveredVolumeM3: number;
   totalTallyVolumeM3: number;
