@@ -100,6 +100,8 @@ export function aggregateDashboardMetrics(
   let totalNetTimberPayable = 0;
   let totalNetFreightPayable = 0;
   let totalGrandExpenditure = 0;
+  let totalOutstandingPayable = 0;
+  let unpaidRecordsCount = 0;
 
   const kavlingSet = new Set<string>();
   const speciesVolumeBreakdown: Record<string, number> = {};
@@ -112,6 +114,12 @@ export function aggregateDashboardMetrics(
     totalNetTimberPayable += r.timberNetPayable;
     totalNetFreightPayable += r.freightNetPayable;
     totalGrandExpenditure += r.grandNetPayable;
+
+    const status = r.paymentStatus || 'UNPAID';
+    if (status !== 'PAID') {
+      totalOutstandingPayable += r.grandNetPayable;
+      unpaidRecordsCount += 1;
+    }
 
     if (r.kavlingNumber && r.kavlingNumber.trim()) {
       kavlingSet.add(r.kavlingNumber.trim());
@@ -133,6 +141,8 @@ export function aggregateDashboardMetrics(
     totalNetTimberPayable: Number(totalNetTimberPayable.toFixed(2)),
     totalNetFreightPayable: Number(totalNetFreightPayable.toFixed(2)),
     totalGrandExpenditure: Number(totalGrandExpenditure.toFixed(2)),
+    totalOutstandingPayable: Number(totalOutstandingPayable.toFixed(2)),
+    unpaidRecordsCount,
     totalRecordsCount: records.length,
     activeKavlingCount: kavlingSet.size,
     speciesVolumeBreakdown,

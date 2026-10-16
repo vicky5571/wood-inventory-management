@@ -136,8 +136,48 @@ export function Toolbar({
         )}
       </div>
 
-      {/* Quick-Filter Species Pills */}
+      {/* Quick-Filter Payment Status Pills */}
       <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-gray-100/80">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">
+          Status Bayar:
+        </span>
+        <button
+          type="button"
+          onClick={() => onFilterChange({ ...filters, paymentStatus: undefined })}
+          className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium ${
+            !filters.paymentStatus || filters.paymentStatus === 'ALL'
+              ? 'bg-[#ffc908] text-[#101828] border-[#ffc908] font-bold shadow-2xs'
+              : 'bg-gray-50 text-gray-600 border-gray-200/80 hover:bg-gray-100 hover:text-gray-900'
+          }`}
+        >
+          Semua Status (全部)
+        </button>
+        <button
+          type="button"
+          onClick={() => onFilterChange({ ...filters, paymentStatus: filters.paymentStatus === 'UNPAID' ? undefined : 'UNPAID' })}
+          className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium ${
+            filters.paymentStatus === 'UNPAID'
+              ? 'bg-rose-500 text-white border-rose-500 font-bold shadow-2xs'
+              : 'bg-gray-50 text-gray-600 border-gray-200/80 hover:bg-gray-100 hover:text-gray-900'
+          }`}
+        >
+          Belum Lunas (未付)
+        </button>
+        <button
+          type="button"
+          onClick={() => onFilterChange({ ...filters, paymentStatus: filters.paymentStatus === 'PAID' ? undefined : 'PAID' })}
+          className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium ${
+            filters.paymentStatus === 'PAID'
+              ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-2xs'
+              : 'bg-gray-50 text-gray-600 border-gray-200/80 hover:bg-gray-100 hover:text-gray-900'
+          }`}
+        >
+          Lunas (已结清)
+        </button>
+      </div>
+
+      {/* Quick-Filter Species Pills */}
+      <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100/60">
         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">
           Spesies:
         </span>

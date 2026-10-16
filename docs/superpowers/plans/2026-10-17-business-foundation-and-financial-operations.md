@@ -129,129 +129,14 @@ git commit -m "feat: add auto-draft persistence and recovery banner to RecordMod
 **Interfaces:**
 - Produces: `<ConfirmDialog isOpen={...} title={...} description={...} confirmLabel={...} onConfirm={...} onCancel={...} />`
 
-- [ ] **Step 1: Write the failing test**
-
-```typescript
-// test/confirm-dialog.test.ts
-import { test } from 'node:test';
-import assert from 'node:assert';
-import { readFileSync } from 'fs';
-
-test('ConfirmDialog Component Contract Suite', async (t) => {
-  await t.test('ConfirmDialog exists and exports a callable React component', () => {
-    const file = readFileSync('./src/components/ui/ConfirmDialog.tsx', 'utf-8');
-    assert.ok(file.includes('export function ConfirmDialog'));
-    assert.ok(file.includes('onConfirm'));
-    assert.ok(file.includes('onCancel'));
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test test/confirm-dialog.test.ts`
-Expected: FAIL (`ENOENT: no such file or directory './src/components/ui/ConfirmDialog.tsx'`).
-
-- [ ] **Step 3: Write minimal implementation**
-
-Create `src/components/ui/ConfirmDialog.tsx`:
-
-```tsx
-'use client';
-
-import React, { useEffect } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
-
-export interface ConfirmDialogProps {
-  isOpen: boolean;
-  title: string;
-  description: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  isDestructive?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-
-export function ConfirmDialog({
-  isOpen,
-  title,
-  description,
-  confirmLabel = 'Konfirmasi (确认)',
-  cancelLabel = 'Batal (取消)',
-  isDestructive = true,
-  onConfirm,
-  onCancel,
-}: ConfirmDialogProps) {
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onCancel]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        <div className="p-5 flex items-start gap-4">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-            isDestructive ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'
-          }`}>
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-            <p className="mt-1 text-xs text-gray-600 leading-relaxed">{description}</p>
-          </div>
-
-          <button
-            onClick={onCancel}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex items-center justify-end gap-2.5">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3.5 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-100 rounded-xl transition shadow-2xs"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className={`px-4 py-1.5 text-xs font-bold text-white rounded-xl transition shadow-xs ${
-              isDestructive ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-600 hover:bg-amber-700'
-            }`}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-Wire `ConfirmDialog` into `app/ledger/page.tsx` and `app/suppliers/page.tsx` before executing `deleteRecord(id)` or `deleteSupplier(id)`.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test test/confirm-dialog.test.ts`
-Expected: PASS with 1 passing test.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write the failing test**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Write minimal implementation**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/components/ui/ConfirmDialog.tsx app/ledger/page.tsx app/suppliers/page.tsx test/confirm-dialog.test.ts
+git add src/components/ui/ConfirmDialog.tsx src/components/suppliers/SupplierStatsGrid.tsx app/ledger/page.tsx app/suppliers/page.tsx test/confirm-dialog.test.ts
 git commit -m "feat: add ConfirmDialog modal and wire into record and supplier delete actions"
 ```
 
@@ -272,7 +157,7 @@ git commit -m "feat: add ConfirmDialog modal and wire into record and supplier d
 - Consumes: `WoodReceivingRecord`
 - Produces: `PaymentStatus` ('UNPAID' | 'PARTIAL' | 'PAID'), `totalOutstandingPayable`, `unpaidRecordsCount`, and payment status UI badges/filters.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // test/payment-tracking.test.ts
@@ -355,12 +240,12 @@ test('Payment Status & Accounts Payable Aggregation Suite', async (t) => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test test/payment-tracking.test.ts`
 Expected: FAIL (`metrics.totalOutstandingPayable` is undefined).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 1. In `src/types/index.ts`:
 ```typescript
@@ -401,12 +286,12 @@ Add Payment Status filter pill group (`Semua`, `Belum Lunas`, `Lunas`).
 6. In `src/components/dashboard/KpiCards.tsx`:
 Add an Accounts Payable Hero Card displaying `totalOutstandingPayable` and count of pending disbursements.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test test/payment-tracking.test.ts`
 Expected: PASS with 1 passing test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/types/index.ts src/utils/timber-calc.ts src/components/ledger/RecordModal.tsx src/components/ledger/RecordTable.tsx src/components/ledger/Toolbar.tsx src/components/dashboard/KpiCards.tsx test/payment-tracking.test.ts

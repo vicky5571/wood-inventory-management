@@ -12,6 +12,16 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
+function renderPaymentBadge(status?: WoodReceivingRecord['paymentStatus']) {
+  if (status === 'PAID') {
+    return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#00bb7f] border border-emerald-200/80">Lunas / 已结清</span>;
+  }
+  if (status === 'PARTIAL') {
+    return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-[#b38600] border border-amber-200/80">Sebagian / 部分</span>;
+  }
+  return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#ed1c24] border border-rose-200/80">Belum Lunas / 未付</span>;
+}
+
 type SortField = 'receiptDate' | 'tallyVolumeM3' | 'grandNetPayable';
 type SortDirection = 'asc' | 'desc';
 
@@ -137,6 +147,9 @@ export function RecordTable({
                 </div>
                 <span className="block text-[10px] text-gray-400 font-sans font-normal">应付金额</span>
               </th>
+              <th className="p-3.5 whitespace-nowrap">
+                Status Bayar<span className="block text-[10px] text-gray-400 font-normal">付款状态</span>
+              </th>
               {canWrite && (
                 <th className="p-3.5 whitespace-nowrap text-center sticky right-0 z-20 bg-gray-50 border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                   Aksi<span className="block text-[10px] text-gray-400 font-normal">操作</span>
@@ -181,6 +194,7 @@ export function RecordTable({
                   <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.timberNetPayable)}</td>
                   <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.freightNetPayable)}</td>
                   <td className="p-3.5 font-bold font-mono tabular-nums text-[#101828] whitespace-nowrap">{formatRupiah(r.grandNetPayable)}</td>
+                  <td className="p-3.5 whitespace-nowrap">{renderPaymentBadge(r.paymentStatus)}</td>
                   {canWrite && (
                     <td className="p-3.5 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f3f4f6] transition-colors border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                       <div className="inline-flex items-center gap-1">

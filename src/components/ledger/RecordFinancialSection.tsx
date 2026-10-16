@@ -113,6 +113,84 @@ export function RecordFinancialSection({
           />
         </div>
       </div>
+
+      {/* Payment Lifecycle & Accounts Payable Section */}
+      <div className="mt-4 pt-3 border-t border-gray-200/80">
+        <div className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span>Status Pembayaran & Hutang (付款状态与应付账款)</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              Status Bayar (付款状态)
+            </label>
+            <select
+              value={form.paymentStatus || 'UNPAID'}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  paymentStatus: e.target.value as 'UNPAID' | 'PARTIAL' | 'PAID',
+                }))
+              }
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-medium cursor-pointer"
+            >
+              <option value="UNPAID">Belum Bayar (未付)</option>
+              <option value="PARTIAL">Sebagian (部分)</option>
+              <option value="PAID">Lunas (已结清)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              No. Faktur / Invoice (发票号)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. INV-2026-001"
+              value={form.invoiceNumber ?? ''}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  invoiceNumber: e.target.value,
+                }))
+              }
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              Tanggal Bayar (付款日期)
+            </label>
+            <input
+              type="date"
+              value={form.paymentDate ?? ''}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  paymentDate: e.target.value,
+                }))
+              }
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs cursor-pointer"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              Catatan Pembayaran (付款备注)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Lunas Transfer Bank"
+              value={form.paymentNotes ?? ''}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  paymentNotes: e.target.value,
+                }))
+              }
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

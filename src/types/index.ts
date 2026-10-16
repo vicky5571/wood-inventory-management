@@ -126,6 +126,11 @@ export interface VolumeCalculationResult {
 }
 
 /**
+ * Payment fulfillment status for timber inbound shipments.
+ */
+export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
+
+/**
  * Operational Work Item: Timber Inbound Delivery and Gate Tally Record.
  * Directly maps to bilingual factory receiving ledgers.
  */
@@ -170,6 +175,12 @@ export interface WoodReceivingRecord {
   brokerFee: number;             // Broker fee
   grandNetPayable: number;       // timberNetPayable + freightNetPayable + brokerFee
 
+  // Payment Lifecycle & AP Tracking
+  paymentStatus?: PaymentStatus; // Status Pembayaran / 付款状态 (UNPAID | PARTIAL | PAID)
+  invoiceNumber?: string;        // No. Faktur / Invoice / 发票号
+  paymentDate?: string;          // Tanggal Bayar / 付款日期 (YYYY-MM-DD)
+  paymentNotes?: string;         // Catatan Pembayaran / 付款备注
+
   createdAt: string;
   updatedAt: string;
 }
@@ -183,6 +194,7 @@ export interface RecordFilterCriteria {
   kavling?: string;
   startDate?: string;
   endDate?: string;
+  paymentStatus?: PaymentStatus | 'ALL';
 }
 
 /**
@@ -198,6 +210,8 @@ export interface DashboardMetrics {
   totalNetTimberPayable: number;
   totalNetFreightPayable: number;
   totalGrandExpenditure: number;
+  totalOutstandingPayable: number;
+  unpaidRecordsCount: number;
   totalRecordsCount: number;
   activeKavlingCount: number;
   speciesVolumeBreakdown: Record<string, number>;
