@@ -8,6 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        canvas: '#f0f2f5', // Soft Slate Grey background for improved card contrast
         wood: {
           50: '#fdf8f6',
           100: '#f2e8e5',

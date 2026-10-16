@@ -13,7 +13,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9fafb]">
+    <div className="min-h-screen flex flex-col bg-canvas">
       {/* Sidebar Navigation (Desktop docked & Mobile slide-out drawer) */}
       <Sidebar />
 
