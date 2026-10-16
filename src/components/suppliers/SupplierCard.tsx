@@ -1,8 +1,19 @@
 'use client';
 
 import React from 'react';
-import type { SupplierSummary } from '@/src/types';
-import { Building2, CheckCircle2, AlertCircle, AlertTriangle, Calendar, Layers } from 'lucide-react';
+import type { SupplierWithMetrics, SupplierSummary, Supplier } from '@/src/types';
+import {
+  Building2,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Calendar,
+  Layers,
+  Edit2,
+  Trash2,
+  User,
+  Phone,
+} from 'lucide-react';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -12,12 +23,23 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
-export function SupplierCard({ supplier }: { supplier: SupplierSummary }) {
-  const isOptimal = supplier.status === 'OPTIMAL';
-  const isAcceptable = supplier.status === 'ACCEPTABLE';
+interface SupplierCardProps {
+  supplier: SupplierWithMetrics | (SupplierSummary & Partial<Supplier>);
+  onEdit?: (supplier: SupplierWithMetrics) => void;
+  onDelete?: (id: string, name: string) => void;
+  canWrite?: boolean;
+}
+
+export function SupplierCard({ supplier, onEdit, onDelete, canWrite = true }: SupplierCardProps) {
+  const rating = ('ratingStatus' in supplier && supplier.ratingStatus) || supplier.status || 'OPTIMAL';
+  const isOptimal = rating === 'OPTIMAL';
+  const isAcceptable = rating === 'ACCEPTABLE';
+
+  const name = supplier.name || supplier.supplierName || 'Pemasok';
+  const code = supplier.code;
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-4 group">
+    <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-3.5 group">
       {/* Header & Status */}
       <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-3">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -25,11 +47,18 @@ export function SupplierCard({ supplier }: { supplier: SupplierSummary }) {
             <Building2 className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-xs font-bold text-gray-900 truncate" title={supplier.supplierName}>
-              {supplier.supplierName}
-            </h3>
-            <span className="text-[11px] text-gray-400 font-sans">
-              Rekanan Terdaftar
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-gray-900 truncate" title={name}>
+                {name}
+              </h3>
+              {code && (
+                <span className="font-mono text-[10px] font-bold text-sky-800 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-200/80 shrink-0">
+                  {code}
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-gray-400 font-sans block truncate">
+              {supplier.address || 'Rekanan Terdaftar'}
             </span>
           </div>
         </div>
@@ -54,6 +83,22 @@ export function SupplierCard({ supplier }: { supplier: SupplierSummary }) {
           </span>
         )}
       </div>
+
+      {/* PIC / Contact (if available) */}
+      {(supplier.contactPerson || supplier.phone) && (
+        <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-gray-50/70 border border-gray-100 text-[11px] text-gray-600">
+          <div className="flex items-center gap-1.5 truncate">
+            <User className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate font-medium">{supplier.contactPerson || 'PIC'}</span>
+          </div>
+          {supplier.phone && (
+            <div className="flex items-center gap-1 font-mono text-[10px] text-gray-500 shrink-0">
+              <Phone className="w-3 h-3 text-gray-400" />
+              <span>{supplier.phone}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -97,13 +142,41 @@ export function SupplierCard({ supplier }: { supplier: SupplierSummary }) {
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100/80 text-[10px] text-gray-500">
         <div className="flex items-center gap-1 truncate">
           <Layers className="w-3 h-3 text-gray-400 shrink-0" />
-          <span className="truncate">{supplier.primarySpecies.join(', ') || 'Kayu Alam'}</span>
+          <span className="truncate">{supplier.primarySpecies?.join(', ') || 'Kayu Alam'}</span>
         </div>
         <div className="flex items-center gap-1 shrink-0 font-mono text-gray-400">
           <Calendar className="w-3 h-3" />
-          <span>{supplier.lastDeliveryDate}</span>
+          <span>{supplier.lastDeliveryDate || '-'}</span>
         </div>
       </div>
+
+      {/* Action Buttons */}
+      {canWrite && (onEdit || onDelete) && (
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(supplier as SupplierWithMetrics)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200/80 transition flex items-center gap-1 cursor-pointer"
+              title="Edit Data Pemasok"
+            >
+              <Edit2 className="w-3 h-3" />
+              <span>Edit</span>
+            </button>
+          )}
+          {onDelete && supplier.id && (
+            <button
+              type="button"
+              onClick={() => onDelete(supplier.id, name)}
+              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition flex items-center gap-1 cursor-pointer"
+              title="Hapus Data Pemasok"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Hapus</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
