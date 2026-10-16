@@ -5,7 +5,7 @@
  * Typed according to the Single Source of Truth (SSOT) WoodReceivingRecord contract.
  */
 
-import type { WoodReceivingRecord } from '../types/index.ts';
+import type { WoodReceivingRecord, Supplier } from '../types/index.ts';
 
 export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
   {
@@ -133,3 +133,59 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     updatedAt: '2026-10-08T09:00:00.000Z',
   },
 ];
+
+export const SEED_SUPPLIERS: Supplier[] = [
+  {
+    id: 'spl-001',
+    code: 'SPL-001',
+    name: 'PT Wana Lestari Abadi',
+    contactPerson: 'Hendra Wijaya',
+    phone: '0812-8821-4401',
+    address: 'Jl. Trans Nabire Km 18, Nabire, Papua',
+    taxId: '01.345.678.9-951.000',
+    notes: 'Konsesi HPH resmi Nabire, spesialisasi Merbau dan Meranti Merah.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-01T08:00:00Z',
+  },
+  {
+    id: 'spl-002',
+    code: 'SPL-002',
+    name: 'CV Papua Rimba Sejahtera',
+    contactPerson: 'Suryanto Tan',
+    phone: '0813-9012-3342',
+    address: 'Kawasan Industri Arso, Keerom, Jayapura',
+    taxId: '02.456.789.1-952.000',
+    notes: 'Pemasok kayu log bulat alam, kuota stabil 200m³/bulan.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-05T09:00:00Z',
+    updatedAt: '2026-10-02T09:00:00Z',
+  },
+  {
+    id: 'spl-003',
+    code: 'SPL-003',
+    name: 'PT Kayu Makmur Nusantara',
+    contactPerson: 'Bambang Irawan',
+    phone: '0811-2345-6789',
+    address: 'Jl. Pelabuhan Jayapura No. 45, Jayapura',
+    taxId: '03.567.890.2-953.000',
+    notes: 'Rekanan Teak/Jati dan Kamper bersertifikat SVLK.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-10T10:00:00Z',
+    updatedAt: '2026-10-03T10:00:00Z',
+  },
+  {
+    id: 'spl-004',
+    code: 'SPL-004',
+    name: 'Koperasi Hutan Lestari',
+    contactPerson: 'Markus Waromi',
+    phone: '0821-4455-6677',
+    address: 'Distrik Sentani Timur, Jayapura',
+    taxId: '04.678.901.3-954.000',
+    notes: 'Koperasi hutan kemasyarakatan lokal, kayu Sengon dan Mahoni.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-15T11:00:00Z',
+    updatedAt: '2026-10-04T11:00:00Z',
+  },
+];
+

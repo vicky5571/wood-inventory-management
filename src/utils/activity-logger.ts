@@ -34,7 +34,16 @@ export function formatActivityDescription(action: ActivityActionType, summary: s
       return `Database di-reset ke data demonstrasi standar (重置示例数据)`;
     case 'SETTINGS_UPDATED':
       return `Pengaturan sistem diperbarui: ${summary} (更新设置)`;
+    case 'SUPPLIER_CREATED':
+      return `Pemasok baru didaftarkan: ${summary} (新增供应商)`;
+    case 'SUPPLIER_UPDATED':
+      return `Data pemasok diperbarui: ${summary} (更新供应商)`;
+    case 'SUPPLIER_DELETED':
+      return `Pemasok dihapus: ${summary} (删除供应商)`;
+    case 'SUPPLIER_RESTORED':
+      return `Pemasok dipulihkan: ${summary} (撤销恢复供应商)`;
     default:
       return summary;
   }
 }
+

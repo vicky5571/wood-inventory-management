@@ -309,6 +309,46 @@ export interface SupplierSummary {
 }
 
 /**
+ * Global Master Data: Timber Supplier / Vendor Profile
+ */
+export interface Supplier {
+  id: string;
+  code: string;               // e.g. "SPL-001"
+  name: string;               // PT / CV / Koperasi name
+  contactPerson?: string;     // PIC / Perwakilan
+  phone?: string;             // WhatsApp / Phone
+  address?: string;           // Base of operations / TPK Origin
+  taxId?: string;             // NPWP
+  notes?: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Filter & Search Criteria for Supplier Directory
+ */
+export interface SupplierFilterCriteria {
+  searchQuery?: string;
+  status?: 'ALL' | 'ACTIVE' | 'INACTIVE';
+}
+
+/**
+ * Supplier Profile merged with dynamic receiving ledger scorecard metrics
+ */
+export interface SupplierWithMetrics extends Supplier {
+  totalDeliveries: number;
+  totalDeliveredVolumeM3: number;
+  totalTallyVolumeM3: number;
+  volumeDiscrepancyM3: number;
+  discrepancyRatePercent: number;
+  totalGrandNetPayable: number;
+  primarySpecies: string[];
+  lastDeliveryDate: string;
+  ratingStatus: 'OPTIMAL' | 'ACCEPTABLE' | 'ATTENTION';
+}
+
+/**
  * Audit trail event action categories
  */
 export type ActivityActionType =
@@ -317,7 +357,11 @@ export type ActivityActionType =
   | 'RECORD_DELETED'
   | 'RECORD_RESTORED'
   | 'DEMO_RESET'
-  | 'SETTINGS_UPDATED';
+  | 'SETTINGS_UPDATED'
+  | 'SUPPLIER_CREATED'
+  | 'SUPPLIER_UPDATED'
+  | 'SUPPLIER_DELETED'
+  | 'SUPPLIER_RESTORED';
 
 /**
  * Operational audit log entry item
