@@ -3,7 +3,9 @@ import type { AuthUser, UserRoleLevel } from '../types/index.ts';
 
 export const COOKIE_NAME = 'wood_session';
 const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
-const SECRET = process.env.SESSION_SECRET || 'wood-inventory-development-secret-key-32chars-min';
+function getSecret(): string {
+  return process.env.SESSION_SECRET || 'wood-inventory-development-secret-key-32chars-min';
+}
 
 interface TokenPayload {
   userId: string;
@@ -15,7 +17,7 @@ interface TokenPayload {
 }
 
 function sign(data: string): string {
-  return createHmac('sha256', SECRET).update(data).digest('base64url');
+  return createHmac('sha256', getSecret()).update(data).digest('base64url');
 }
 
 export function createSessionToken(user: AuthUser, ttlSeconds: number = DEFAULT_TTL_SECONDS): string {
@@ -39,6 +41,8 @@ export function verifySessionToken(token: string | undefined | null): AuthUser |
   if (parts.length !== 2) return null;
 
   const [payloadB64, signature] = parts;
+  if (!payloadB64 || !signature) return null;
+
   const expectedSignature = sign(payloadB64);
 
   const sigBuf = Buffer.from(signature);
@@ -49,9 +53,14 @@ export function verifySessionToken(token: string | undefined | null): AuthUser |
 
   try {
     const raw = Buffer.from(payloadB64, 'base64url').toString('utf-8');
-    const payload: TokenPayload = JSON.parse(raw);
+    const payload = JSON.parse(raw);
+    if (!payload || typeof payload !== 'object') return null;
 
-    if (Date.now() > payload.exp) {
+    if (typeof payload.exp !== 'number' || Date.now() > payload.exp) {
+      return null;
+    }
+
+    if (!payload.userId || typeof payload.userId !== 'string') {
       return null;
     }
 
