@@ -2,19 +2,154 @@
  * test/use-wood-records.test.ts
  *
  * Unit tests verifying useWoodRecords contracts, filtering invariants,
- * mutation mechanics, CSV generation, and storage adapters.
+ * mutation mechanics, CSV generation, storage adapters, and optimistic server sync.
  */
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import { useWoodRecords } from '../src/hooks/useWoodRecords.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import { MemoryStorageAdapter, LocalStorageAdapter } from '../src/persistence/storage.ts';
+import { toastStore } from '../src/utils/toast-store.ts';
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../src/types/index.ts';
+
+function renderHook<T>(hookFn: () => T): T {
+  let result: T | undefined;
+  function Component() {
+    result = hookFn();
+    return null;
+  }
+  renderToString(React.createElement(Component));
+  return result as T;
+}
 
 test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
   await t.test('useWoodRecords hook is exported as a callable function', () => {
     assert.strictEqual(typeof useWoodRecords, 'function');
+  });
+
+  await t.test('useWoodRecords exports complete contract including isSyncing state', () => {
+    const hookResult = renderHook(useWoodRecords);
+
+    assert.strictEqual(typeof hookResult.isSyncing, 'boolean');
+    assert.strictEqual(hookResult.isSyncing, false);
+    assert.strictEqual(typeof hookResult.isHydrated, 'boolean');
+    assert.ok(Array.isArray(hookResult.records));
+    assert.ok(Array.isArray(hookResult.allRecords));
+    assert.ok(typeof hookResult.metrics === 'object' && hookResult.metrics !== null);
+    assert.ok(typeof hookResult.filters === 'object' && hookResult.filters !== null);
+    assert.ok(Array.isArray(hookResult.speciesList));
+    assert.strictEqual(typeof hookResult.setFilters, 'function');
+    assert.strictEqual(typeof hookResult.saveRecord, 'function');
+    assert.strictEqual(typeof hookResult.deleteRecord, 'function');
+    assert.strictEqual(typeof hookResult.restoreRecord, 'function');
+    assert.strictEqual(typeof hookResult.resetDemo, 'function');
+    assert.strictEqual(typeof hookResult.exportCsv, 'function');
+  });
+
+  await t.test('saveRecord initiates background POST sync and triggers warning toast on failure', async () => {
+    toastStore.clearToasts();
+    const originalFetch = globalThis.fetch;
+    let postedUrl = '';
+    let postedMethod = '';
+    let postedBody = '';
+
+    globalThis.fetch = async (url: any, opts: any) => {
+      postedUrl = String(url);
+      postedMethod = opts?.method || 'GET';
+      postedBody = opts?.body || '';
+      return new Response(JSON.stringify({ success: false, error: 'Forbidden' }), { status: 403 });
+    };
+
+    try {
+      const hookResult = renderHook(useWoodRecords);
+
+      const testRecord: WoodReceivingRecord = {
+        ...SEED_WOOD_RECORDS[0],
+        id: 'rec-sync-test-1',
+        receiptNumber: 'KW-TEST-SYNC',
+      };
+
+      hookResult.saveRecord(testRecord);
+
+      // Wait for background async fetch to settle
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      assert.strictEqual(postedUrl, '/api/records');
+      assert.strictEqual(postedMethod, 'POST');
+      assert.ok(postedBody.includes('rec-sync-test-1'));
+
+      const toasts = toastStore.getToasts();
+      assert.ok(toasts.length > 0);
+      const warnToast = toasts.find((toastItem) => toastItem.title === 'Sinkronisasi Server Gagal');
+      assert.ok(warnToast, 'Should display server sync failure warning toast');
+      assert.strictEqual(warnToast.description, 'Data tersimpan di perangkat lokal.');
+    } finally {
+      globalThis.fetch = originalFetch;
+      toastStore.clearToasts();
+    }
+  });
+
+  await t.test('deleteRecord initiates background DELETE sync', async () => {
+    toastStore.clearToasts();
+    const originalFetch = globalThis.fetch;
+    let deleteUrl = '';
+    let deleteMethod = '';
+
+    globalThis.fetch = async (url: any, opts: any) => {
+      deleteUrl = String(url);
+      deleteMethod = opts?.method || 'GET';
+      return new Response(JSON.stringify({ success: true }));
+    };
+
+    try {
+      const hookResult = renderHook(useWoodRecords);
+
+      hookResult.deleteRecord('rec-delete-test', { showUndoToast: false });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      assert.strictEqual(deleteUrl, '/api/records?id=rec-delete-test');
+      assert.strictEqual(deleteMethod, 'DELETE');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('restoreRecord initiates background POST sync', async () => {
+    toastStore.clearToasts();
+    const originalFetch = globalThis.fetch;
+    let restoreUrl = '';
+    let restoreMethod = '';
+    let restoreBody = '';
+
+    globalThis.fetch = async (url: any, opts: any) => {
+      restoreUrl = String(url);
+      restoreMethod = opts?.method || 'GET';
+      restoreBody = opts?.body || '';
+      return new Response(JSON.stringify({ success: true }));
+    };
+
+    try {
+      const hookResult = renderHook(useWoodRecords);
+
+      const restoreTarget: WoodReceivingRecord = {
+        ...SEED_WOOD_RECORDS[0],
+        id: 'rec-restore-test',
+      };
+
+      hookResult.restoreRecord(restoreTarget);
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      assert.strictEqual(restoreUrl, '/api/records');
+      assert.strictEqual(restoreMethod, 'POST');
+      assert.ok(restoreBody.includes('rec-restore-test'));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   await t.test('SEED_WOOD_RECORDS conforms to WoodReceivingRecord structure', () => {
