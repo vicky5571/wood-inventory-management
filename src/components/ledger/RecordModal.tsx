@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
 import { computeRecordCalculations } from '@/src/utils/timber-calc.ts';
+import { toast } from '@/src/utils/toast-store';
 import { TallyDimensionCalculator } from './TallyDimensionCalculator';
 import {
   X,
@@ -86,7 +87,8 @@ export function RecordModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
+    const isEdit = Boolean(initialRecord);
+    const savedRecord: WoodReceivingRecord = {
       ...(form as WoodReceivingRecord),
       timberGrossTotal: preview.timberGrossTotal,
       timberPphAmount: preview.timberPphAmount,
@@ -96,7 +98,19 @@ export function RecordModal({
       grandNetPayable: preview.grandNetPayable,
       createdAt: form.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    onSave(savedRecord);
+
+    const plate = savedRecord.truckPlateNumber ? `Truk ${savedRecord.truckPlateNumber}` : 'Data Penerimaan';
+    const vol = savedRecord.tallyVolumeM3 ? `${savedRecord.tallyVolumeM3} m³` : '0 m³';
+    const species = savedRecord.woodSpecies ? ` • ${savedRecord.woodSpecies}` : '';
+
+    toast.success(
+      isEdit ? 'Data Penerimaan Berhasil Diperbarui (入库已更新)' : 'Penerimaan Kayu Berhasil Disimpan (新增入库成功)',
+      `${plate} • Vol Tally: ${vol}${species}`
+    );
+
     onClose();
   };
 

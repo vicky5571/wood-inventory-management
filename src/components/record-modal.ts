@@ -6,6 +6,7 @@
  */
 
 import { computeRecordCalculations } from '../utils/timber-calc.ts';
+import { toast } from '../utils/toast-store.ts';
 import type { WoodReceivingRecord } from '../types/index.ts';
 
 function formatRupiah(num: number): string {
@@ -234,6 +235,16 @@ export function openRecordModal(
     };
 
     onSave(fullRecord);
+
+    const plate = fullRecord.truckPlateNumber ? `Truk ${fullRecord.truckPlateNumber}` : 'Data Penerimaan';
+    const vol = fullRecord.tallyVolumeM3 ? `${fullRecord.tallyVolumeM3} m³` : '0 m³';
+    const species = fullRecord.woodSpecies ? ` • ${fullRecord.woodSpecies}` : '';
+
+    toast.success(
+      isEdit ? 'Data Penerimaan Berhasil Diperbarui (入库已更新)' : 'Penerimaan Kayu Berhasil Disimpan (新增入库成功)',
+      `${plate} • Vol Tally: ${vol}${species}`
+    );
+
     container.innerHTML = '';
   });
 }

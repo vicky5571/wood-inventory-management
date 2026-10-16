@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { openRecordModal } from '../src/components/record-modal.ts';
+import { toastStore } from '../src/utils/toast-store.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { MockFormData } from './helpers/mock-dom.ts';
 
@@ -206,5 +207,11 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     assert.strictEqual((savedRecord as any).freightNetPayable, 4900000);
     assert.strictEqual((savedRecord as any).grandNetPayable, 64850000);
     assert.strictEqual(container.innerHTML, '', 'Modal container should be cleared after submit');
+
+    const toasts = toastStore.getToasts();
+    assert.ok(toasts.length > 0, 'Toast notification should be triggered upon save');
+    assert.strictEqual(toasts[0].type, 'success');
+    assert.ok(toasts[0].title.includes('Berhasil Disimpan'));
+    assert.ok(toasts[0].description?.includes('Truk DK 1234 AB'));
   });
 });

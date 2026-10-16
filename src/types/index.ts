@@ -267,5 +267,21 @@ export interface AuthApiResponse {
   error?: string;
 }
 
+/**
+ * Toast notification category
+ */
+export type ToastType = 'success' | 'info' | 'warning' | 'error';
+
+/**
+ * Global toast notification message item
+ */
+export interface ToastItem {
+  id: string;
+  type: ToastType;
+  title: string;
+  description?: string;
+  durationMs?: number;
+}
+
 
 
