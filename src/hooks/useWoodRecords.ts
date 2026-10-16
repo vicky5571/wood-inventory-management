@@ -1,12 +1,23 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics } from '../types/index.ts';
 import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
 import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
 import { toast } from '../utils/toast-store.ts';
+import { exportRecordsToCsv } from '../utils/records-csv.ts';
 
 const STORAGE_KEY = 'wood_receiving_records_next_v1';
+
+function persistRecords(records: WoodReceivingRecord[]): void {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+  } catch (e) {
+    console.error('Failed to persist to localStorage:', e);
+  }
+}
 
 export function useWoodRecords() {
   const [allRecords, setAllRecords] = useState<WoodReceivingRecord[]>([]);
@@ -14,7 +25,31 @@ export function useWoodRecords() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Initialize from LocalStorage or Seed Data, then sync in background
+  const recordsRef = useRef<WoodReceivingRecord[]>(allRecords);
+  recordsRef.current = allRecords;
+
+  const hasMutatedRef = useRef(false);
+  const activeSyncsRef = useRef(0);
+
+  const syncWithServer = useCallback(async (action: () => Promise<void>, showErrorToast = false) => {
+    if (typeof fetch === 'undefined') return;
+
+    activeSyncsRef.current += 1;
+    setIsSyncing(true);
+
+    try {
+      await action();
+    } catch {
+      if (showErrorToast) {
+        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      }
+    } finally {
+      activeSyncsRef.current = Math.max(0, activeSyncsRef.current - 1);
+      setIsSyncing(activeSyncsRef.current > 0);
+    }
+  }, []);
+
+  // Initialize from LocalStorage or Seed Data, then non-blocking background sync
   useEffect(() => {
     let localDataLoaded = false;
     try {
@@ -23,6 +58,7 @@ export function useWoodRecords() {
         if (raw !== null) {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
+            recordsRef.current = parsed;
             setAllRecords(parsed);
             setIsHydrated(true);
             localDataLoaded = true;
@@ -35,159 +71,92 @@ export function useWoodRecords() {
 
     if (!localDataLoaded) {
       const seed: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
+      recordsRef.current = seed;
       setAllRecords(seed);
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-        }
-      } catch {}
+      persistRecords(seed);
       setIsHydrated(true);
     }
 
-    // Non-blocking background server synchronization
-    if (typeof fetch !== 'undefined') {
-      setIsSyncing(true);
-      fetch('/api/records')
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((json) => {
-          if (json && json.success && Array.isArray(json.data)) {
-            setAllRecords(json.data);
-            try {
-              if (typeof window !== 'undefined' && window.localStorage) {
-                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
-              }
-            } catch (e) {
-              console.error('Failed to update localStorage from server sync:', e);
-            }
-          }
-        })
-        .catch((err) => {
-          // Gracefully retain local data on offline or network error
-          console.debug('Background record sync skipped/offline:', err?.message || err);
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, []);
+    syncWithServer(async () => {
+      const res = await fetch('/api/records');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (!hasMutatedRef.current && json?.success && Array.isArray(json.data)) {
+        recordsRef.current = json.data;
+        setAllRecords(json.data);
+        persistRecords(json.data);
+      }
+    }, false);
+  }, [syncWithServer]);
 
   const saveRecord = useCallback((record: WoodReceivingRecord) => {
-    let savedRecord: WoodReceivingRecord = record;
-    setAllRecords((prev) => {
-      const index = prev.findIndex((r) => r.id === record.id);
-      let next: WoodReceivingRecord[];
-      const now = new Date().toISOString();
-      if (index >= 0) {
-        savedRecord = {
-          ...prev[index],
-          ...record,
-          updatedAt: now,
-        };
-        next = [...prev];
-        next[index] = savedRecord;
-      } else {
-        savedRecord = {
-          ...record,
-          createdAt: record.createdAt || now,
-          updatedAt: now,
-        };
-        next = [savedRecord, ...prev];
-      }
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        }
-      } catch (e) {
-        console.error('Failed to persist to localStorage:', e);
-      }
-      return next;
-    });
+    hasMutatedRef.current = true;
+    const now = new Date().toISOString();
+    const prev = recordsRef.current;
+    const index = prev.findIndex((r) => r.id === record.id);
 
-    if (typeof fetch !== 'undefined') {
-      setIsSyncing(true);
-      fetch('/api/records', {
+    const savedRecord: WoodReceivingRecord = index >= 0
+      ? { ...prev[index], ...record, updatedAt: now }
+      : { ...record, createdAt: record.createdAt || now, updatedAt: now };
+
+    const next = index >= 0
+      ? prev.map((r, i) => (i === index ? savedRecord : r))
+      : [savedRecord, ...prev];
+
+    recordsRef.current = next;
+    setAllRecords(next);
+    persistRecords(next);
+
+    syncWithServer(async () => {
+      const res = await fetch('/api/records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(savedRecord),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-          }
-        })
-        .catch(() => {
-          toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, []);
+      });
+      if (!res.ok) {
+        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      }
+    }, true);
+  }, [syncWithServer]);
 
   const restoreRecord = useCallback((record: WoodReceivingRecord, index?: number) => {
-    setAllRecords((prev) => {
-      if (prev.some((r) => r.id === record.id)) return prev;
-      const next = [...prev];
-      if (typeof index === 'number' && index >= 0 && index <= next.length) {
-        next.splice(index, 0, record);
-      } else {
-        next.unshift(record);
-      }
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        }
-      } catch (e) {
-        console.error('Failed to persist to localStorage:', e);
-      }
-      return next;
-    });
+    hasMutatedRef.current = true;
+    const prev = recordsRef.current;
+    if (prev.some((r) => r.id === record.id)) return;
 
-    if (typeof fetch !== 'undefined') {
-      setIsSyncing(true);
-      fetch('/api/records', {
+    const next = [...prev];
+    if (typeof index === 'number' && index >= 0 && index <= next.length) {
+      next.splice(index, 0, record);
+    } else {
+      next.unshift(record);
+    }
+
+    recordsRef.current = next;
+    setAllRecords(next);
+    persistRecords(next);
+
+    syncWithServer(async () => {
+      const res = await fetch('/api/records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record),
-      })
-        .then((res) => {
-          if (!res.ok) {
-            toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-          }
-        })
-        .catch(() => {
-          toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, []);
+      });
+      if (!res.ok) {
+        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      }
+    }, true);
+  }, [syncWithServer]);
 
   const deleteRecord = useCallback((id: string, options?: { showUndoToast?: boolean }) => {
-    let targetRecord: WoodReceivingRecord | undefined;
-    let targetIndex = -1;
+    hasMutatedRef.current = true;
+    const prev = recordsRef.current;
+    const targetIndex = prev.findIndex((r) => r.id === id);
+    const targetRecord = targetIndex >= 0 ? prev[targetIndex] : undefined;
 
-    setAllRecords((prev) => {
-      const target = prev.find((r) => r.id === id);
-      targetIndex = prev.findIndex((r) => r.id === id);
-      if (target) {
-        targetRecord = target;
-      }
-
-      const next = prev.filter((r) => r.id !== id);
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        }
-      } catch (e) {
-        console.error('Failed to persist to localStorage:', e);
-      }
-      return next;
-    });
+    const next = prev.filter((r) => r.id !== id);
+    recordsRef.current = next;
+    setAllRecords(next);
+    persistRecords(next);
 
     if (targetRecord && options?.showUndoToast !== false) {
       const plate = targetRecord.truckPlateNumber ? `Truk ${targetRecord.truckPlateNumber}` : 'Penerimaan';
@@ -200,49 +169,30 @@ export function useWoodRecords() {
         {
           label: 'Urungkan (撤销)',
           onClick: () => {
-            restoreRecord(targetRecord!, targetIndex);
-            toast.success(
-              'Data Penerimaan Dipulihkan (已恢复)',
-              `${plate} berhasil dikembalikan ke buku besar.`
-            );
+            restoreRecord(targetRecord, targetIndex);
+            toast.success('Data Penerimaan Dipulihkan (已恢复)', `${plate} berhasil dikembalikan ke buku besar.`);
           },
         }
       );
     }
 
-    if (typeof fetch !== 'undefined') {
-      setIsSyncing(true);
-      fetch('/api/records?id=' + encodeURIComponent(id), {
-        method: 'DELETE',
-      })
-        .then((res) => {
-          if (!res.ok && res.status !== 404) {
-            toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-          }
-        })
-        .catch(() => {
-          toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, [restoreRecord]);
+    syncWithServer(async () => {
+      const res = await fetch('/api/records?id=' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!res.ok && res.status !== 404) {
+        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      }
+    }, true);
+  }, [restoreRecord, syncWithServer]);
 
   const resetDemo = useCallback(() => {
+    hasMutatedRef.current = true;
     const seed: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
+    recordsRef.current = seed;
     setAllRecords(seed);
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-      }
-    } catch (e) {
-      console.error('Failed to persist to localStorage:', e);
-    }
+    persistRecords(seed);
     setFilters({});
   }, []);
 
-  // Filtered Records
   const records = useMemo(() => {
     return allRecords.filter((r) => {
       if (filters.species && r.woodSpecies !== filters.species) return false;
@@ -252,14 +202,8 @@ export function useWoodRecords() {
       if (filters.searchQuery) {
         const q = filters.searchQuery.trim().toLowerCase();
         const hay = [
-          r.truckPlateNumber,
-          r.forestryDocNumber,
-          r.receiptNumber,
-          r.contractNumber,
-          r.supplierName,
-          r.woodSpecies,
-          r.kavlingNumber,
-          r.storageYard,
+          r.truckPlateNumber, r.forestryDocNumber, r.receiptNumber,
+          r.contractNumber, r.supplierName, r.woodSpecies, r.kavlingNumber, r.storageYard,
         ].filter(Boolean).join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
@@ -267,64 +211,9 @@ export function useWoodRecords() {
     });
   }, [allRecords, filters]);
 
-  // Aggregated Metrics
-  const metrics: DashboardMetrics = useMemo(() => {
-    return aggregateDashboardMetrics(records);
-  }, [records]);
-
-  // Species list for dropdowns
-  const speciesList = useMemo(() => {
-    return Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean);
-  }, [allRecords]);
-
-  // CSV Export (RFC 4180-compliant)
-  const exportCsv = useCallback(() => {
-    const headers = [
-      'Penerimaan (到货日期)',
-      'No. Polisi (车牌号)',
-      'SKSHHK / DKP (送货单号)',
-      'No. Kontrak (合同编号)',
-      'Supplier (供应商)',
-      'Jenis Kayu (树种)',
-      'No. Kav (进厂批号)',
-      'Batang Del (送货根数)',
-      'Vol Del m³ (送货立方)',
-      'Batang Tally (检尺根数)',
-      'Vol Tally m³ (检尺立方)',
-      'Net Kayu (木材应付)',
-      'Net Ongkir (运费应付)',
-      'Total Bayar (应付金额)',
-    ];
-
-    const escapeCsv = (str: string) => `"${(str || '').replace(/"/g, '""')}"`;
-    const rows = records.map((r) => [
-      r.receiptDate,
-      escapeCsv(r.truckPlateNumber),
-      escapeCsv(r.forestryDocNumber),
-      escapeCsv(r.contractNumber),
-      escapeCsv(r.supplierName),
-      escapeCsv(r.woodSpecies),
-      escapeCsv(r.kavlingNumber),
-      r.deliveredPieces,
-      r.deliveredVolumeM3,
-      r.tallyPieces,
-      r.tallyVolumeM3,
-      r.timberNetPayable,
-      r.freightNetPayable,
-      r.grandNetPayable,
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `penerimaan_kayu_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-  }, [records]);
+  const metrics: DashboardMetrics = useMemo(() => aggregateDashboardMetrics(records), [records]);
+  const speciesList = useMemo(() => Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean), [allRecords]);
+  const exportCsv = useCallback(() => exportRecordsToCsv(records), [records]);
 
   return {
     records,

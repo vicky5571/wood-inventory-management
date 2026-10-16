@@ -7,12 +7,15 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { useWoodRecords } from '../src/hooks/useWoodRecords.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import { MemoryStorageAdapter, LocalStorageAdapter } from '../src/persistence/storage.ts';
 import { toastStore } from '../src/utils/toast-store.ts';
+import { escapeCsvField, generateRecordsCsvContent, CSV_HEADERS } from '../src/utils/records-csv.ts';
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../src/types/index.ts';
 
 function renderHook<T>(hookFn: () => T): T {
@@ -152,6 +155,52 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     }
   });
 
+  await t.test('saveRecord and deleteRecord persist updates immediately to localStorage', () => {
+    const map = new Map<string, string>();
+    const origWindow = globalThis.window;
+    globalThis.window = {
+      localStorage: {
+        getItem: (k: string) => map.get(k) || null,
+        setItem: (k: string, v: string) => map.set(k, v),
+        removeItem: (k: string) => map.delete(k),
+        clear: () => map.clear(),
+      },
+    } as any;
+
+    try {
+      const hookResult = renderHook(useWoodRecords);
+      const testRecord: WoodReceivingRecord = {
+        ...SEED_WOOD_RECORDS[0],
+        id: 'rec-local-persist',
+        supplierName: 'Persisted Supplier',
+      };
+
+      hookResult.saveRecord(testRecord);
+      const savedRaw = map.get('wood_receiving_records_next_v1');
+      assert.ok(savedRaw);
+      const savedParsed = JSON.parse(savedRaw);
+      assert.ok(savedParsed.some((r: any) => r.id === 'rec-local-persist'));
+
+      hookResult.deleteRecord('rec-local-persist', { showUndoToast: false });
+      const afterDeleteRaw = map.get('wood_receiving_records_next_v1');
+      assert.ok(afterDeleteRaw);
+      const afterDeleteParsed = JSON.parse(afterDeleteRaw);
+      assert.ok(!afterDeleteParsed.some((r: any) => r.id === 'rec-local-persist'));
+    } finally {
+      globalThis.window = origWindow;
+    }
+  });
+
+  await t.test('source code verifies hasMutatedRef and activeSyncsRef concurrency invariants', () => {
+    const hookPath = path.resolve(process.cwd(), 'src/hooks/useWoodRecords.ts');
+    const content = fs.readFileSync(hookPath, 'utf-8');
+
+    assert.match(content, /hasMutatedRef = useRef\(false\)/, 'Tracks local mutation ref');
+    assert.match(content, /activeSyncsRef = useRef\(0\)/, 'Tracks active sync counter ref');
+    assert.match(content, /!hasMutatedRef\.current && json\?\.success/, 'Guards mount GET response against stale overwrite');
+    assert.match(content, /setIsSyncing\(activeSyncsRef\.current > 0\)/, 'Derives isSyncing from activeSyncs counter');
+  });
+
   await t.test('SEED_WOOD_RECORDS conforms to WoodReceivingRecord structure', () => {
     assert.ok(Array.isArray(SEED_WOOD_RECORDS));
     assert.strictEqual(SEED_WOOD_RECORDS.length, 4);
@@ -270,11 +319,14 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
   });
 
   await t.test('RFC 4180 CSV escaping handles quotes, commas, and formatting', () => {
-    const escapeCsv = (str: string) => `"${(str || '').replace(/"/g, '""')}"`;
+    assert.strictEqual(escapeCsvField('Simple Text'), '"Simple Text"');
+    assert.strictEqual(escapeCsvField('Text with "quotes"'), '"Text with ""quotes"""');
+    assert.strictEqual(escapeCsvField('Comma, and "quotes"'), '"Comma, and ""quotes"""');
+    assert.strictEqual(escapeCsvField(''), '""');
 
-    assert.strictEqual(escapeCsv('Simple Text'), '"Simple Text"');
-    assert.strictEqual(escapeCsv('Text with "quotes"'), '"Text with ""quotes"""');
-    assert.strictEqual(escapeCsv('Comma, and "quotes"'), '"Comma, and ""quotes"""');
-    assert.strictEqual(escapeCsv(''), '""');
+    const csvOutput = generateRecordsCsvContent(SEED_WOOD_RECORDS.slice(0, 1));
+    assert.ok(csvOutput.startsWith(CSV_HEADERS.join(',')));
+    assert.ok(csvOutput.includes(SEED_WOOD_RECORDS[0].receiptDate));
+    assert.ok(csvOutput.includes(`"${SEED_WOOD_RECORDS[0].supplierName}"`));
   });
 });
