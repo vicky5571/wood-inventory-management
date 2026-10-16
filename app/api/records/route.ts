@@ -1,26 +1,151 @@
-import { NextResponse } from 'next/server';
-import { SEED_WOOD_RECORDS } from '@/src/persistence/seed-data';
+import { NextResponse } from 'next/server.js';
+import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
+import { verifySessionToken, COOKIE_NAME } from '../../../src/auth/session.ts';
+import type { AuthUser, WoodReceivingRecord } from '../../../src/types/index.ts';
+
+export const dynamic = 'force-dynamic';
+
+async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
+  let token: string | undefined;
+
+  // Extract from Request headers first (compatible with unit tests and edge/node runtime)
+  const rawHeader = request.headers.get('cookie') || '';
+  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
+  if (match) {
+    token = match[1];
+  } else {
+    try {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      token = cookieStore.get(COOKIE_NAME)?.value;
+    } catch {
+      token = undefined;
+    }
+  }
+
+  return verifySessionToken(token);
+}
 
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    data: SEED_WOOD_RECORDS,
-    timestamp: new Date().toISOString(),
-  });
+  try {
+    const records = await serverRecordStore.getAll();
+    return NextResponse.json({
+      success: true,
+      data: records,
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Failed to retrieve records' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Sesi tidak ditemukan atau kadaluarsa' },
+        { status: 401 }
+      );
+    }
+
+    if (user.roleLevel > 2) {
+      return NextResponse.json(
+        { success: false, error: 'Akses ditolak: Hanya Level 1 dan 2 yang dapat membuat atau mengubah data' },
+        { status: 403 }
+      );
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { success: false, error: 'Invalid payload' },
+        { status: 400 }
+      );
+    }
+
+    const candidate = body as Partial<WoodReceivingRecord>;
+    if (
+      !candidate.woodSpecies ||
+      typeof candidate.woodSpecies !== 'string' ||
+      candidate.woodSpecies.trim() === '' ||
+      typeof candidate.tallyVolumeM3 !== 'number'
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Validation error: woodSpecies and tallyVolumeM3 are required' },
+        { status: 400 }
+      );
+    }
+
+    const saved = await serverRecordStore.save(candidate as WoodReceivingRecord);
+
     return NextResponse.json({
       success: true,
-      message: 'Record received',
-      data: body,
+      data: saved,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { success: false, error: 'Invalid payload' },
-      { status: 400 }
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Sesi tidak ditemukan atau kadaluarsa' },
+        { status: 401 }
+      );
+    }
+
+    if (user.roleLevel > 2) {
+      return NextResponse.json(
+        { success: false, error: 'Akses ditolak: Hanya Level 1 dan 2 yang dapat menghapus data' },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id || id.trim() === '') {
+      return NextResponse.json(
+        { success: false, error: 'Missing required query parameter: id' },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await serverRecordStore.delete(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: 'Record not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Record deleted successfully',
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
     );
   }
 }
