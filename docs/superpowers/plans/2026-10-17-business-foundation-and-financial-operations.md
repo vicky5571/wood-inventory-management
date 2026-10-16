@@ -82,71 +82,14 @@ git commit -m "feat: implement server-side json store and authenticated records 
 - Consumes: `/api/records` endpoint, `localStorage`
 - Produces: `useWoodRecords` returning `{ records, allRecords, metrics, filters, setFilters, saveRecord, deleteRecord, restoreRecord, resetDemo, isSyncing }`.
 
-- [ ] **Step 1: Write the failing test**
-
-Add test to `test/use-wood-records.test.ts`:
-
-```typescript
-// in test/use-wood-records.test.ts
-await t.test('useWoodRecords exports isSyncing state and syncs with server API', () => {
-  // Verifies hook contract accommodates server sync flag
-  assert.strictEqual(typeof useWoodRecords, 'function');
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test test/use-wood-records.test.ts`
-Expected: PASS or verify existing tests pass.
-
-- [ ] **Step 3: Write minimal implementation**
-
-Update `src/hooks/useWoodRecords.ts`:
-- After initial mount from `localStorage`, perform an asynchronous background `fetch('/api/records')`. If successful, update state and cache to `localStorage`.
-- When `saveRecord` is called, write to local state and `localStorage` immediately, then call `fetch('/api/records', { method: 'POST', ... })` in the background. If server fails, show non-blocking toast warning and retain local copy.
-- When `deleteRecord` is called, delete locally and send `fetch('/api/records?id=' + id, { method: 'DELETE' })`.
-
-```typescript
-// excerpt in src/hooks/useWoodRecords.ts
-const [isSyncing, setIsSyncing] = useState(false);
-
-useEffect(() => {
-  // 1. Instant local hydration
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      setAllRecords(JSON.parse(raw));
-      setIsHydrated(true);
-    }
-  } catch {}
-
-  // 2. Background server sync
-  fetch('/api/records')
-    .then((res) => (res.ok ? res.json() : null))
-    .then((json) => {
-      if (json?.success && Array.isArray(json.data)) {
-        setAllRecords(json.data);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
-      }
-    })
-    .catch(() => {
-      // Offline fallback: keep localStorage data
-    })
-    .finally(() => {
-      setIsHydrated(true);
-    });
-}, []);
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test test/use-wood-records.test.ts`
-Expected: PASS with 0 failures.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write the failing test**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Write minimal implementation**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/hooks/useWoodRecords.ts test/use-wood-records.test.ts
+git add src/hooks/useWoodRecords.ts src/utils/records-csv.ts test/use-wood-records.test.ts
 git commit -m "feat: add optimistic server synchronization with offline fallback to useWoodRecords"
 ```
 
@@ -162,68 +105,14 @@ git commit -m "feat: add optimistic server synchronization with offline fallback
 - Consumes: `localStorage` key `wood_record_form_draft_v1`
 - Produces: Auto-save on form change, recovery banner when opening in Add mode, draft cleanup on submit or discard.
 
-- [ ] **Step 1: Write the failing test**
-
-```typescript
-// test/record-modal-draft.test.ts
-import { test } from 'node:test';
-import assert from 'node:assert';
-
-test('RecordModal Auto-Draft Logic Suite', async (t) => {
-  const DRAFT_KEY = 'wood_record_form_draft_v1';
-
-  await t.test('detects when an uncommitted draft is stored in localStorage', () => {
-    const draftData = {
-      woodSpecies: 'Jati / Teak',
-      truckPlateNumber: 'B 1234 YRD',
-      tallyVolumeM3: 12.5,
-    };
-    const serialized = JSON.stringify({ draft: draftData, timestamp: Date.now() });
-    const parsed = JSON.parse(serialized);
-
-    assert.strictEqual(parsed.draft.truckPlateNumber, 'B 1234 YRD');
-    assert.strictEqual(parsed.draft.tallyVolumeM3, 12.5);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test test/record-modal-draft.test.ts`
-Expected: PASS (contract verification).
-
-- [ ] **Step 3: Write minimal implementation**
-
-In `src/components/ledger/RecordModal.tsx`:
-1. Define `const DRAFT_KEY = 'wood_record_form_draft_v1';`.
-2. Add state `const [hasDraft, setHasDraft] = useState(false);` and `const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);`.
-3. Check for draft in `useEffect` when `isOpen && !initialRecord`.
-4. Add debounce auto-save to `localStorage` when `!initialRecord` and form has user inputs (`truckPlateNumber` or `tallyVolumeM3` or `woodSpecies`).
-5. Render a banner at the top of the modal if draft exists:
-   ```tsx
-   {hasDraft && (
-     <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900">
-       <div>
-         <strong>Draf Belum Tersimpan Ditemukan:</strong> Lanjutkan pengisian terakhir?
-       </div>
-       <div className="flex gap-2">
-         <button type="button" onClick={restoreDraft} className="px-2.5 py-1 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700">Pulihkan</button>
-         <button type="button" onClick={discardDraft} className="px-2.5 py-1 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300">Buang</button>
-       </div>
-     </div>
-   )}
-   ```
-6. On successful submit (`handleSubmit`): `localStorage.removeItem(DRAFT_KEY); setHasDraft(false);`.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test test/record-modal-draft.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write the failing test**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Write minimal implementation**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/components/ledger/RecordModal.tsx test/record-modal-draft.test.ts
+git add src/components/ledger/RecordModal.tsx src/components/ledger/DraftRecoveryBanner.tsx src/components/ledger/RecordModalSections.tsx src/utils/record-draft.ts test/record-modal-draft.test.ts
 git commit -m "feat: add auto-draft persistence and recovery banner to RecordModal"
 ```
 
