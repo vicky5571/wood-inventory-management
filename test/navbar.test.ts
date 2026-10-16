@@ -61,6 +61,18 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
     assert.match(userNavContent, /className="[^"]*p-2 text-gray-400[^"]*"/);
     assert.doesNotMatch(userNavContent, /className="[^"]*ml-2[^"]*"/);
   });
+
+  await t.test('Navbar mobile drawer links conform to 40px touch ergonomic height', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const navbarContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/layout/Navbar.tsx'),
+      'utf-8'
+    );
+
+    // Mobile links must use py-2.5 to provide optimal 40px touch height
+    assert.match(navbarContent, /px-3 py-2\.5 rounded-lg text-sm/);
+  });
 });
 
 

@@ -137,7 +137,7 @@ export function Navbar() {
                 key={item.id}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.id)}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all ${
                   isActive
                     ? 'bg-emerald-50 text-emerald-900 font-semibold border border-emerald-200'
                     : 'text-slate-600 hover:bg-slate-50 font-medium'
