@@ -42,7 +42,7 @@ export function UserNav() {
       <button
         onClick={logout}
         title="Keluar dari akun (退出)"
-        className="ml-2 p-1.5 text-gray-400 hover:text-[#ed1c24] hover:bg-rose-50 rounded-xl transition cursor-pointer"
+        className="p-2 text-gray-400 hover:text-[#ed1c24] hover:bg-rose-50 rounded-xl transition cursor-pointer"
       >
         <LogOut className="w-4 h-4" />
       </button>

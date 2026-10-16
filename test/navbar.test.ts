@@ -48,5 +48,19 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
   await t.test('resolveActiveNavSection falls back to dashboard when elements are not in DOM', () => {
     assert.equal(resolveActiveNavSection(500, {}), 'dashboard');
   });
+
+  await t.test('UserNav logout button uses normalized padding and eliminates redundant margin', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const userNavContent = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/layout/UserNav.tsx'),
+      'utf-8'
+    );
+
+    // Button should use p-2 for 32x32px hit target and NOT contain redundant ml-2
+    assert.match(userNavContent, /className="[^"]*p-2 text-gray-400[^"]*"/);
+    assert.doesNotMatch(userNavContent, /className="[^"]*ml-2[^"]*"/);
+  });
 });
+
 
