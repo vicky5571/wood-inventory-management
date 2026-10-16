@@ -389,3 +389,18 @@ export interface AppSettings {
   yardName: string;
   yardCode: string;
 }
+
+/**
+ * Confirmation dialog modal properties for destructive action safeguarding
+ */
+export interface ConfirmDialogProps {
+  isOpen: boolean;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  isDestructive?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+

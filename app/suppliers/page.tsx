@@ -9,6 +9,7 @@ import { toast } from '@/src/utils/toast-store';
 import { SupplierCard } from '@/src/components/suppliers/SupplierCard';
 import { SupplierTable } from '@/src/components/suppliers/SupplierTable';
 import { SupplierModal } from '@/src/components/suppliers/SupplierModal';
+import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
 import type { Supplier, SupplierWithMetrics } from '@/src/types';
 import {
   Building2,
@@ -37,6 +38,8 @@ export default function SuppliersPage() {
     isOpen: false,
     supplier: null,
   });
+  const [pendingDeleteSupplier, setPendingDeleteSupplier] = useState<{ id: string; name: string } | null>(null);
+
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {
@@ -273,7 +276,7 @@ export default function SuppliersPage() {
               key={supplier.id || supplier.supplierName}
               supplier={supplier}
               onEdit={handleOpenEdit}
-              onDelete={handleDeleteSupplier}
+              onDelete={(id, name) => setPendingDeleteSupplier({ id, name })}
               canWrite={canWrite}
             />
           ))}
@@ -282,7 +285,7 @@ export default function SuppliersPage() {
         <SupplierTable
           suppliers={filteredSuppliers}
           onEdit={handleOpenEdit}
-          onDelete={handleDeleteSupplier}
+          onDelete={(id, name) => setPendingDeleteSupplier({ id, name })}
           canWrite={canWrite}
         />
       )}
@@ -293,6 +296,27 @@ export default function SuppliersPage() {
         initialSupplier={modalState.supplier}
         onClose={handleCloseModal}
         onSave={handleSaveSupplier}
+      />
+
+      {/* Delete Confirmation Safeguard Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(pendingDeleteSupplier)}
+        title="Hapus Rekanan Supplier? (确认删除供应商)"
+        description={
+          pendingDeleteSupplier
+            ? `Data pemasok ${pendingDeleteSupplier.name} akan dihapus dari direktori aktif rekanan.`
+            : 'Data pemasok akan dihapus dari direktori aktif rekanan.'
+        }
+        confirmLabel="Hapus Pemasok"
+        cancelLabel="Batal"
+        isDestructive={true}
+        onConfirm={() => {
+          if (pendingDeleteSupplier) {
+            handleDeleteSupplier(pendingDeleteSupplier.id, pendingDeleteSupplier.name);
+          }
+          setPendingDeleteSupplier(null);
+        }}
+        onCancel={() => setPendingDeleteSupplier(null)}
       />
     </div>
   );

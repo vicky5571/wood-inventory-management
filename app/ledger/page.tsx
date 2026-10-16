@@ -7,6 +7,7 @@ import { useActivityLog } from '@/src/hooks/useActivityLog';
 import { Toolbar } from '@/src/components/ledger/Toolbar';
 import { RecordTable } from '@/src/components/ledger/RecordTable';
 import { RecordModal } from '@/src/components/ledger/RecordModal';
+import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
 import type { WoodReceivingRecord } from '@/src/types';
 import { TableProperties, ShieldAlert } from 'lucide-react';
 
@@ -27,6 +28,10 @@ export default function LedgerPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<WoodReceivingRecord | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const pendingRecord = pendingDeleteId ? records.find((r) => r.id === pendingDeleteId) : null;
+
 
   const handleNewEntry = () => {
     if (!canWrite) return;
@@ -129,7 +134,7 @@ export default function LedgerPage() {
             records={records}
             canWrite={canWrite}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={(id) => setPendingDeleteId(id)}
             onResetFilters={() => setFilters({})}
           />
         </div>
@@ -145,6 +150,27 @@ export default function LedgerPage() {
           onSave={handleSave}
         />
       )}
+
+      {/* Delete Confirmation Safeguard Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(pendingDeleteId)}
+        title="Hapus Penerimaan Kayu? (确认删除入库记录)"
+        description={
+          pendingRecord
+            ? `Data penerimaan Truk ${pendingRecord.truckPlateNumber || '-'} • ${pendingRecord.woodSpecies} (${pendingRecord.tallyVolumeM3} m³) akan dihapus dari buku besar. Tindakan ini dapat diurungkan melalui notifikasi setelahnya.`
+            : 'Data penerimaan kayu akan dihapus dari buku besar. Tindakan ini dapat diurungkan melalui notifikasi setelahnya.'
+        }
+        confirmLabel="Hapus Penerimaan"
+        cancelLabel="Batal"
+        isDestructive={true}
+        onConfirm={() => {
+          if (pendingDeleteId) {
+            handleDelete(pendingDeleteId);
+          }
+          setPendingDeleteId(null);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }
