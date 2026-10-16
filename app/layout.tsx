@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Navbar } from '@/src/components/layout/Navbar';
+import { AppLayout } from '@/src/components/layout/AppLayout';
 import { ToastContainer } from '@/src/components/ui/Toast';
 
 export const metadata: Metadata = {
@@ -33,10 +33,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#f9fafb] text-[#101828] antialiased">
-        <Navbar />
-        <main className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-6">
-          {children}
-        </main>
+        <AppLayout>{children}</AppLayout>
         <ToastContainer />
       </body>
     </html>
