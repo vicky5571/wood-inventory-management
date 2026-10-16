@@ -119,6 +119,24 @@ body {
 .data-table th, .data-table td { padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--wood-border); white-space: nowrap; }
 .data-table th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; }
 .data-table tr:hover { background: #f1f5f9; }
+.data-table th:last-child,
+.data-table td:last-child {
+  position: sticky;
+  right: 0;
+  border-left: 1px solid var(--wood-border);
+  box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 2;
+}
+.data-table th:last-child {
+  background: #f8fafc;
+}
+.data-table td:last-child {
+  background: #ffffff;
+  z-index: 1;
+}
+.data-table tr:hover td:last-child {
+  background: #f1f5f9;
+}
 .col-header-subtitle { display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 400; }
 
 .badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.7rem; }
