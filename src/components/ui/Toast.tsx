@@ -103,11 +103,17 @@ export function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: (id
   );
 }
 
+const EMPTY_TOASTS: ToastItem[] = [];
+
+const subscribeToasts = (callback: () => void) => toastStore.subscribe(callback);
+const getToastsSnapshot = () => toastStore.getToasts();
+const getToastsServerSnapshot = () => EMPTY_TOASTS;
+
 export function ToastContainer() {
   const toasts = useSyncExternalStore(
-    (callback) => toastStore.subscribe(callback),
-    () => toastStore.getToasts(),
-    () => []
+    subscribeToasts,
+    getToastsSnapshot,
+    getToastsServerSnapshot
   );
 
   if (toasts.length === 0) return null;

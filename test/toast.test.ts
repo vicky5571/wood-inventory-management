@@ -16,8 +16,11 @@ test('Toast Store & Notification Management Suite', async (t) => {
     toastStore.clearToasts();
   });
 
-  await t.test('initializes with empty toasts list', () => {
+  await t.test('initializes with empty toasts list and maintains referential snapshot stability', () => {
     assert.deepStrictEqual(toastStore.getToasts(), []);
+    const snap1 = toastStore.getToasts();
+    const snap2 = toastStore.getToasts();
+    assert.strictEqual(snap1, snap2, 'Snapshot reference must be identical across consecutive reads');
   });
 
   await t.test('toast.success creates success toast with title and description', () => {
