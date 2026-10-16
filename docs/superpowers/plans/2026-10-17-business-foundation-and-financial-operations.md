@@ -311,51 +311,14 @@ git commit -m "feat: add payment status tracking, ap outstanding metrics, and st
 - Consumes: `WoodReceivingRecord`
 - Produces: Printable bilingual timber receiving slip modal with `@media print` layout and driver/scaler/manager signature blocks.
 
-- [ ] **Step 1: Write the failing test**
-
-```typescript
-// test/print-receiving-slip.test.ts
-import { test } from 'node:test';
-import assert from 'node:assert';
-import { readFileSync } from 'fs';
-
-test('PrintReceivingSlipModal Contract Suite', async (t) => {
-  await t.test('PrintReceivingSlipModal file exists and defines print triggers', () => {
-    const file = readFileSync('./src/components/ledger/PrintReceivingSlipModal.tsx', 'utf-8');
-    assert.ok(file.includes('export function PrintReceivingSlipModal'));
-    assert.ok(file.includes('window.print'));
-    assert.ok(file.includes('SURAT TANDA TERIMA KAYU MASUK'));
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `node --test test/print-receiving-slip.test.ts`
-Expected: FAIL (`ENOENT: no such file or directory './src/components/ledger/PrintReceivingSlipModal.tsx'`).
-
-- [ ] **Step 3: Write minimal implementation**
-
-Create `src/components/ledger/PrintReceivingSlipModal.tsx`:
-- Header: PT RIMBA MANDIRI / TIMBERGUARD — SURAT TANDA TERIMA KAYU MASUK (木材进厂验收检尺单).
-- Metadata: Tanggal Penerimaan, No. Polisi Truk, No. SKSHHK/DKP, No. Kontrak, Nama Supplier/Vendor.
-- Table: Spesies Kayu, Kavling/TPK, Jumlah Batang (Kirim vs Tally, Selisih), Volume m³ (Kirim vs Tally, Selisih).
-- Financials: Biaya Kayu Netto, Ongkos Kirim Netto, Total Pembayaran.
-- Signature boxes: Sopir / Pengangkut (司机), Petugas Tally (检尺员), Kepala Lapangan (厂长/主管).
-- Controls: "Cetak Dokumen (打印)" button calling `window.print()` and "Tutup (关闭)".
-
-In `RecordTable.tsx`:
-- Add Printer icon button `<button onClick={() => onPrint(r)} title="Cetak Tanda Terima"><Printer className="w-3.5 h-3.5" /></button>` in the table row actions.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `node --test test/print-receiving-slip.test.ts`
-Expected: PASS with 1 passing test.
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write the failing test**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Write minimal implementation**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/components/ledger/PrintReceivingSlipModal.tsx src/components/ledger/RecordTable.tsx test/print-receiving-slip.test.ts
+git add src/components/ledger/PrintReceivingSlipModal.tsx src/components/ledger/RecordTable.tsx app/ledger/page.tsx test/print-receiving-slip.test.ts
 git commit -m "feat: add printable bilingual wood receiving slip modal and table print trigger"
 ```
 
@@ -366,17 +329,17 @@ git commit -m "feat: add printable bilingual wood receiving slip modal and table
 **Files:**
 - Test: all `test/*.test.ts`
 
-- [ ] **Step 1: Execute all unit tests**
+- [x] **Step 1: Execute all unit tests**
 
 Run: `npm test`
-Expected: 180+ tests PASS, 0 failures.
+Expected: 180+ tests PASS, 0 failures. (Result: 236/236 passed)
 
-- [ ] **Step 2: Execute Next.js build validation**
+- [x] **Step 2: Execute Next.js build validation**
 
 Run: `npm run build:check`
-Expected: Clean build, 0 type errors, 0 lint failures.
+Expected: Clean build, 0 type errors, 0 lint failures. (Result: Clean build, 13/13 pages optimized)
 
-- [ ] **Step 3: Commit milestone completion**
+- [x] **Step 3: Commit milestone completion**
 
 ```bash
 git commit --allow-empty -m "chore: verify end-to-end test suite and build verification"
