@@ -182,7 +182,7 @@ export function RecordTable({
                   <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.freightNetPayable)}</td>
                   <td className="p-3.5 font-bold font-mono tabular-nums text-[#101828] whitespace-nowrap">{formatRupiah(r.grandNetPayable)}</td>
                   {canWrite && (
-                    <td className="p-3.5 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-canvas transition-colors border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
+                    <td className="p-3.5 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f3f4f6] transition-colors border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                       <div className="inline-flex items-center gap-1">
                         <button
                           onClick={() => onEdit(r)}

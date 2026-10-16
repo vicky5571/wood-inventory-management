@@ -32,7 +32,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-canvas text-[#101828] antialiased">
+      <body className="min-h-screen bg-[#f3f4f6] text-[#101828] antialiased">
         <AppLayout>{children}</AppLayout>
         <ToastContainer />
       </body>
