@@ -1,28 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { NAV_ITEMS, resolveActiveNavSection } from '../src/components/layout/nav-config.ts';
+import { NAV_ITEMS, resolveActiveNavSection, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Navbar Navigation & Layout Config Suite', async (t) => {
-  await t.test('NAV_ITEMS contains bilingual configuration for all required sections', () => {
-    assert.equal(NAV_ITEMS.length, 3);
+  await t.test('NAV_ITEMS contains bilingual configuration for all 5 required operational routes', () => {
+    assert.equal(NAV_ITEMS.length, 5);
 
     const ids = NAV_ITEMS.map((item) => item.id);
-    assert.deepEqual(ids, ['dashboard', 'ledger', 'species']);
+    assert.deepEqual(ids, ['analytics', 'ledger', 'suppliers', 'activity', 'settings']);
 
-    const dashboard = NAV_ITEMS.find((item) => item.id === 'dashboard')!;
-    assert.equal(dashboard.href, '#dashboard');
-    assert.equal(dashboard.labelId, 'Dashboard');
-    assert.equal(dashboard.labelZh, '仪表板');
+    const analytics = NAV_ITEMS.find((item) => item.id === 'analytics')!;
+    assert.equal(analytics.href, '/');
+    assert.equal(analytics.labelId, 'Ringkasan');
+    assert.equal(analytics.labelZh, '运营概况');
 
     const ledger = NAV_ITEMS.find((item) => item.id === 'ledger')!;
-    assert.equal(ledger.href, '#ledger');
+    assert.equal(ledger.href, '/ledger');
     assert.equal(ledger.labelId, 'Buku Besar');
     assert.equal(ledger.labelZh, '入库总账');
 
-    const species = NAV_ITEMS.find((item) => item.id === 'species')!;
-    assert.equal(species.href, '#species');
-    assert.equal(species.labelId, 'Spesies');
-    assert.equal(species.labelZh, '木材种类');
+    const suppliers = NAV_ITEMS.find((item) => item.id === 'suppliers')!;
+    assert.equal(suppliers.href, '/suppliers');
+    assert.equal(suppliers.labelId, 'Pemasok');
+    assert.equal(suppliers.labelZh, '供应商');
+
+    const activity = NAV_ITEMS.find((item) => item.id === 'activity')!;
+    assert.equal(activity.href, '/activity');
+    assert.equal(activity.labelId, 'Aktivitas');
+    assert.equal(activity.labelZh, '审计日志');
+
+    const settings = NAV_ITEMS.find((item) => item.id === 'settings')!;
+    assert.equal(settings.href, '/settings');
+    assert.equal(settings.labelId, 'Pengaturan');
+    assert.equal(settings.labelZh, '系统设置');
+  });
+
+  await t.test('isNavItemActive matches operational routes accurately', () => {
+    assert.equal(isNavItemActive('/', '/'), true);
+    assert.equal(isNavItemActive('/', '/ledger'), false);
+    assert.equal(isNavItemActive('/ledger', '/ledger'), true);
+    assert.equal(isNavItemActive('/suppliers', '/suppliers'), true);
   });
 
   await t.test('resolveActiveNavSection correctly resolves section based on scroll offsets', () => {
@@ -74,5 +91,3 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
     assert.match(navbarContent, /px-3 py-2\.5 rounded-lg text-sm/);
   });
 });
-
-

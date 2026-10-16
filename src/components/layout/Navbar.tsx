@@ -1,25 +1,41 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Trees, Menu, X, LayoutDashboard, TableProperties, PieChart, ChevronRight } from 'lucide-react';
-import { NAV_ITEMS, resolveActiveNavSection } from './nav-config';
+import {
+  Trees,
+  Menu,
+  X,
+  LayoutDashboard,
+  TableProperties,
+  Building2,
+  History,
+  Settings,
+  ChevronRight,
+} from 'lucide-react';
+import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  dashboard: LayoutDashboard,
+  analytics: LayoutDashboard,
   ledger: TableProperties,
-  species: PieChart,
+  suppliers: Building2,
+  activity: History,
+  settings: Settings,
 };
 
 export function Navbar() {
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+
+  // Resolve current active item from pathname
+  const activeItem = NAV_ITEMS.find((item) => isNavItemActive(item.href, pathname)) || NAV_ITEMS[0];
+  const activeTab = activeItem.id;
 
   // Compute sliding indicator position from active tab ref
   const updateIndicator = useCallback(() => {
@@ -39,26 +55,13 @@ export function Navbar() {
     updateIndicator();
     window.addEventListener('resize', updateIndicator);
     return () => window.removeEventListener('resize', updateIndicator);
-  }, [updateIndicator]);
+  }, [updateIndicator, pathname]);
 
   useEffect(() => {
     if (pathname === '/login') return;
 
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      setIsScrolled(scrollY > 8);
-
-      const ledgerEl = document.getElementById('ledger');
-      const speciesEl = document.getElementById('species');
-      const dashboardEl = document.getElementById('dashboard');
-
-      const active = resolveActiveNavSection(scrollY, {
-        dashboard: dashboardEl ? dashboardEl.offsetTop : 0,
-        species: speciesEl ? speciesEl.offsetTop : undefined,
-        ledger: ledgerEl ? ledgerEl.offsetTop : undefined,
-      });
-
-      setActiveTab(active);
+      setIsScrolled(window.scrollY > 8);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -79,18 +82,6 @@ export function Navbar() {
     return null;
   }
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    setActiveTab(id);
-    setIsMobileMenuOpen(false);
-
-    const target = document.getElementById(id);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.history.pushState(null, '', `#${id}`);
-    }
-  };
-
   return (
     <>
       <header
@@ -104,8 +95,8 @@ export function Navbar() {
       >
         <div className="max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-4">
           {/* Left: Brand & Facility Identity */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/80 text-[#101828] shadow-[0_1px_3px_0_rgb(180_83_9/0.15)] flex-shrink-0">
+          <Link href="/" className="flex items-center gap-3 min-w-0 group cursor-pointer">
+            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/80 text-[#101828] shadow-[0_1px_3px_0_rgb(180_83_9/0.15)] flex-shrink-0 group-hover:scale-105 transition-transform">
               <Trees className="w-[18px] h-[18px] text-amber-700" />
               {/* Pulse dot */}
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white shadow-sm" />
@@ -125,12 +116,12 @@ export function Navbar() {
                 Penerimaan Kayu & Stok (木材入库与库存管理)
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Center: Section Navigation Tabs (Desktop) — with sliding indicator */}
           <nav
             ref={navRef}
-            aria-label="Section Navigation"
+            aria-label="Primary Navigation"
             className="hidden md:flex relative items-center gap-0.5 bg-gray-100/70 p-1 rounded-xl border border-gray-200/50"
           >
             {/* Sliding active indicator */}
@@ -143,15 +134,14 @@ export function Navbar() {
             />
 
             {NAV_ITEMS.map((item) => {
-              const isActive = activeTab === item.id;
+              const isActive = isNavItemActive(item.href, pathname);
               const Icon = ICON_MAP[item.id];
 
               return (
-                <a
+                <Link
                   key={item.id}
                   ref={(el) => { tabRefs.current[item.id] = el; }}
                   href={item.href}
-                  onClick={(e) => handleNavClick(e, item.id)}
                   className={`
                     relative z-10 flex items-center gap-2 px-3.5 py-[7px] rounded-[10px] text-xs transition-colors duration-200
                     ${isActive
@@ -165,7 +155,7 @@ export function Navbar() {
                   )}
                   <span className="whitespace-nowrap">{item.labelId}</span>
                   <span className="text-[10px] opacity-50 whitespace-nowrap">({item.labelZh})</span>
-                </a>
+                </Link>
               );
             })}
           </nav>
@@ -223,14 +213,14 @@ export function Navbar() {
         >
           <div className="px-4 py-4 flex flex-col gap-1">
             {NAV_ITEMS.map((item, index) => {
-              const isActive = activeTab === item.id;
+              const isActive = isNavItemActive(item.href, pathname);
               const Icon = ICON_MAP[item.id];
 
               return (
-                <a
+                <Link
                   key={item.id}
                   href={item.href}
-                  onClick={(e) => handleNavClick(e, item.id)}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`
                     group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200
                     ${isActive
@@ -257,7 +247,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <ChevronRight className={`w-4 h-4 transition-all duration-200 ${isActive ? 'text-amber-500 translate-x-0' : 'text-gray-300 -translate-x-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
-                </a>
+                </Link>
               );
             })}
           </div>

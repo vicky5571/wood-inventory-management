@@ -7,25 +7,49 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   {
-    id: 'dashboard',
-    labelId: 'Dashboard',
-    labelZh: '仪表板',
-    href: '#dashboard',
+    id: 'analytics',
+    labelId: 'Ringkasan',
+    labelZh: '运营概况',
+    href: '/',
   },
   {
     id: 'ledger',
     labelId: 'Buku Besar',
     labelZh: '入库总账',
-    href: '#ledger',
+    href: '/ledger',
   },
   {
-    id: 'species',
-    labelId: 'Spesies',
-    labelZh: '木材种类',
-    href: '#species',
+    id: 'suppliers',
+    labelId: 'Pemasok',
+    labelZh: '供应商',
+    href: '/suppliers',
+  },
+  {
+    id: 'activity',
+    labelId: 'Aktivitas',
+    labelZh: '审计日志',
+    href: '/activity',
+  },
+  {
+    id: 'settings',
+    labelId: 'Pengaturan',
+    labelZh: '系统设置',
+    href: '/settings',
   },
 ] as const;
 
+export function isNavItemActive(itemHref: string, currentPathname: string): boolean {
+  if (!currentPathname) return false;
+  // Clean query params if present in currentPathname
+  const cleanPath = currentPathname.split('?')[0];
+
+  if (itemHref === '/') {
+    return cleanPath === '/';
+  }
+  return cleanPath === itemHref || cleanPath.startsWith(`${itemHref}/`);
+}
+
+// Backward-compatibility fallback for legacy tests if needed
 export function resolveActiveNavSection(
   scrollY: number,
   offsets: { dashboard?: number; species?: number; ledger?: number }
@@ -39,4 +63,3 @@ export function resolveActiveNavSection(
   }
   return 'dashboard';
 }
-
