@@ -5,6 +5,7 @@ import type { WoodReceivingRecord } from '@/src/types';
 import { computeRecordCalculations } from '@/src/utils/timber-calc.ts';
 import { toast } from '@/src/utils/toast-store';
 import { TallyDimensionCalculator } from './TallyDimensionCalculator';
+import { SpeciesCombobox } from './SpeciesCombobox';
 import {
   X,
   Calculator,
@@ -50,11 +51,13 @@ const defaultRecord = (): Partial<WoodReceivingRecord> => ({
 export function RecordModal({
   isOpen,
   initialRecord,
+  availableSpecies,
   onClose,
   onSave,
 }: {
   isOpen: boolean;
   initialRecord: WoodReceivingRecord | null;
+  availableSpecies?: string[];
   onClose: () => void;
   onSave: (record: WoodReceivingRecord) => void;
 }) {
@@ -243,13 +246,11 @@ export function RecordModal({
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
                   Jenis Kayu (树种) <span className="text-[#ed1c24]">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Teak / Meranti / Pine"
+                <SpeciesCombobox
                   value={form.woodSpecies || ''}
-                  onChange={(e) => setForm({ ...form, woodSpecies: e.target.value })}
-                  className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
+                  onChange={(species) => setForm({ ...form, woodSpecies: species })}
+                  availableSpecies={availableSpecies}
+                  required
                 />
               </div>
               <div>

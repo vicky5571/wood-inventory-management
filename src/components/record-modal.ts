@@ -7,6 +7,7 @@
 
 import { computeRecordCalculations } from '../utils/timber-calc.ts';
 import { toast } from '../utils/toast-store.ts';
+import { DEFAULT_TIMBER_SPECIES } from '../utils/timber-species.ts';
 import type { WoodReceivingRecord } from '../types/index.ts';
 
 function formatRupiah(num: number): string {
@@ -73,7 +74,10 @@ export function openRecordModal(
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Jenis Kayu <span>(树种) *</span></label>
-                <input class="input-control" type="text" name="woodSpecies" value="${escapeHtml(initialRecord?.woodSpecies || '')}" placeholder="Teak / Merbau / Sengon" required />
+                <input class="input-control" type="text" name="woodSpecies" list="species-datalist" value="${escapeHtml(initialRecord?.woodSpecies || '')}" placeholder="Pilih atau ketik jenis kayu..." required />
+                <datalist id="species-datalist">
+                  ${DEFAULT_TIMBER_SPECIES.map((s) => `<option value="${escapeHtml(s)}"></option>`).join('')}
+                </datalist>
               </div>
               <div class="form-group">
                 <label class="form-label">Panjang Kayu (m) <span>(长度)</span></label>

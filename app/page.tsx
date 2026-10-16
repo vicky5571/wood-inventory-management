@@ -113,6 +113,7 @@ export default function DashboardPage() {
         <RecordModal
           isOpen={isModalOpen}
           initialRecord={editingRecord}
+          availableSpecies={speciesList}
           onClose={() => setIsModalOpen(false)}
           onSave={saveRecord}
         />
