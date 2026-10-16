@@ -7,6 +7,7 @@ import { useActivityLog } from '@/src/hooks/useActivityLog';
 import { Toolbar } from '@/src/components/ledger/Toolbar';
 import { RecordTable } from '@/src/components/ledger/RecordTable';
 import { RecordModal } from '@/src/components/ledger/RecordModal';
+import { PrintReceivingSlipModal } from '@/src/components/ledger/PrintReceivingSlipModal';
 import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
 import type { WoodReceivingRecord } from '@/src/types';
 import { TableProperties, ShieldAlert } from 'lucide-react';
@@ -28,6 +29,7 @@ export default function LedgerPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<WoodReceivingRecord | null>(null);
+  const [printingRecord, setPrintingRecord] = useState<WoodReceivingRecord | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const pendingRecord = pendingDeleteId ? records.find((r) => r.id === pendingDeleteId) : null;
@@ -135,6 +137,7 @@ export default function LedgerPage() {
             canWrite={canWrite}
             onEdit={handleEdit}
             onDelete={(id) => setPendingDeleteId(id)}
+            onPrint={(r) => setPrintingRecord(r)}
             onResetFilters={() => setFilters({})}
           />
         </div>
@@ -150,6 +153,13 @@ export default function LedgerPage() {
           onSave={handleSave}
         />
       )}
+
+      {/* Printable Receiving Slip Modal */}
+      <PrintReceivingSlipModal
+        isOpen={Boolean(printingRecord)}
+        record={printingRecord}
+        onClose={() => setPrintingRecord(null)}
+      />
 
       {/* Delete Confirmation Safeguard Dialog */}
       <ConfirmDialog

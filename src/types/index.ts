@@ -429,3 +429,12 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
+/**
+ * Printable timber receiving slip modal properties
+ */
+export interface PrintReceivingSlipModalProps {
+  isOpen: boolean;
+  record: WoodReceivingRecord | null;
+  onClose: () => void;
+}
+

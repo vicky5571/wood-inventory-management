@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
-import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown, SearchX, RotateCcw } from 'lucide-react';
+import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown, SearchX, RotateCcw } from 'lucide-react';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -30,12 +30,14 @@ export function RecordTable({
   canWrite = true,
   onEdit,
   onDelete,
+  onPrint,
   onResetFilters,
 }: {
   records: WoodReceivingRecord[];
   canWrite?: boolean;
   onEdit: (record: WoodReceivingRecord) => void;
   onDelete: (id: string) => void;
+  onPrint?: (record: WoodReceivingRecord) => void;
   onResetFilters?: () => void;
 }) {
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -198,6 +200,14 @@ export function RecordTable({
                   {canWrite && (
                     <td className="p-3.5 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f3f4f6] transition-colors border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                       <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onPrint?.(r)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                          title="Cetak Tanda Terima (打印进厂单)"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => onEdit(r)}
                           className="p-1.5 text-gray-400 hover:text-[#b38600] hover:bg-[#ffc908]/15 rounded-lg transition"
