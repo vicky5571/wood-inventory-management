@@ -11,7 +11,10 @@ import {
   clearRecordDraft,
 } from '@/src/utils/record-draft';
 import { DraftRecoveryBanner } from './DraftRecoveryBanner';
-import { RecordModalSections } from './RecordModalSections';
+import { RecordDocumentSection } from './RecordDocumentSection';
+import { RecordMeasurementSection } from './RecordMeasurementSection';
+import { RecordFinancialSection } from './RecordFinancialSection';
+import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { X, Scale, CheckCircle2 } from 'lucide-react';
 
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
@@ -206,12 +209,14 @@ export function RecordModal({
 
         {/* Modal Body / Form */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-5">
-          <RecordModalSections
+          <RecordDocumentSection
             form={form}
             setForm={setForm}
             availableSpecies={availableSpecies}
-            preview={preview}
           />
+          <RecordMeasurementSection form={form} setForm={setForm} />
+          <RecordFinancialSection form={form} setForm={setForm} />
+          <RecordReconciliationCard preview={preview} />
 
           {/* Modal Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
