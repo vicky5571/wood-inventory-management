@@ -6,6 +6,7 @@ import { computeRecordCalculations } from '@/src/utils/timber-calc.ts';
 import { toast } from '@/src/utils/toast-store';
 import { TallyDimensionCalculator } from './TallyDimensionCalculator';
 import { SpeciesCombobox } from './SpeciesCombobox';
+import { SupplierCombobox } from './SupplierCombobox';
 import {
   X,
   Calculator,
@@ -217,13 +218,10 @@ export function RecordModal({
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
                   Supplier / Pemilik Kayu (供应商) <span className="text-[#ed1c24]">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Nama PT / CV / Koperasi Hutan"
+                <SupplierCombobox
                   value={form.supplierName || ''}
-                  onChange={(e) => setForm({ ...form, supplierName: e.target.value })}
-                  className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
+                  onChange={(val) => setForm({ ...form, supplierName: val })}
+                  required
                 />
               </div>
             </div>
