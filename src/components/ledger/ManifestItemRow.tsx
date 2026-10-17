@@ -3,14 +3,13 @@
 import React from 'react';
 import type { ManifestItemInput } from '@/src/types';
 import { SpeciesCombobox } from './SpeciesCombobox';
+import { YardSelect } from './YardSelect';
+import { KavlingSelect } from './KavlingSelect';
+import { getLotsForYard } from '@/src/utils/storage-locations';
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 
 const formatRupiah = (num: number): string =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(num);
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 
 const inputCls = 'w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent font-mono tabular-nums shadow-2xs';
 const tallyCls = 'w-full text-xs px-2 py-1 bg-white border border-[#ffc908] rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] font-mono tabular-nums font-bold';
@@ -53,6 +52,16 @@ export function ManifestItemRow({
 
   const updateField = <K extends keyof ManifestItemInput>(field: K, value: ManifestItemInput[K]) => {
     onChange({ ...item, [field]: value });
+  };
+
+  const handleYardChange = (newYard: string) => {
+    let nextKavling = item.kavlingNumber || '';
+    if (nextKavling) {
+      const validLots = getLotsForYard(newYard);
+      const exists = validLots.some((lot) => lot.lotCode.toLowerCase() === nextKavling.toLowerCase());
+      if (!exists) nextKavling = '';
+    }
+    onChange({ ...item, storageYard: newYard, kavlingNumber: nextKavling });
   };
 
   return (
@@ -135,27 +144,24 @@ export function ManifestItemRow({
             className={inputCls}
           />
         </div>
-        {/* 3. Kavling */}
-        <div className="col-span-1">
-          <label className={labelCls}>Kavling (批号) <span className="text-[#ed1c24]">*</span></label>
-          <input
-            type="text"
-            required
-            placeholder="KAV-01"
-            value={item.kavlingNumber || ''}
-            onChange={(e) => updateField('kavlingNumber', e.target.value)}
-            className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] uppercase shadow-2xs"
-          />
-        </div>
-        {/* 4. Yard / TPK */}
+        {/* 3. Yard / TPK */}
         <div className="col-span-1">
           <label className={labelCls}>TPK (场地)</label>
-          <input
-            type="text"
-            placeholder="TPK-1"
+          <YardSelect
+            id={`yard-select-${item.id || index}`}
             value={item.storageYard || ''}
-            onChange={(e) => updateField('storageYard', e.target.value)}
-            className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] shadow-2xs"
+            onChange={(yard) => handleYardChange(yard)}
+          />
+        </div>
+        {/* 4. Kavling */}
+        <div className="col-span-1">
+          <label className={labelCls}>Kavling (批号) <span className="text-[#ed1c24]">*</span></label>
+          <KavlingSelect
+            id={`kavling-select-${item.id || index}`}
+            selectedYard={item.storageYard || ''}
+            value={item.kavlingNumber || ''}
+            onChange={(lot) => updateField('kavlingNumber', lot)}
+            required
           />
         </div>
         {/* 5. Delivered Pieces */}

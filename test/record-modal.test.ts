@@ -249,5 +249,16 @@ test('RecordModal Multi-Item Integration Suite', async (t) => {
     assert.match(content, /hideSpeciesSection=\{true\}/);
     assert.match(content, /hideTimberPricing=\{true\}/);
   });
+
+  await t.test('ManifestItemRow incorporates YardSelect and KavlingSelect cascading selectors', () => {
+    const rowPath = path.join(process.cwd(), 'src/components/ledger/ManifestItemRow.tsx');
+    assert.ok(fs.existsSync(rowPath), 'ManifestItemRow.tsx must exist');
+    const rowContent = fs.readFileSync(rowPath, 'utf-8');
+    const rowLines = rowContent.split('\n').length;
+    assert.ok(rowLines < 250, `ManifestItemRow.tsx must remain under 250 lines (currently ${rowLines})`);
+    assert.match(rowContent, /YardSelect/);
+    assert.match(rowContent, /KavlingSelect/);
+    assert.match(rowContent, /handleYardChange/);
+  });
 });
 

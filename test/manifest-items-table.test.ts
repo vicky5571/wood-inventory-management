@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { getLotsForYard, resetStorageLocations } from '../src/utils/storage-locations.ts';
 
 test('Manifest Items Table Components Invariant Suite', async (t) => {
   const rowPath = path.join(process.cwd(), 'src/components/ledger/ManifestItemRow.tsx');
@@ -24,6 +25,45 @@ test('Manifest Items Table Components Invariant Suite', async (t) => {
     assert.match(content, /tallyVolumeM3/);
     assert.match(content, /timberPricePerM3/);
     assert.match(content, /timberPphRate/);
+  });
+
+  await t.test('ManifestItemRow integrates cascading YardSelect and KavlingSelect components', () => {
+    const content = fs.readFileSync(rowPath, 'utf-8');
+    assert.match(content, /YardSelect/, 'Must import or use YardSelect');
+    assert.match(content, /KavlingSelect/, 'Must import or use KavlingSelect');
+    assert.match(content, /getLotsForYard/, 'Must import getLotsForYard for lot validity checks');
+    assert.match(content, /handleYardChange/, 'Must implement handleYardChange for cascading update');
+    assert.doesNotMatch(
+      content,
+      /<input[^>]*value=\{item\.kavlingNumber/,
+      'Freeform input for kavlingNumber must be replaced by KavlingSelect'
+    );
+    assert.doesNotMatch(
+      content,
+      /<input[^>]*value=\{item\.storageYard/,
+      'Freeform input for storageYard must be replaced by YardSelect'
+    );
+  });
+
+  await t.test('Cascading yard change preserves matching kavling and resets mismatched kavling', () => {
+    resetStorageLocations();
+    const isLotValidForYard = (yard: string, lotCode: string) => {
+      if (!lotCode) return false;
+      const validLots = getLotsForYard(yard);
+      return validLots.some((l) => l.lotCode.toLowerCase() === lotCode.toLowerCase());
+    };
+
+    // TPK-Timur has KAV-01 and KAV-02
+    assert.strictEqual(isLotValidForYard('TPK-Timur', 'KAV-01'), true);
+    assert.strictEqual(isLotValidForYard('TPK-Timur', 'KAV-02'), true);
+    assert.strictEqual(isLotValidForYard('TPK-Timur', 'KAV-03'), false);
+
+    // TPK-Utara has KAV-03 and KAV-04
+    assert.strictEqual(isLotValidForYard('TPK-Utara', 'KAV-03'), true);
+    assert.strictEqual(isLotValidForYard('TPK-Utara', 'KAV-01'), false);
+
+    // Empty yard has no valid lots
+    assert.strictEqual(isLotValidForYard('', 'KAV-01'), false);
   });
 
   await t.test('ManifestItemRow implements live discrepancy badge, subtotal net, and guarded delete', () => {
