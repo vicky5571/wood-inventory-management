@@ -3,22 +3,27 @@
  *
  * Server persistence bridge for wood receiving records.
  * Primary backing engine: native relational SQLite (SqliteRecordStore).
- * Backward-compatible fallback: file-based JSON store with serialized mutex
+ * Backward-compatible fallback: file-based JSON store (FileRecordStore)
  * when explicit filePath or WOOD_RECORDS_PATH is configured.
  */
 
 import path from 'node:path';
-import fs from 'node:fs/promises';
-import { SEED_WOOD_RECORDS } from './seed-data.ts';
 import { SqliteRecordStore, sqliteRecordStore } from './sqlite-record-store.ts';
-import type { WoodReceivingRecord, ManifestFormInput } from '../types/index.ts';
-import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
+import { FileRecordStore } from './file-record-store.ts';
+import type {
+  WoodReceivingRecord,
+  ManifestFormInput,
+  StorageYard,
+  StorageLot,
+  StorageLotStatus,
+  StorageLotWithYard,
+} from '../types/index.ts';
+import { loadStorageLocations, addYard, addLot } from '../utils/storage-locations.ts';
 
 export class ServerRecordStore {
   private explicitFilePath: string | null = null;
   private explicitSqliteStore: SqliteRecordStore | null = null;
-  private cache: WoodReceivingRecord[] | null = null;
-  private writeLock: Promise<unknown> = Promise.resolve();
+  private fileStore: FileRecordStore | null = null;
 
   constructor(filePathOrStore?: string | SqliteRecordStore) {
     if (filePathOrStore instanceof SqliteRecordStore) {
@@ -40,197 +45,82 @@ export class ServerRecordStore {
     return path.resolve(path.join(process.cwd(), 'data', 'wood_records.json'));
   }
 
+  private getFileStore(): FileRecordStore {
+    if (!this.fileStore) {
+      this.fileStore = new FileRecordStore(this.getEffectiveFilePath());
+    }
+    return this.fileStore;
+  }
+
   private getSqliteStore(): SqliteRecordStore {
     return this.explicitSqliteStore || sqliteRecordStore;
   }
 
-  /**
-   * Promise-queue mutex ensuring only one critical read-modify-write action
-   * executes at any given time for file-based operations.
-   */
-  private runExclusive<T>(action: () => Promise<T>): Promise<T> {
-    const next = this.writeLock.then(action, action);
-    this.writeLock = next.then(() => {}, () => {});
-    return next;
-  }
-
-  /**
-   * Low-level atomic file writer using temporary file creation and atomic rename.
-   */
-  private async writeAtomically(targetPath: string, data: WoodReceivingRecord[]): Promise<void> {
-    const dir = path.dirname(targetPath);
-    await fs.mkdir(dir, { recursive: true });
-    const tmpPath = `${targetPath}.tmp.${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    await fs.writeFile(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
-    await fs.rename(tmpPath, targetPath);
-  }
-
-  /**
-   * Internal helper to persist seed records and initialize cache in file mode.
-   */
-  private async hydrateSeed(targetPath: string): Promise<WoodReceivingRecord[]> {
-    const seedClone: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
-    await this.writeAtomically(targetPath, seedClone);
-    this.cache = seedClone;
-    return JSON.parse(JSON.stringify(seedClone));
-  }
-
-  /**
-   * Retrieves all records.
-   * Delegates to SQLite in relational mode, or JSON cache/file in file mode.
-   */
   async getAll(): Promise<WoodReceivingRecord[]> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().getAll();
-    }
-
-    const targetPath = this.getEffectiveFilePath();
-    if (this.cache !== null) {
-      return JSON.parse(JSON.stringify(this.cache));
-    }
-
-    try {
-      const raw = await fs.readFile(targetPath, 'utf-8');
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        this.cache = parsed;
-        return JSON.parse(JSON.stringify(this.cache));
-      }
-    } catch {
-      // File does not exist or content is malformed -> fall through to reset/hydrate
-    }
-
-    return this.hydrateSeed(targetPath);
+    return this.isFileMode() ? this.getFileStore().getAll() : this.getSqliteStore().getAll();
   }
 
-  /**
-   * Retrieves a single record by ID.
-   */
   async getById(id: string): Promise<WoodReceivingRecord | null> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().getById(id);
-    }
-    const all = await this.getAll();
-    return all.find((r) => r.id === id) || null;
+    return this.isFileMode() ? this.getFileStore().getById(id) : this.getSqliteStore().getById(id);
   }
 
-  /**
-   * Saves or updates a record.
-   * Delegates to SQLite relational engine or mutex-guarded atomic file write.
-   */
   async save(record: WoodReceivingRecord): Promise<WoodReceivingRecord> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().save(record);
-    }
-
-    const targetPath = this.getEffectiveFilePath();
-    return this.runExclusive(async () => {
-      const records = await this.getAll();
-      const now = new Date().toISOString();
-
-      const existingIndex = record.id ? records.findIndex((r) => r.id === record.id) : -1;
-
-      let targetRecord: WoodReceivingRecord;
-
-      if (existingIndex >= 0) {
-        targetRecord = {
-          ...records[existingIndex],
-          ...record,
-          updatedAt: now,
-        };
-        records[existingIndex] = targetRecord;
-      } else {
-        const id = record.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        targetRecord = {
-          ...record,
-          id,
-          createdAt: record.createdAt || now,
-          updatedAt: now,
-        };
-        records.unshift(targetRecord);
-      }
-
-      await this.writeAtomically(targetPath, records);
-      this.cache = records;
-      return JSON.parse(JSON.stringify(targetRecord));
-    });
+    return this.isFileMode() ? this.getFileStore().save(record) : this.getSqliteStore().save(record);
   }
 
-  /**
-   * Saves a multi-item manifest and returns projected flat WoodReceivingRecord items.
-   */
   async saveManifest(manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().saveManifest(manifest);
-    }
-
-    const targetPath = this.getEffectiveFilePath();
-    return this.runExclusive(async () => {
-      const records = await this.getAll();
-      const { next, flattened } = applyManifestToRecords(records, manifest);
-      await this.writeAtomically(targetPath, next);
-      this.cache = next;
-      return JSON.parse(JSON.stringify(flattened));
-    });
+    return this.isFileMode() ? this.getFileStore().saveManifest(manifest) : this.getSqliteStore().saveManifest(manifest);
   }
 
-  /**
-   * Deletes a record by ID.
-   */
   async delete(id: string): Promise<boolean> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().delete(id);
-    }
-
-    const targetPath = this.getEffectiveFilePath();
-    return this.runExclusive(async () => {
-      const records = await this.getAll();
-      const index = records.findIndex((r) => r.id === id);
-      if (index === -1) {
-        return false;
-      }
-
-      records.splice(index, 1);
-      await this.writeAtomically(targetPath, records);
-      this.cache = records;
-      return true;
-    });
+    return this.isFileMode() ? this.getFileStore().delete(id) : this.getSqliteStore().delete(id);
   }
 
-  /**
-   * Deletes all records belonging to a manifest by manifestId.
-   */
   async deleteManifest(manifestId: string): Promise<boolean> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().deleteManifest(manifestId);
-    }
+    return this.isFileMode() ? this.getFileStore().deleteManifest(manifestId) : this.getSqliteStore().deleteManifest(manifestId);
+  }
 
-    const targetPath = this.getEffectiveFilePath();
-    return this.runExclusive(async () => {
-      const records = await this.getAll();
-      const initialLen = records.length;
-      const filtered = records.filter((r) => r.manifest_id !== manifestId && r.id !== manifestId);
-      if (filtered.length === initialLen) {
-        return false;
-      }
-      await this.writeAtomically(targetPath, filtered);
-      this.cache = filtered;
-      return true;
-    });
+  async reset(): Promise<WoodReceivingRecord[]> {
+    return this.isFileMode() ? this.getFileStore().reset() : this.getSqliteStore().reset();
   }
 
   /**
-   * Re-seeds store with fresh SEED_WOOD_RECORDS.
+   * Retrieves storage locations (yards and joined lots).
    */
-  async reset(): Promise<WoodReceivingRecord[]> {
+  async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
     if (!this.isFileMode()) {
-      return this.getSqliteStore().reset();
+      return this.getSqliteStore().getStorageLocations();
     }
-
-    const targetPath = this.getEffectiveFilePath();
-    return this.runExclusive(async () => {
-      return this.hydrateSeed(targetPath);
+    const data = loadStorageLocations();
+    const lots: StorageLotWithYard[] = data.lots.map((lot) => {
+      const yard = data.yards.find((y) => y.id === lot.yardId);
+      return {
+        ...lot,
+        yardCode: yard?.yardCode || '',
+        yardName: yard?.name || '',
+      };
     });
+    return { yards: data.yards, lots };
+  }
+
+  /**
+   * Saves or updates a storage yard.
+   */
+  async saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }): Promise<StorageYard> {
+    if (!this.isFileMode()) {
+      return this.getSqliteStore().saveStorageYard(yard);
+    }
+    return addYard(yard.name, yard.description);
+  }
+
+  /**
+   * Saves or updates a storage lot.
+   */
+  async saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
+    if (!this.isFileMode()) {
+      return this.getSqliteStore().saveStorageLot(lot);
+    }
+    return addLot(lot.yardId, lot.lotCode, lot.status);
   }
 
   /**

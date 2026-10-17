@@ -203,6 +203,11 @@ export function addLot(
     (l) => l.yardId.toLowerCase() === yard!.id.toLowerCase() && l.lotCode.toLowerCase() === trimmedLot.toLowerCase()
   );
   if (existingLot) {
+    if (status && existingLot.status !== status) {
+      existingLot.status = status;
+      existingLot.updatedAt = new Date().toISOString();
+      saveStorageLocations(data);
+    }
     return existingLot;
   }
 

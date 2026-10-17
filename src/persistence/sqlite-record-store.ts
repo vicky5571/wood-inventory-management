@@ -10,8 +10,21 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createSqliteDatabase } from './sqlite/db.ts';
 import { runMigrations } from './sqlite/migrations.ts';
 import { migrateJsonToSqlite, saveManifestToSqlite } from './sqlite/migrate-json.ts';
+import {
+  seedStorageLocationsIfEmpty,
+  getStorageLocationsFromDb,
+  saveStorageYardToDb,
+  saveStorageLotToDb,
+} from './sqlite/storage-locations-db.ts';
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
-import type { WoodReceivingRecord, ManifestFormInput } from '../types/index.ts';
+import type {
+  WoodReceivingRecord,
+  ManifestFormInput,
+  StorageYard,
+  StorageLot,
+  StorageLotStatus,
+  StorageLotWithYard,
+} from '../types/index.ts';
 
 export class SqliteRecordStore {
   private db: DatabaseSync;
@@ -30,6 +43,7 @@ export class SqliteRecordStore {
     if (!countRow || countRow.c === 0) {
       migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
     }
+    seedStorageLocationsIfEmpty(this.db);
     this.initialized = true;
   }
 
@@ -154,6 +168,30 @@ export class SqliteRecordStore {
     this.db.exec('DELETE FROM receiving_manifests;');
     migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
     return this.getAll();
+  }
+
+  /**
+   * Retrieves all storage locations (yards and joined lots).
+   */
+  async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
+    this.ensureInitialized();
+    return getStorageLocationsFromDb(this.db);
+  }
+
+  /**
+   * Saves or updates a storage yard.
+   */
+  async saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }): Promise<StorageYard> {
+    this.ensureInitialized();
+    return saveStorageYardToDb(this.db, yard);
+  }
+
+  /**
+   * Saves or updates a storage lot.
+   */
+  async saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
+    this.ensureInitialized();
+    return saveStorageLotToDb(this.db, lot);
   }
 
   /**
