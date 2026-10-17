@@ -108,8 +108,8 @@ export function getLotsForYard(yardNameOrId: string): StorageLot[] {
       y.name.toLowerCase() === normalized ||
       y.yardCode.toLowerCase() === normalized
   );
-  const targetYardId = matchedYard ? matchedYard.id : yardNameOrId.trim();
-  return data.lots.filter((lot) => lot.yardId === targetYardId);
+  const targetYardId = (matchedYard ? matchedYard.id : yardNameOrId.trim()).toLowerCase();
+  return data.lots.filter((lot) => lot.yardId.toLowerCase() === targetYardId);
 }
 
 export function isLotFullOrMaintenance(lot?: StorageLot): { isWarning: boolean; message?: string } {
@@ -143,7 +143,10 @@ function deriveYardCode(name: string, existingYards: StorageYard[]): string {
 }
 
 export function addYard(name: string, description?: string): StorageYard {
-  const trimmedName = name.trim();
+  const trimmedName = name ? name.trim() : '';
+  if (!trimmedName) {
+    throw new Error('Yard name cannot be empty');
+  }
   const data = loadStorageLocations();
   const existing = data.yards.find((y) => y.name.toLowerCase() === trimmedName.toLowerCase());
   if (existing) {
@@ -176,9 +179,15 @@ export function addLot(
   lotCode: string,
   status: StorageLotStatus = 'ACTIVE'
 ): StorageLot {
-  const data = loadStorageLocations();
-  const normalizedYard = yardNameOrId.trim().toLowerCase();
-  let yard = data.yards.find(
+  const trimmedYard = yardNameOrId ? yardNameOrId.trim() : '';
+  const trimmedLot = lotCode ? lotCode.trim() : '';
+  if (!trimmedYard || !trimmedLot) {
+    throw new Error('Lot code and yard identifier cannot be empty');
+  }
+
+  const normalizedYard = trimmedYard.toLowerCase();
+  const existingYards = getYards();
+  let yard = existingYards.find(
     (y) =>
       y.id.toLowerCase() === normalizedYard ||
       y.name.toLowerCase() === normalizedYard ||
@@ -186,12 +195,12 @@ export function addLot(
   );
 
   if (!yard) {
-    yard = addYard(yardNameOrId);
+    yard = addYard(trimmedYard);
   }
 
-  const trimmedLot = lotCode.trim();
+  const data = loadStorageLocations();
   const existingLot = data.lots.find(
-    (l) => l.yardId === yard!.id && l.lotCode.toLowerCase() === trimmedLot.toLowerCase()
+    (l) => l.yardId.toLowerCase() === yard!.id.toLowerCase() && l.lotCode.toLowerCase() === trimmedLot.toLowerCase()
   );
   if (existingLot) {
     return existingLot;

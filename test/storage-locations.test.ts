@@ -57,6 +57,10 @@ test('Storage Locations Utility Suite', async (t) => {
     assert.strictEqual(timurById.length, 2);
     assert.deepStrictEqual(timurById.map((l) => l.lotCode), ['KAV-01', 'KAV-02']);
 
+    // Case-insensitive fallback on yardId
+    const timurCase = getLotsForYard('YARD-TIMUR');
+    assert.strictEqual(timurCase.length, 2);
+
     // By Name
     const utaraByName = getLotsForYard('TPK-Utara');
     assert.strictEqual(utaraByName.length, 2);
@@ -115,6 +119,15 @@ test('Storage Locations Utility Suite', async (t) => {
     assert.strictEqual(getYards().length, 5);
   });
 
+  await t.test('addYard and addLot validate empty or whitespace inputs', () => {
+    assert.throws(() => addYard(''), /Yard name cannot be empty/);
+    assert.throws(() => addYard('   '), /Yard name cannot be empty/);
+
+    assert.throws(() => addLot('', 'KAV-01'), /Lot code and yard identifier cannot be empty/);
+    assert.throws(() => addLot('TPK-T', ''), /Lot code and yard identifier cannot be empty/);
+    assert.throws(() => addLot('   ', '   '), /Lot code and yard identifier cannot be empty/);
+  });
+
   await t.test('addLot dynamically adds a new lot to an existing or auto-provisioned yard', () => {
     // Add to existing yard by ID
     const lot1 = addLot('yard-timur', 'KAV-09', 'ACTIVE');
@@ -132,12 +145,16 @@ test('Storage Locations Utility Suite', async (t) => {
     assert.strictEqual(lot2.status, 'FULL');
     assert.strictEqual(lot2.yardId, 'yard-utara');
 
-    // Add to nonexistent yard auto-provisions the yard
+    // Add to nonexistent yard auto-provisions the yard and keeps BOTH in storage without stale overwrite
     const lot3 = addLot('TPK-Dermaga', 'KAV-DERMAGA-1', 'ACTIVE');
     assert.strictEqual(lot3.lotCode, 'KAV-DERMAGA-1');
-    const provisionedYard = getYards().find((y) => y.name === 'TPK-Dermaga');
-    assert.ok(provisionedYard);
+    const storedState = loadStorageLocations();
+    const provisionedYard = storedState.yards.find((y) => y.name === 'TPK-Dermaga');
+    assert.ok(provisionedYard, 'Stored yards must retain auto-provisioned yard');
     assert.strictEqual(lot3.yardId, provisionedYard.id);
+    const provisionedLot = storedState.lots.find((l) => l.lotCode === 'KAV-DERMAGA-1');
+    assert.ok(provisionedLot, 'Stored lots must retain new lot');
+    assert.strictEqual(provisionedLot.yardId, provisionedYard.id);
   });
 
   await t.test('filterLots and filterYards perform robust substring searches', () => {
