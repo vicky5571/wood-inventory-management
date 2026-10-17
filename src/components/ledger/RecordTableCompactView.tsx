@@ -3,6 +3,7 @@
 import React from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
 import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { isInvoiceSearchMatch } from '@/src/utils/record-search';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -40,6 +41,7 @@ export type SortDirection = 'asc' | 'desc';
 export interface RecordTableViewProps {
   records: WoodReceivingRecord[];
   canWrite?: boolean;
+  searchQuery?: string;
   sortField: SortField | null;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
@@ -51,6 +53,7 @@ export interface RecordTableViewProps {
 export function RecordTableCompactView({
   records,
   canWrite = true,
+  searchQuery,
   sortField,
   sortDirection,
   onSort,
@@ -161,7 +164,14 @@ export function RecordTableCompactView({
                 <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.timberNetPayable)}</td>
                 <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.freightNetPayable)}</td>
                 <td className="p-3.5 font-bold font-mono tabular-nums text-[#101828] whitespace-nowrap">{formatRupiah(r.grandNetPayable)}</td>
-                <td className="p-3.5 whitespace-nowrap">{renderPaymentBadge(r.paymentStatus)}</td>
+                <td className="p-3.5 whitespace-nowrap">
+                  {renderPaymentBadge(r.paymentStatus)}
+                  {isInvoiceSearchMatch(r, searchQuery || '') && (
+                    <span className="block mt-1 text-[9px] font-mono font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80">
+                      Faktur: {r.invoiceNumber}
+                    </span>
+                  )}
+                </td>
                 {canWrite && (
                   <td className="p-3.5 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f3f4f6] transition-colors border-l border-gray-200/80 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                     <div className="inline-flex items-center gap-1">
@@ -198,3 +208,4 @@ export function RecordTableCompactView({
     </div>
   );
 }
+

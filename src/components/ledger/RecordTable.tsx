@@ -11,6 +11,7 @@ import { RecordTableExcelView } from './RecordTableExcelView';
 export function RecordTable({
   records,
   canWrite = true,
+  searchQuery,
   onEdit,
   onDelete,
   onPrint,
@@ -18,6 +19,7 @@ export function RecordTable({
 }: {
   records: WoodReceivingRecord[];
   canWrite?: boolean;
+  searchQuery?: string;
   onEdit: (record: WoodReceivingRecord) => void;
   onDelete: (id: string) => void;
   onPrint?: (record: WoodReceivingRecord) => void;
@@ -123,6 +125,7 @@ export function RecordTable({
         <RecordTableExcelView
           records={sortedRecords}
           canWrite={canWrite}
+          searchQuery={searchQuery}
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}
@@ -134,6 +137,7 @@ export function RecordTable({
         <RecordTableCompactView
           records={sortedRecords}
           canWrite={canWrite}
+          searchQuery={searchQuery}
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}

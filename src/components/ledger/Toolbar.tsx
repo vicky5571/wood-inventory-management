@@ -38,7 +38,7 @@ export function Toolbar({
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
-              placeholder="Cari Plat / Dok / Supplier / Kav..."
+              placeholder="Cari Plat / Dok / Faktur / Supplier / Kav..."
               value={filters.searchQuery || ''}
               onChange={(e) => onFilterChange({ ...filters, searchQuery: e.target.value })}
               className={`w-full pl-9 ${

@@ -135,6 +135,7 @@ export default function LedgerPage() {
           <RecordTable
             records={records}
             canWrite={canWrite}
+            searchQuery={filters.searchQuery}
             onEdit={handleEdit}
             onDelete={(id) => setPendingDeleteId(id)}
             onPrint={(r) => setPrintingRecord(r)}
