@@ -212,6 +212,11 @@ export interface StorageYard {
 }
 
 /**
+ * Operational status of storage lot / kavling.
+ */
+export type StorageLotStatus = 'ACTIVE' | 'FULL' | 'MAINTENANCE';
+
+/**
  * Storage Infrastructure: Lot / Kavling inside a Yard.
  */
 export interface StorageLot {
@@ -219,9 +224,25 @@ export interface StorageLot {
   tenantId: string;
   yardId: string;
   lotCode: string;
-  status: 'ACTIVE' | 'FULL' | 'MAINTENANCE';
+  status: StorageLotStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Relational join of lot with parent yard details for UI presentation.
+ */
+export interface StorageLotWithYard extends StorageLot {
+  yardCode: string;
+  yardName: string;
+}
+
+/**
+ * Offline-first bundle for storage yards and lots master data.
+ */
+export interface StorageLocationsData {
+  yards: StorageYard[];
+  lots: StorageLot[];
 }
 
 /**
