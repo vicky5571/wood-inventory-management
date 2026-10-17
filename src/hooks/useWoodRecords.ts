@@ -6,6 +6,7 @@ import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
 import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
 import { toast } from '../utils/toast-store.ts';
 import { exportRecordsToCsv } from '../utils/records-csv.ts';
+import { recordMatchesSearchQuery } from '../utils/record-search.ts';
 
 const STORAGE_KEY = 'wood_receiving_records_next_v1';
 
@@ -205,13 +206,8 @@ export function useWoodRecords() {
         if (filters.paymentStatus === 'PAID' && r.paymentStatus !== 'PAID') return false;
         if (filters.paymentStatus === 'PARTIAL' && r.paymentStatus !== 'PARTIAL') return false;
       }
-      if (filters.searchQuery) {
-        const q = filters.searchQuery.trim().toLowerCase();
-        const hay = [
-          r.truckPlateNumber, r.forestryDocNumber, r.receiptNumber,
-          r.contractNumber, r.supplierName, r.woodSpecies, r.kavlingNumber, r.storageYard,
-        ].filter(Boolean).join(' ').toLowerCase();
-        if (!hay.includes(q)) return false;
+      if (filters.searchQuery && !recordMatchesSearchQuery(r, filters.searchQuery)) {
+        return false;
       }
       return true;
     });

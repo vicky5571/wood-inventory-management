@@ -8,6 +8,7 @@
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
 import type { StorageAdapter } from './storage.ts';
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
+import { recordMatchesSearchQuery } from '../utils/record-search.ts';
 
 const STORAGE_KEY = 'wood_receiving_records_v1';
 
@@ -47,25 +48,8 @@ export class WoodRecordRepository {
       if (criteria.endDate && r.receiptDate > criteria.endDate) {
         return false;
       }
-      if (criteria.searchQuery && criteria.searchQuery.trim() !== '') {
-        const query = criteria.searchQuery.trim().toLowerCase();
-        const haystack = [
-          r.truckPlateNumber,
-          r.forestryDocNumber,
-          r.receiptNumber,
-          r.contractNumber,
-          r.supplierName,
-          r.woodSpecies,
-          r.kavlingNumber,
-          r.storageYard,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-
-        if (!haystack.includes(query)) {
-          return false;
-        }
+      if (criteria.searchQuery && !recordMatchesSearchQuery(r, criteria.searchQuery)) {
+        return false;
       }
       return true;
     });

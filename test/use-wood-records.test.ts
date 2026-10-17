@@ -16,6 +16,7 @@ import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import { MemoryStorageAdapter, LocalStorageAdapter } from '../src/persistence/storage.ts';
 import { toastStore } from '../src/utils/toast-store.ts';
 import { escapeCsvField, generateRecordsCsvContent, CSV_HEADERS } from '../src/utils/records-csv.ts';
+import { recordMatchesSearchQuery } from '../src/utils/record-search.ts';
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../src/types/index.ts';
 
 function renderHook<T>(hookFn: () => T): T {
@@ -301,19 +302,7 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
 
     // Filter by search query across multiple fields
     const queryFilter = 'papua';
-    const queryResults = records.filter((r) => {
-      const hay = [
-        r.truckPlateNumber,
-        r.forestryDocNumber,
-        r.receiptNumber,
-        r.contractNumber,
-        r.supplierName,
-        r.woodSpecies,
-        r.kavlingNumber,
-        r.storageYard,
-      ].filter(Boolean).join(' ').toLowerCase();
-      return hay.includes(queryFilter.toLowerCase());
-    });
+    const queryResults = records.filter((r) => recordMatchesSearchQuery(r, queryFilter));
     assert.strictEqual(queryResults.length, 1);
     assert.strictEqual(queryResults[0].supplierName, 'CV Papua Rimba Sejahtera');
   });

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import type { RecordFilterCriteria, WoodReceivingRecord } from '../src/types/index.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 
+import { recordMatchesSearchQuery } from '../src/utils/record-search.ts';
+
 /**
  * Filter helper matching the implementation in useWoodRecords / RecordTable
  */
@@ -14,22 +16,8 @@ function applyFilters(records: WoodReceivingRecord[], filters: RecordFilterCrite
     if (filters.kavling && r.kavlingNumber !== filters.kavling) {
       return false;
     }
-    if (filters.searchQuery && filters.searchQuery.trim() !== '') {
-      const q = filters.searchQuery.toLowerCase().trim();
-      const haystack = [
-        r.truckPlateNumber,
-        r.forestryDocNumber,
-        r.receiptNumber,
-        r.contractNumber,
-        r.supplierName,
-        r.woodSpecies,
-        r.kavlingNumber,
-        r.storageYard,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-      if (!haystack.includes(q)) return false;
+    if (filters.searchQuery && !recordMatchesSearchQuery(r, filters.searchQuery)) {
+      return false;
     }
     return true;
   });
@@ -111,5 +99,24 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
       searchQuery: 'NONEXISTENT-999',
     });
     assert.strictEqual(emptyResults.length, 0);
+  });
+
+  await t.test('searches across invoiceNumber without false-positive date string collisions', () => {
+    const testRecords: WoodReceivingRecord[] = [
+      {
+        ...records[0],
+        id: 'rec-inv-test-1',
+        invoiceNumber: 'INV-2026-999',
+      },
+    ];
+
+    // Searching by invoice number finds the record
+    const invoiceResults = applyFilters(testRecords, { searchQuery: 'INV-2026-999' });
+    assert.strictEqual(invoiceResults.length, 1);
+    assert.strictEqual(invoiceResults[0].invoiceNumber, 'INV-2026-999');
+
+    // Searching by receiptDate substring '2026-10-01' does not match text search
+    const dateResults = applyFilters(testRecords, { searchQuery: '2026-10-01' });
+    assert.strictEqual(dateResults.length, 0);
   });
 });
