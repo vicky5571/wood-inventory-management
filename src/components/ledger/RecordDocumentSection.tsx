@@ -46,6 +46,17 @@ export function RecordDocumentSection({
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              Dokumen Tanggal (发货时间)
+            </label>
+            <input
+              type="date"
+              value={form.docDate || ''}
+              onChange={(e) => setForm((prev) => ({ ...prev, docDate: e.target.value }))}
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
               No. Polisi Truk (车牌号) <span className="text-[#ed1c24]">*</span>
             </label>
             <input
@@ -72,6 +83,18 @@ export function RecordDocumentSection({
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              No. Kwitansi (订货单号)
+            </label>
+            <input
+              type="text"
+              placeholder="KW-2026-..."
+              value={form.receiptNumber || ''}
+              onChange={(e) => setForm((prev) => ({ ...prev, receiptNumber: e.target.value }))}
+              className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
               No. Kontrak (合同编号)
             </label>
             <input
@@ -82,7 +105,7 @@ export function RecordDocumentSection({
               className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
             />
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 md:col-span-3">
             <label className="block text-[11px] font-semibold text-gray-700 mb-1">
               Supplier / Pemilik Kayu (供应商) <span className="text-[#ed1c24]">*</span>
             </label>
