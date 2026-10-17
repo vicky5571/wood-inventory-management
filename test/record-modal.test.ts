@@ -243,5 +243,11 @@ test('RecordModal Multi-Item Integration Suite', async (t) => {
   await t.test('RecordReconciliationCard supports ManifestCalculationOutput', () => {
     assert.match(cardContent, /ManifestCalculationOutput/);
   });
+
+  await t.test('RecordModal accepts allRecords and configures deduplicated sections', () => {
+    assert.match(content, /allRecords\?: WoodReceivingRecord\[\]/);
+    assert.match(content, /hideSpeciesSection=\{true\}/);
+    assert.match(content, /hideTimberPricing=\{true\}/);
+  });
 });
 

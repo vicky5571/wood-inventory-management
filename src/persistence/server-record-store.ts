@@ -11,7 +11,8 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
 import { SqliteRecordStore, sqliteRecordStore } from './sqlite-record-store.ts';
-import type { WoodReceivingRecord } from '../types/index.ts';
+import type { WoodReceivingRecord, ManifestFormInput } from '../types/index.ts';
+import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
 
 export class ServerRecordStore {
   private explicitFilePath: string | null = null;
@@ -156,6 +157,24 @@ export class ServerRecordStore {
   }
 
   /**
+   * Saves a multi-item manifest and returns projected flat WoodReceivingRecord items.
+   */
+  async saveManifest(manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> {
+    if (!this.isFileMode()) {
+      return this.getSqliteStore().saveManifest(manifest);
+    }
+
+    const targetPath = this.getEffectiveFilePath();
+    return this.runExclusive(async () => {
+      const records = await this.getAll();
+      const { next, flattened } = applyManifestToRecords(records, manifest);
+      await this.writeAtomically(targetPath, next);
+      this.cache = next;
+      return JSON.parse(JSON.stringify(flattened));
+    });
+  }
+
+  /**
    * Deletes a record by ID.
    */
   async delete(id: string): Promise<boolean> {
@@ -174,6 +193,28 @@ export class ServerRecordStore {
       records.splice(index, 1);
       await this.writeAtomically(targetPath, records);
       this.cache = records;
+      return true;
+    });
+  }
+
+  /**
+   * Deletes all records belonging to a manifest by manifestId.
+   */
+  async deleteManifest(manifestId: string): Promise<boolean> {
+    if (!this.isFileMode()) {
+      return this.getSqliteStore().deleteManifest(manifestId);
+    }
+
+    const targetPath = this.getEffectiveFilePath();
+    return this.runExclusive(async () => {
+      const records = await this.getAll();
+      const initialLen = records.length;
+      const filtered = records.filter((r) => r.manifest_id !== manifestId && r.id !== manifestId);
+      if (filtered.length === initialLen) {
+        return false;
+      }
+      await this.writeAtomically(targetPath, filtered);
+      this.cache = filtered;
       return true;
     });
   }

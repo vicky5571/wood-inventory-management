@@ -97,13 +97,52 @@ export class SqliteRecordStore {
   }
 
   /**
-   * Deletes a receiving record by manifest id.
-   * Cascading foreign keys remove associated line items.
+   * Deletes a receiving record by id or synthetic line item id (manifestId_itemId).
+   * If synthetic, deletes the line item from receiving_items. If 0 items remain,
+   * cascades parent manifest deletion.
    */
   async delete(id: string): Promise<boolean> {
     this.ensureInitialized();
+    const flatRow = this.db
+      .prepare('SELECT manifest_id, item_id FROM v_buku_besar_flat WHERE id = ?;')
+      .get(id) as { manifest_id: string; item_id: string } | undefined;
+
+    if (flatRow && id !== flatRow.manifest_id) {
+      this.db.prepare('DELETE FROM receiving_items WHERE id = ?;').run(flatRow.item_id);
+      const remaining = this.db
+        .prepare('SELECT COUNT(*) AS c FROM receiving_items WHERE manifest_id = ?;')
+        .get(flatRow.manifest_id) as { c: number } | undefined;
+      if (!remaining || remaining.c === 0) {
+        this.db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(flatRow.manifest_id);
+      }
+      return true;
+    }
+
     const result = this.db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(id);
-    return Number(result.changes) > 0;
+    if (Number(result.changes) > 0) {
+      return true;
+    }
+
+    if (id.includes('_')) {
+      const idx = id.lastIndexOf('_');
+      const manifestId = id.slice(0, idx);
+      const itemId = id.slice(idx + 1);
+      const itemRow = this.db
+        .prepare('SELECT id, manifest_id FROM receiving_items WHERE id = ? AND manifest_id = ?;')
+        .get(itemId, manifestId) as { id: string; manifest_id: string } | undefined;
+      if (itemRow) {
+        this.db.prepare('DELETE FROM receiving_items WHERE id = ?;').run(itemRow.id);
+        const remaining = this.db
+          .prepare('SELECT COUNT(*) AS c FROM receiving_items WHERE manifest_id = ?;')
+          .get(itemRow.manifest_id) as { c: number } | undefined;
+        if (!remaining || remaining.c === 0) {
+          this.db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(itemRow.manifest_id);
+        }
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

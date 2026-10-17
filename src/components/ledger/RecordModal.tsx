@@ -40,10 +40,11 @@ const createItem = (r?: Partial<WoodReceivingRecord>): ManifestItemInput => ({
 });
 
 export function RecordModal({
-  isOpen, initialRecord, availableSpecies, onClose, onSave,
+  isOpen, initialRecord, allRecords, availableSpecies, onClose, onSave,
 }: {
   isOpen: boolean;
   initialRecord: WoodReceivingRecord | null;
+  allRecords?: WoodReceivingRecord[];
   availableSpecies?: string[];
   onClose: () => void;
   onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
@@ -55,7 +56,18 @@ export function RecordModal({
   useEffect(() => {
     if (!isOpen) { setPendingDraft(null); return; }
     if (initialRecord) {
-      setForm({ ...initialRecord }); setItems([createItem(initialRecord)]); setPendingDraft(null);
+      const manifestId = initialRecord.manifest_id || initialRecord.id;
+      const siblings = allRecords
+        ? allRecords.filter((r) => (r.manifest_id && r.manifest_id === manifestId) || r.id === manifestId)
+        : [];
+      const editItems = siblings.length > 0 ? siblings.map((r) => createItem(r)) : [createItem(initialRecord)];
+      const totalBrokerFee = siblings.length > 1
+        ? siblings.reduce((sum, s) => sum + (s.brokerFee || 0), 0)
+        : (initialRecord.brokerFee || 0);
+
+      setForm({ ...initialRecord, manifest_id: manifestId, brokerFee: totalBrokerFee });
+      setItems(editItems);
+      setPendingDraft(null);
     } else {
       setForm(defaultRecord()); setItems([createItem()]);
       const mDraft = loadManifestDraft();
@@ -66,7 +78,7 @@ export function RecordModal({
         setPendingDraft(rDraft && hasMeaningfulDraftData(rDraft) ? { ...rDraft, items: [createItem(rDraft)] } : null);
       }
     }
-  }, [initialRecord, isOpen]);
+  }, [initialRecord, allRecords, isOpen]);
 
   useEffect(() => {
     if (!isOpen || initialRecord) return;
@@ -210,9 +222,9 @@ export function RecordModal({
         {pendingDraft && <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />}
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-5">
-          <RecordDocumentSection form={form} setForm={setForm} availableSpecies={availableSpecies} />
+          <RecordDocumentSection form={form} setForm={setForm} availableSpecies={availableSpecies} hideSpeciesSection={true} />
           <ManifestItemsTable items={items} onChange={handleItemsChange} availableSpecies={availableSpecies} />
-          <RecordFinancialSection form={form} setForm={setForm} />
+          <RecordFinancialSection form={form} setForm={setForm} hideTimberPricing={true} />
           <RecordReconciliationCard preview={preview} />
 
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">

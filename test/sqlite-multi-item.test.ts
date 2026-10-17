@@ -52,6 +52,71 @@ test('SqliteRecordStore Multi-Item Persistence Suite', async (t) => {
     assert.strictEqual(flatRecords[0].manifest_id, 'man-multi-1');
     assert.strictEqual(flatRecords[1].manifest_id, 'man-multi-1');
     assert.notStrictEqual(flatRecords[0].id, flatRecords[1].id, 'Must have distinct synthetic IDs');
+    assert.strictEqual(flatRecords[0].brokerFee, 125000, 'Broker fee allocated proportionally for item a (5/8 of 200k)');
+    assert.strictEqual(flatRecords[1].brokerFee, 75000, 'Broker fee allocated proportionally for item b (3/8 of 200k)');
+    assert.strictEqual(flatRecords[0].grandNetPayable + flatRecords[1].grandNetPayable, 27246000, 'Sum of grandNetPayable equals manifest total');
+  });
+
+  await t.test('delete() with synthetic id deletes line item and parent manifest when 0 items remain', async () => {
+    const testManifest: ManifestFormInput = {
+      id: 'man-synth-del',
+      receiptDate: '2026-10-18',
+      truckPlateNumber: 'B 3333 DEL',
+      forestryDocNumber: 'DOC-DEL-01',
+      receiptNumber: 'KW-DEL-01',
+      contractNumber: 'CTR-DEL-01',
+      supplierName: 'PT Delete Test',
+      freightRatePerM3: 100000,
+      brokerFee: 50000,
+      items: [
+        {
+          id: 'item-d1',
+          woodSpecies: 'Teak',
+          woodLengthM: 4,
+          kavlingNumber: 'K1',
+          storageYard: 'Y1',
+          deliveredPieces: 5,
+          deliveredVolumeM3: 2,
+          tallyPieces: 5,
+          tallyVolumeM3: 2,
+          timberPricePerM3: 1000000,
+          timberPphRate: 0.5,
+        },
+        {
+          id: 'item-d2',
+          woodSpecies: 'Mahoni',
+          woodLengthM: 4,
+          kavlingNumber: 'K2',
+          storageYard: 'Y1',
+          deliveredPieces: 5,
+          deliveredVolumeM3: 2,
+          tallyPieces: 5,
+          tallyVolumeM3: 2,
+          timberPricePerM3: 1000000,
+          timberPphRate: 0.5,
+        },
+      ],
+    };
+
+    const flat = await store.saveManifest(testManifest);
+    assert.strictEqual(flat.length, 2);
+
+    // Delete item 1 via synthetic ID
+    const deletedItem1 = await store.delete('man-synth-del_item-d1');
+    assert.strictEqual(deletedItem1, true);
+
+    // One item remaining in manifest (now projected with single item id 'man-synth-del')
+    const midState = await store.getAll();
+    const remainingItems = midState.filter((r) => r.manifest_id === 'man-synth-del');
+    assert.strictEqual(remainingItems.length, 1);
+    assert.strictEqual(remainingItems[0].woodSpecies, 'Mahoni');
+
+    // Delete last remaining item via manifest id
+    const deletedLast = await store.delete('man-synth-del');
+    assert.strictEqual(deletedLast, true);
+
+    const finalState = await store.getAll();
+    assert.ok(!finalState.some((r) => r.manifest_id === 'man-synth-del'));
   });
 
   await t.test('deleting manifest cascades and removes all associated line items', async () => {

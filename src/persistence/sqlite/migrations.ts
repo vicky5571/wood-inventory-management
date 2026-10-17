@@ -217,8 +217,18 @@ export function runMigrations(db: DatabaseSync): void {
       ROUND(i.tally_volume_m3 * m.freight_rate_per_m3, 2) AS freightGrossTotal,
       ROUND((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0), 2) AS freightPphAmount,
       ROUND((i.tally_volume_m3 * m.freight_rate_per_m3) - ((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0)), 2) AS freightNetPayable,
-      m.broker_fee AS brokerFee,
-      ROUND(f.timber_net_payable + ((i.tally_volume_m3 * m.freight_rate_per_m3) - ((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + m.broker_fee, 2) AS grandNetPayable,
+      CASE 
+        WHEN COALESCE((SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id), 0) > 0 
+        THEN ROUND(m.broker_fee * (i.tally_volume_m3 / (SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id)), 2)
+        WHEN i.item_sequence = 1 THEN m.broker_fee
+        ELSE 0.0
+      END AS brokerFee,
+      ROUND(f.timber_net_payable + ((i.tally_volume_m3 * m.freight_rate_per_m3) - ((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + CASE 
+        WHEN COALESCE((SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id), 0) > 0 
+        THEN ROUND(m.broker_fee * (i.tally_volume_m3 / (SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id)), 2)
+        WHEN i.item_sequence = 1 THEN m.broker_fee
+        ELSE 0.0
+      END, 2) AS grandNetPayable,
       m.payment_status AS paymentStatus,
       m.invoice_number AS invoiceNumber,
       m.payment_date AS paymentDate,

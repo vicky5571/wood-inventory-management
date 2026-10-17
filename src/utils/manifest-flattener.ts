@@ -16,6 +16,9 @@ export function flattenManifest(
   const cAt = existingCreatedAt || now;
   const manifestId = manifest.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const isSingle = items.length === 1;
+  const totalVolume = items.reduce((acc, it) => acc + (Math.max(0, Number(it.tallyVolumeM3) || 0)), 0);
+  const totalBrokerFee = Math.max(0, Number(manifest.brokerFee) || 0);
+  let allocatedBrokerFeeSoFar = 0;
 
   return items.map((item, idx) => {
     const itemId = item.id || `item-${manifestId}-${idx + 1}`;
@@ -37,7 +40,17 @@ export function flattenManifest(
     const freightPphAmount = Math.round(freightGrossTotal * 0.02);
     const freightNetPayable = freightGrossTotal - freightPphAmount;
 
-    const brokerFee = Math.max(0, Number(manifest.brokerFee) || 0);
+    let brokerFee: number;
+    if (totalVolume > 0) {
+      if (idx === items.length - 1) {
+        brokerFee = Math.max(0, totalBrokerFee - allocatedBrokerFeeSoFar);
+      } else {
+        brokerFee = Math.round(totalBrokerFee * (tallyVolumeM3 / totalVolume));
+        allocatedBrokerFeeSoFar += brokerFee;
+      }
+    } else {
+      brokerFee = idx === 0 ? totalBrokerFee : 0;
+    }
     const grandNetPayable = timberNetPayable + freightNetPayable + brokerFee;
 
     const record: WoodReceivingRecord = {

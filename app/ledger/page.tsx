@@ -154,6 +154,7 @@ export default function LedgerPage() {
         <RecordModal
           isOpen={isModalOpen}
           initialRecord={editingRecord}
+          allRecords={records}
           availableSpecies={speciesList}
           onClose={() => setIsModalOpen(false)}
           onSave={handleSave}

@@ -71,6 +71,16 @@ export function RecordTableExcelView({
     );
   }, [records]);
 
+  const manifestItemCounts = React.useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of records) {
+      if (r.manifest_id) {
+        counts.set(r.manifest_id, (counts.get(r.manifest_id) || 0) + 1);
+      }
+    }
+    return counts;
+  }, [records]);
+
   const renderSortIndicator = (field: SortField) => {
     if (sortField !== field) {
       return <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-60 group-hover:opacity-100" />;
@@ -143,12 +153,25 @@ export function RecordTableExcelView({
             const volDiff = Number((r.tallyVolumeM3 - r.deliveredVolumeM3).toFixed(2));
             const isMatch = Math.abs(volDiff) < 0.001;
             const isSurplus = volDiff > 0;
+            const batchCount = r.manifest_id ? manifestItemCounts.get(r.manifest_id) || 0 : 0;
 
             return (
               <tr key={r.id} className="hover:bg-amber-50/20 transition-colors group">
                 <td className="p-2 font-medium whitespace-nowrap border-r border-gray-100">{r.receiptDate}</td>
                 <td className="p-2 text-gray-500 whitespace-nowrap border-r border-gray-100">{r.docDate || '-'}</td>
-                <td className="p-2 font-semibold text-gray-800 whitespace-nowrap border-r border-gray-100">{r.truckPlateNumber}</td>
+                <td className="p-2 font-semibold text-gray-800 whitespace-nowrap border-r border-gray-100">
+                  <div className="flex items-center gap-1.5">
+                    <span>{r.truckPlateNumber}</span>
+                    {batchCount > 1 && (
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80"
+                        title={`Bagian dari manifes ${r.manifest_id} (${batchCount} item)`}
+                      >
+                        Batch [{batchCount} item]
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="p-2 font-mono text-gray-600 whitespace-nowrap border-r border-gray-100">{r.forestryDocNumber}</td>
                 <td className="p-2 font-mono text-gray-600 whitespace-nowrap border-r border-gray-100">{r.receiptNumber || '-'}</td>
                 <td className="p-2 text-gray-600 whitespace-nowrap border-r border-gray-100">{r.contractNumber || '-'}</td>

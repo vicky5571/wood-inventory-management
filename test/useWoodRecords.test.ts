@@ -190,7 +190,11 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
 
       // Wait briefly for background sync
       await new Promise((r) => setTimeout(r, 60));
-      assert.strictEqual(syncedBodies.length, 2, 'Must sync both flattened records to server');
+      assert.strictEqual(syncedBodies.length, 1, 'Must sync manifest to server in a single atomic POST');
+      const syncedPayload = JSON.parse(syncedBodies[0]);
+      assert.ok(syncedPayload.manifest, 'Must include manifest in request body');
+      assert.strictEqual(syncedPayload.manifest.id, 'man-persist-sync');
+      assert.strictEqual(syncedPayload.manifest.items.length, 2);
     } finally {
       globalThis.window = origWindow;
       globalThis.fetch = origFetch;

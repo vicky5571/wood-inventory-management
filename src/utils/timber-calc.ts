@@ -56,22 +56,10 @@ export function calculateFreightPayment(
 export function computeRecordCalculations(
   input: RecordCalculationInput
 ): RecordCalculationOutput {
-  const timber = calculateTimberPayment(
-    input.tallyVolumeM3,
-    input.timberPricePerM3,
-    input.timberPphRate ?? 0
-  );
-
-  const freight = calculateFreightPayment(
-    input.tallyVolumeM3,
-    input.freightRatePerM3,
-    input.freightPphAmount ?? 0
-  );
-
+  const timber = calculateTimberPayment(input.tallyVolumeM3, input.timberPricePerM3, input.timberPphRate ?? 0);
+  const freight = calculateFreightPayment(input.tallyVolumeM3, input.freightRatePerM3, input.freightPphAmount ?? 0);
   const broker = input.brokerFee ?? 0;
-  if (broker < 0) {
-    throw new RangeError('Broker fee must be non-negative');
-  }
+  if (broker < 0) throw new RangeError('Broker fee must be non-negative');
 
   const grandNetPayable = Number((timber.netPayable + freight.netPayable + broker).toFixed(2));
   const volumeDiscrepancyM3 = Number((input.tallyVolumeM3 - input.deliveredVolumeM3).toFixed(4));
@@ -95,14 +83,10 @@ export function computeRecordCalculations(
 export function aggregateDashboardMetrics(
   records: WoodReceivingRecord[]
 ): DashboardMetrics {
-  let totalDeliveredVolumeM3 = 0;
-  let totalTallyVolumeM3 = 0;
-  let totalDeliveredPieces = 0;
-  let totalTallyPieces = 0;
-  let totalNetTimberPayable = 0;
-  let totalNetFreightPayable = 0;
-  let totalGrandExpenditure = 0;
-  let totalOutstandingPayable = 0;
+  let totalDeliveredVolumeM3 = 0, totalTallyVolumeM3 = 0;
+  let totalDeliveredPieces = 0, totalTallyPieces = 0;
+  let totalNetTimberPayable = 0, totalNetFreightPayable = 0;
+  let totalGrandExpenditure = 0, totalOutstandingPayable = 0;
   let unpaidRecordsCount = 0;
 
   const kavlingSet = new Set<string>();
@@ -184,13 +168,9 @@ export function classifyDiscrepancy(diff: number, tolerance: number = 0.001): Di
  * truck freight on total tally volume, and grand net payable.
  */
 export function computeManifestCalculations(manifest: ManifestFormInput): ManifestCalculationOutput {
-  let totalDeliveredPieces = 0;
-  let totalDeliveredVolumeM3 = 0;
-  let totalTallyPieces = 0;
-  let totalTallyVolumeM3 = 0;
-  let totalTimberGross = 0;
-  let totalTimberPph = 0;
-  let totalTimberNet = 0;
+  let totalDeliveredPieces = 0, totalDeliveredVolumeM3 = 0;
+  let totalTallyPieces = 0, totalTallyVolumeM3 = 0;
+  let totalTimberGross = 0, totalTimberPph = 0, totalTimberNet = 0;
 
   const items = (manifest.items || []).map((item) => {
     const deliveredPieces = Math.max(0, Number(item.deliveredPieces) || 0);

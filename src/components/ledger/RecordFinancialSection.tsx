@@ -7,11 +7,13 @@ import { CreditCard } from 'lucide-react';
 export interface RecordFinancialSectionProps {
   form: Partial<WoodReceivingRecord>;
   setForm: React.Dispatch<React.SetStateAction<Partial<WoodReceivingRecord>>>;
+  hideTimberPricing?: boolean;
 }
 
 export function RecordFinancialSection({
   form,
   setForm,
+  hideTimberPricing = false,
 }: RecordFinancialSectionProps) {
   return (
     <div className="bg-gray-50/70 border border-gray-200/70 rounded-2xl p-4.5">
@@ -26,41 +28,45 @@ export function RecordFinancialSection({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-            Harga Kayu / m³ (均价 IDR)
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={form.timberPricePerM3 ?? 0}
-            onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                timberPricePerM3: parseFloat(e.target.value) || 0,
-              }))
-            }
-            className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
-          />
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-            Tarif PPh Kayu % (税率 0.5% / 1.5%)
-          </label>
-          <input
-            type="number"
-            step="0.1"
-            min="0"
-            value={form.timberPphRate ?? 0.5}
-            onChange={(e) =>
-              setForm((prev) => ({
-                ...prev,
-                timberPphRate: parseFloat(e.target.value) || 0,
-              }))
-            }
-            className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
-          />
-        </div>
+        {!hideTimberPricing && (
+          <>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                Harga Kayu / m³ (均价 IDR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.timberPricePerM3 ?? 0}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    timberPricePerM3: parseFloat(e.target.value) || 0,
+                  }))
+                }
+                className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                Tarif PPh Kayu % (税率 0.5% / 1.5%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={form.timberPphRate ?? 0.5}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    timberPphRate: parseFloat(e.target.value) || 0,
+                  }))
+                }
+                className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
+              />
+            </div>
+          </>
+        )}
         <div>
           <label className="block text-[11px] font-semibold text-gray-700 mb-1">
             Tarif Ongkir / m³ (运费单价 IDR)

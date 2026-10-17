@@ -130,16 +130,13 @@ export function useWoodRecords() {
     persistRecords(next);
 
     syncWithServer(async () => {
-      for (const rec of flattened) {
-        const res = await fetch('/api/records', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(rec),
-        });
-        if (!res.ok) {
-          toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-          break;
-        }
+      const res = await fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manifest }),
+      });
+      if (!res.ok) {
+        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
       }
     }, true);
 
