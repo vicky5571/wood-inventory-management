@@ -31,27 +31,41 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     title: 'Observer',
   });
 
-  await t.test('SqliteRecordStore: getStorageLocations returns yards and joined lots', async () => {
+  await t.test('SqliteRecordStore: getStorageLocations returns canonical yards and joined lots', async () => {
     const store = new SqliteRecordStore(':memory:');
     const locations = await store.getStorageLocations();
 
     assert.ok(Array.isArray(locations.yards));
     assert.ok(Array.isArray(locations.lots));
-    assert.ok(locations.yards.length > 0, 'should have initial seed yards');
-    assert.ok(locations.lots.length > 0, 'should have initial seed lots');
+    assert.ok(locations.yards.length >= 4, 'should have at least 4 canonical seed yards');
+    assert.ok(locations.lots.length >= 8, 'should have at least 8 canonical seed lots');
 
-    const firstYard = locations.yards[0];
-    assert.ok(firstYard.id);
-    assert.ok(firstYard.yardCode);
-    assert.ok(firstYard.name);
+    const canonicalYardIds = ['yard-barat', 'yard-selatan', 'yard-timur', 'yard-utara'];
+    for (const yId of canonicalYardIds) {
+      assert.ok(locations.yards.some((y) => y.id === yId), `canonical yard ${yId} must be present`);
+    }
 
-    const firstLot = locations.lots[0];
-    assert.ok(firstLot.id);
-    assert.ok(firstLot.yardId);
-    assert.ok(firstLot.lotCode);
-    assert.ok(firstLot.status);
-    assert.ok(firstLot.yardCode, 'joined yardCode must be present');
-    assert.ok(firstLot.yardName, 'joined yardName must be present');
+    const canonicalLotIds = [
+      'lot-kav-01',
+      'lot-kav-02',
+      'lot-kav-03',
+      'lot-kav-04',
+      'lot-kav-05',
+      'lot-kav-06',
+      'lot-kav-07',
+      'lot-kav-08',
+    ];
+    for (const lId of canonicalLotIds) {
+      assert.ok(locations.lots.some((l) => l.id === lId), `canonical lot ${lId} must be present`);
+    }
+
+    const fullLot = locations.lots.find((l) => l.id === 'lot-kav-04');
+    assert.strictEqual(fullLot?.status, 'FULL');
+    assert.strictEqual(fullLot?.yardCode, 'TPK-U');
+
+    const maintLot = locations.lots.find((l) => l.id === 'lot-kav-06');
+    assert.strictEqual(maintLot?.status, 'MAINTENANCE');
+    assert.strictEqual(maintLot?.yardCode, 'TPK-B');
   });
 
   await t.test('SqliteRecordStore: saveStorageYard creates and updates a yard', async () => {
@@ -150,17 +164,26 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     assert.strictEqual(lot.lotCode, 'KAV-F1');
   });
 
-  await t.test('GET /api/storage-locations returns 200 with yards and lots', async () => {
-    const req = new Request('http://localhost:3000/api/storage-locations', {
-      method: 'GET',
-    });
-
+  await t.test('GET /api/storage-locations returns 200 with canonical yards and lots', async () => {
     const res = await GET();
     assert.strictEqual(res.status, 200);
     const body = await res.json();
     assert.strictEqual(body.success, true);
     assert.ok(Array.isArray(body.data.yards));
     assert.ok(Array.isArray(body.data.lots));
+    assert.ok(body.data.yards.length >= 4);
+    assert.ok(body.data.lots.length >= 8);
+
+    const yardIds = body.data.yards.map((y: any) => y.id);
+    assert.ok(yardIds.includes('yard-timur'));
+    assert.ok(yardIds.includes('yard-utara'));
+    assert.ok(yardIds.includes('yard-barat'));
+    assert.ok(yardIds.includes('yard-selatan'));
+
+    const lotIds = body.data.lots.map((l: any) => l.id);
+    for (let i = 1; i <= 8; i++) {
+      assert.ok(lotIds.includes(`lot-kav-0${i}`));
+    }
   });
 
   await t.test('POST /api/storage-locations rejects unauthenticated requests with 401', async () => {
@@ -208,6 +231,28 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     assert.strictEqual(body.success, false);
   });
 
+  await t.test('POST /api/storage-locations rejects invalid lot status with 400', async () => {
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify({
+        type: 'lot',
+        yardId: 'yard-timur',
+        lotCode: 'KAV-INVALID',
+        status: 'CORRUPTED',
+      }),
+    });
+
+    const res = await POST(req);
+    assert.strictEqual(res.status, 400);
+    const body = await res.json();
+    assert.strictEqual(body.success, false);
+    assert.match(body.error, /Invalid lot status/);
+  });
+
   await t.test('POST /api/storage-locations saves a new yard successfully', async () => {
     const req = new Request('http://localhost:3000/api/storage-locations', {
       method: 'POST',
@@ -231,7 +276,11 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     assert.strictEqual(body.data.yardCode, 'TPK-RY');
   });
 
-  await t.test('POST /api/storage-locations saves a new lot successfully', async () => {
+  await t.test('POST /api/storage-locations saves lot to canonical yard without creating phantom yards', async () => {
+    const beforeRes = await GET();
+    const beforeBody = await beforeRes.json();
+    const initialYardCount = beforeBody.data.yards.length;
+
     const req = new Request('http://localhost:3000/api/storage-locations', {
       method: 'POST',
       headers: {
@@ -250,7 +299,12 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     assert.strictEqual(res.status, 200);
     const body = await res.json();
     assert.strictEqual(body.success, true);
+    assert.strictEqual(body.data.yardId, 'yard-timur');
     assert.strictEqual(body.data.lotCode, 'KAV-REST-01');
     assert.strictEqual(body.data.status, 'ACTIVE');
+
+    const afterRes = await GET();
+    const afterBody = await afterRes.json();
+    assert.strictEqual(afterBody.data.yards.length, initialYardCount);
   });
 });

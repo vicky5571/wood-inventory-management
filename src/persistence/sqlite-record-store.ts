@@ -40,10 +40,13 @@ export class SqliteRecordStore {
     runMigrations(this.db);
 
     const countRow = this.db.prepare('SELECT COUNT(*) AS c FROM tenants;').get() as { c: number } | undefined;
-    if (!countRow || countRow.c === 0) {
+    const isBrandNewDb = !countRow || countRow.c === 0;
+
+    seedStorageLocationsIfEmpty(this.db);
+
+    if (isBrandNewDb) {
       migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
     }
-    seedStorageLocationsIfEmpty(this.db);
     this.initialized = true;
   }
 

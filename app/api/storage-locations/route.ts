@@ -115,6 +115,17 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      if (
+        payload.status !== undefined &&
+        payload.status !== 'ACTIVE' &&
+        payload.status !== 'FULL' &&
+        payload.status !== 'MAINTENANCE'
+      ) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid lot status: expected "ACTIVE", "FULL", or "MAINTENANCE"' },
+          { status: 400 }
+        );
+      }
       const savedLot = await serverRecordStore.saveStorageLot({
         id: payload.id,
         yardId: payload.yardId.trim(),
@@ -139,3 +150,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

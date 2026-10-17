@@ -147,6 +147,10 @@ export function saveStorageLotToDb(
   if (!trimmedLotCode || !lot.yardId) {
     throw new Error('Lot code and yard identifier cannot be empty');
   }
+  const allowedStatuses: StorageLotStatus[] = ['ACTIVE', 'FULL', 'MAINTENANCE'];
+  if (lot.status && !allowedStatuses.includes(lot.status)) {
+    throw new Error('Invalid lot status: expected "ACTIVE", "FULL", or "MAINTENANCE"');
+  }
   const status: StorageLotStatus = lot.status || 'ACTIVE';
   const now = new Date().toISOString();
 
@@ -204,3 +208,4 @@ export function saveStorageLotToDb(
     updatedAt: now,
   };
 }
+
