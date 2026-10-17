@@ -299,6 +299,72 @@ export interface ManifestWithItems extends ReceivingManifest {
   };
 }
 
+/**
+ * Inbound Timber Line Item Form Input for Multi-Item Receiving Manifests.
+ */
+export interface ManifestItemInput {
+  id: string;
+  woodSpecies: string;
+  woodLengthM: number;
+  kavlingNumber: string;
+  storageYard: string;
+  deliveredPieces: number;
+  deliveredVolumeM3: number;
+  tallyPieces: number;
+  tallyVolumeM3: number;
+  timberPricePerM3: number;
+  timberPphRate: number;
+}
+
+/**
+ * Inbound Timber Manifest Header & Multi-Item Form Payload.
+ */
+export interface ManifestFormInput {
+  id: string;
+  receiptDate: string;
+  docDate?: string;
+  truckPlateNumber: string;
+  forestryDocNumber: string;
+  receiptNumber: string;
+  contractNumber: string;
+  supplierName: string;
+  freightRatePerM3: number;
+  freightPphAmount?: number;
+  brokerFee: number;
+  paymentStatus?: PaymentStatus;
+  invoiceNumber?: string;
+  paymentDate?: string;
+  paymentNotes?: string;
+  items: ManifestItemInput[];
+}
+
+/**
+ * Pure Domain Calculation Output for Multi-Item Receiving Manifests.
+ */
+export interface ManifestCalculationOutput {
+  totalDeliveredPieces: number;
+  totalDeliveredVolumeM3: number;
+  totalTallyPieces: number;
+  totalTallyVolumeM3: number;
+  volumeDiscrepancyM3: number;
+  pieceDiscrepancy: number;
+  totalTimberGross: number;
+  totalTimberPph: number;
+  totalTimberNet: number;
+  freightGrossTotal: number;
+  freightPphAmount: number;
+  freightNetPayable: number;
+  brokerFee: number;
+  grandNetPayable: number;
+  items: Array<ManifestItemInput & {
+    timberGrossTotal: number;
+    timberPphAmount: number;
+    timberNetPayable: number;
+    volumeDiscrepancyM3: number;
+    pieceDiscrepancy: number;
+  }>;
+}
+
 
 /**
  * Filter & Search Criteria for Wood Receiving Records
