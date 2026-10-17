@@ -86,6 +86,8 @@ export function RecordModal({
         woodLengthM: first.woodLengthM ?? prev.woodLengthM,
         kavlingNumber: first.kavlingNumber || prev.kavlingNumber,
         storageYard: first.storageYard || prev.storageYard,
+        timberPricePerM3: first.timberPricePerM3 ?? prev.timberPricePerM3,
+        timberPphRate: first.timberPphRate ?? prev.timberPphRate,
       }));
     }
   };
@@ -97,12 +99,22 @@ export function RecordModal({
         (form.woodSpecies && form.woodSpecies !== cur.woodSpecies) ||
         (form.kavlingNumber && form.kavlingNumber !== cur.kavlingNumber) ||
         (form.storageYard && form.storageYard !== cur.storageYard) ||
-        (form.woodLengthM !== undefined && form.woodLengthM !== cur.woodLengthM)
+        (form.woodLengthM !== undefined && form.woodLengthM !== cur.woodLengthM) ||
+        (form.timberPricePerM3 !== undefined && form.timberPricePerM3 !== cur.timberPricePerM3) ||
+        (form.timberPphRate !== undefined && form.timberPphRate !== cur.timberPphRate)
       ) {
-        setItems([{ ...cur, woodSpecies: form.woodSpecies || cur.woodSpecies, woodLengthM: form.woodLengthM ?? cur.woodLengthM, kavlingNumber: form.kavlingNumber || cur.kavlingNumber, storageYard: form.storageYard || cur.storageYard }]);
+        setItems([{
+          ...cur,
+          woodSpecies: form.woodSpecies || cur.woodSpecies,
+          woodLengthM: form.woodLengthM ?? cur.woodLengthM,
+          kavlingNumber: form.kavlingNumber || cur.kavlingNumber,
+          storageYard: form.storageYard || cur.storageYard,
+          timberPricePerM3: form.timberPricePerM3 ?? cur.timberPricePerM3,
+          timberPphRate: form.timberPphRate ?? cur.timberPphRate,
+        }]);
       }
     }
-  }, [form.woodSpecies, form.woodLengthM, form.kavlingNumber, form.storageYard]);
+  }, [form.woodSpecies, form.woodLengthM, form.kavlingNumber, form.storageYard, form.timberPricePerM3, form.timberPphRate]);
 
   const manifestPayload: ManifestFormInput = useMemo(() => ({
     id: form.manifest_id || (initialRecord?.manifest_id ?? `man-${Date.now()}`),
