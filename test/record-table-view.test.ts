@@ -64,3 +64,4 @@ test('RecordTable Architectural & View Invariants Suite', async (t) => {
     assert.match(content, /Grand Total|总计/, 'Must label grand total summary');
   });
 });
+
