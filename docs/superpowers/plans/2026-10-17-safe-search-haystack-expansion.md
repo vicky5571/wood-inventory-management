@@ -35,7 +35,7 @@
 - Produces: `recordMatchesSearchQuery(record: WoodReceivingRecord, query: string): boolean`
 - Produces: `isInvoiceSearchMatch(record: WoodReceivingRecord, query: string): boolean`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/record-search.test.ts
@@ -104,13 +104,13 @@ test('recordMatchesSearchQuery Suite', async (t) => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 node --test test/record-search.test.ts
 ```
 
-- [ ] **Step 3: Implement minimal code in `src/utils/record-search.ts`**
+- [x] **Step 3: Implement minimal code in `src/utils/record-search.ts`**
 
 ```ts
 /**
@@ -158,13 +158,13 @@ export function recordMatchesSearchQuery(record: WoodReceivingRecord, rawQuery: 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 node --test test/record-search.test.ts
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/utils/record-search.ts test/record-search.test.ts
@@ -185,25 +185,25 @@ git commit -m "feat(search): implement pure short-circuit search matcher with in
 - Consumes: `recordMatchesSearchQuery` from `src/utils/record-search.ts`
 - Produces: Updated filtering logic in `useWoodRecords` and `WoodRecordRepository` with zero string-array allocations.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 Update `test/toolbar-filters.test.ts` to assert that searching by invoice number filters records accurately without matching date substrings.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 node --test test/toolbar-filters.test.ts
 ```
 
-- [ ] **Step 3: Update `src/hooks/useWoodRecords.ts` and `src/persistence/record-repository.ts`**
+- [x] **Step 3: Update `src/hooks/useWoodRecords.ts` and `src/persistence/record-repository.ts`**
 Replace the inline `haystack = [r.truckPlateNumber, ...].filter(Boolean).join(' ')` with `recordMatchesSearchQuery(r, filters.searchQuery)`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 node --test test/toolbar-filters.test.ts test/storage-crud.test.ts
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/hooks/useWoodRecords.ts src/persistence/record-repository.ts test/toolbar-filters.test.ts
@@ -224,7 +224,7 @@ git commit -m "refactor(records): adopt recordMatchesSearchQuery across client a
 - Consumes: `isInvoiceSearchMatch` from `src/utils/record-search.ts`
 - Produces: Visual match tag `Faktur: {invoiceNumber}` in `RecordTableCompactView.tsx` and updated search placeholder in `Toolbar.tsx`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 // test/record-table-search-badge.test.ts
@@ -250,13 +250,13 @@ test('Search Transparency & Match Visibility Suite', async (t) => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 node --test test/record-table-search-badge.test.ts
 ```
 
-- [ ] **Step 3: Implement minimal code**
+- [x] **Step 3: Implement minimal code**
 1. In `Toolbar.tsx`: update placeholder to `placeholder="Cari Plat / Dok / Faktur / Supplier / Kav..."`.
 2. In `RecordTable.tsx` & `RecordTableCompactView.tsx`: pass `searchQuery` prop and render an inline tag:
 ```tsx
@@ -267,20 +267,20 @@ node --test test/record-table-search-badge.test.ts
 )}
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 node --test test/record-table-search-badge.test.ts
 ```
 
-- [ ] **Step 5: Run full test suite & production build**
+- [x] **Step 5: Run full test suite & production build**
 
 ```bash
 npm test
 npm run build
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/ledger/Toolbar.tsx src/components/ledger/RecordTable.tsx src/components/ledger/RecordTableCompactView.tsx test/record-table-search-badge.test.ts
@@ -291,18 +291,18 @@ git commit -m "feat(ledger): add visible invoice match indicator in compact view
 
 ### Task 4: Final Regression & Integration Verification
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 Verify all 36+ test suites pass with 0 failures:
 ```bash
 npm test
 ```
 
-- [ ] **Step 2: Run Next.js production build**
+- [x] **Step 2: Run Next.js production build**
 Confirm zero type, bundling, or static generation errors:
 ```bash
 npm run build
 ```
 
-- [ ] **Step 3: Git Status Audit**
+- [x] **Step 3: Git Status Audit**
 Ensure working directory is clean and all files obey the 250 LOC ceiling.
 
