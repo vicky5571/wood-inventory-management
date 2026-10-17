@@ -71,3 +71,4 @@ test('recordMatchesSearchQuery Suite', async (t) => {
     assert.strictEqual(isInvoiceSearchMatch(sample, ''), false);
   });
 });
+

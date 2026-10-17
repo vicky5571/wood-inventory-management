@@ -33,3 +33,4 @@ test('Search Transparency & Match Visibility Suite', async (t) => {
     assert.match(content, /Faktur:/, 'Must render visible Faktur indicator on matching row');
   });
 });
+

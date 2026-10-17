@@ -41,3 +41,4 @@ export function recordMatchesSearchQuery(record: WoodReceivingRecord, rawQuery: 
     fieldContains(record.invoiceNumber, q)
   );
 }
+
