@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { ServerRecordStore } from '../src/persistence/server-record-store.ts';
+import { ServerRecordStore, serverRecordStore } from '../src/persistence/server-record-store.ts';
+import { SqliteRecordStore } from '../src/persistence/sqlite-record-store.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { GET, POST, DELETE } from '../app/api/records/route.ts';
@@ -420,3 +421,61 @@ test('Records API Route Handlers Suite', async (t) => {
     assert.equal(delNotFoundRes.status, 404);
   });
 });
+
+test('ServerRecordStore SQLite Delegation & Bridge Suite', async (t) => {
+  await t.test('singleton serverRecordStore delegates directly to SQLite engine', async () => {
+    const records = await serverRecordStore.getAll();
+    assert.ok(Array.isArray(records));
+    assert.ok(records.length >= 4);
+
+    const first = records[0];
+    const fetched = await serverRecordStore.getById(first.id);
+    assert.ok(fetched);
+    assert.strictEqual(fetched?.id, first.id);
+  });
+
+  await t.test('ServerRecordStore accepts custom SqliteRecordStore instance', async () => {
+    const memorySqlite = new SqliteRecordStore(':memory:');
+    const store = new ServerRecordStore(memorySqlite);
+
+    const initial = await store.getAll();
+    assert.strictEqual(initial.length, 4);
+
+    const saved = await store.save({
+      woodSpecies: 'Sonokeling (紫檀)',
+      tallyVolumeM3: 3.5,
+      truckPlateNumber: 'B 7777 SK',
+      forestryDocNumber: 'DOC-SK-01',
+      receiptNumber: 'KW-SK-01',
+      contractNumber: 'CTR-SK-01',
+      supplierName: 'PT Rimba Raya',
+      woodLengthM: 2.0,
+      kavlingNumber: 'KAV-S1',
+      storageYard: 'TPK-1',
+      deliveredPieces: 10,
+      deliveredVolumeM3: 3.5,
+      tallyPieces: 10,
+      timberPricePerM3: 5000000,
+    } as unknown as WoodReceivingRecord);
+
+    assert.ok(saved.id);
+    assert.strictEqual(saved.woodSpecies, 'Sonokeling (紫檀)');
+    assert.strictEqual(saved.grandNetPayable, 17412500);
+
+    const fetched = await store.getById(saved.id);
+    assert.ok(fetched);
+    assert.strictEqual(fetched?.truckPlateNumber, 'B 7777 SK');
+
+    const deleted = await store.delete(saved.id);
+    assert.strictEqual(deleted, true);
+
+    const afterDelete = await store.getById(saved.id);
+    assert.strictEqual(afterDelete, null);
+
+    const resetRecords = await store.reset();
+    assert.strictEqual(resetRecords.length, 4);
+
+    store.close();
+  });
+});
+

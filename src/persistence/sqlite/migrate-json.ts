@@ -174,8 +174,8 @@ export function migrateJsonToSqlite(
       const freightPphRate = (rec as any).freightPphRate ?? 2.0;
 
       insertManifestStmt.run(
-        manifestId, tenantId, manifestNumber, rec.receiptDate, rec.docDate || null,
-        rec.truckPlateNumber, rec.forestryDocNumber, rec.receiptNumber, rec.contractNumber,
+        manifestId, tenantId, manifestNumber, rec.receiptDate || now.split('T')[0], rec.docDate || null,
+        rec.truckPlateNumber || '-', rec.forestryDocNumber || '-', rec.receiptNumber || manifestNumber, rec.contractNumber || '-',
         supplierId, rec.freightRatePerM3 || 0, freightPphRate, rec.brokerFee || 0,
         rec.paymentStatus || 'UNPAID', rec.invoiceNumber || null, rec.paymentDate || null,
         rec.paymentNotes || null, rec.createdAt || now, rec.updatedAt || now
