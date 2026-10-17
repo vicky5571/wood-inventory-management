@@ -26,7 +26,7 @@ export class SqliteRecordStore {
     if (this.initialized) return;
     runMigrations(this.db);
 
-    const countRow = this.db.prepare('SELECT COUNT(*) AS c FROM receiving_manifests;').get() as { c: number } | undefined;
+    const countRow = this.db.prepare('SELECT COUNT(*) AS c FROM tenants;').get() as { c: number } | undefined;
     if (!countRow || countRow.c === 0) {
       migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
     }

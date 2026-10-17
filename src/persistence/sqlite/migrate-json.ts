@@ -15,9 +15,18 @@ export interface MigrationResult {
   itemsCount: number;
 }
 
-const toCode = (name: string, prefix: string, maxLen = 20): string => {
+export const toCode = (name: string, prefix: string, maxLen = 20): string => {
   const clean = name.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  return `${prefix}-${clean.slice(0, maxLen) || 'GEN'}`;
+  if (clean.length <= maxLen) {
+    return `${prefix}-${clean || 'GEN'}`;
+  }
+  let hash = 2166136261;
+  for (let i = 0; i < clean.length; i++) {
+    hash ^= clean.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  const checksum = (hash >>> 0).toString(16).padStart(4, '0').slice(0, 4).toUpperCase();
+  return `${prefix}-${clean.slice(0, Math.max(0, maxLen - 4))}${checksum}`;
 };
 
 export function migrateJsonToSqlite(
@@ -169,7 +178,7 @@ export function migrateJsonToSqlite(
 
       // 4. Manifest
       const manifestId = rec.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      const manifestNumber = rec.receiptNumber || `MAN-${manifestId}`;
+      const manifestNumber = `MAN-${manifestId}`;
       const now = new Date().toISOString();
       const freightPphRate = (rec as any).freightPphRate ?? 2.0;
 

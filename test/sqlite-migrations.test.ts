@@ -197,6 +197,7 @@ test('SQLite Migrations Suite', async (t) => {
 
       // Verify v_buku_besar_flat
       const flatRow = db.prepare('SELECT * FROM v_buku_besar_flat WHERE manifest_id = ?').get('man-1') as {
+        id: string;
         manifest_id: string;
         item_id: string;
         supplierName: string;
@@ -208,6 +209,7 @@ test('SQLite Migrations Suite', async (t) => {
         grandNetPayable: number;
       };
 
+      assert.strictEqual(flatRow.id, 'man-1', 'single-item manifest projects manifest.id as flat row id');
       assert.strictEqual(flatRow.manifest_id, 'man-1');
       assert.strictEqual(flatRow.item_id, 'item-1');
       assert.strictEqual(flatRow.supplierName, 'PT Kayu Abadi');
@@ -217,6 +219,69 @@ test('SQLite Migrations Suite', async (t) => {
       assert.strictEqual(flatRow.timberNetPayable, 1990000.0);
       assert.strictEqual(flatRow.freightNetPayable, 294000.0);
       assert.strictEqual(flatRow.grandNetPayable, 2334000.0);
+    } finally {
+      db.close();
+    }
+  });
+
+  await t.test('projects deterministic synthetic unique IDs in v_buku_besar_flat for single vs multi-item manifests', () => {
+    const db = createSqliteDatabase(':memory:');
+    try {
+      runMigrations(db);
+
+      db.prepare("INSERT INTO tenants (id, name, slug) VALUES ('t1', 'Tenant 1', 't1')").run();
+      db.prepare("INSERT INTO suppliers (id, tenant_id, code, name) VALUES ('s1', 't1', 'SUP-1', 'Supplier 1')").run();
+      db.prepare("INSERT INTO wood_species (id, tenant_id, code, common_name) VALUES ('sp1', 't1', 'JTI', 'Jati')").run();
+
+      // Single item manifest
+      db.prepare(`
+        INSERT INTO receiving_manifests (
+          id, tenant_id, manifest_number, receipt_date, truck_plate_number,
+          forestry_doc_number, receipt_number, contract_number, supplier_id
+        ) VALUES ('man-single', 't1', 'MAN-S', '2026-10-18', 'B 1111 AA', 'D-1', 'KW-1', 'C-1', 's1')
+      `).run();
+      db.prepare(`
+        INSERT INTO receiving_items (
+          id, manifest_id, tenant_id, species_id, wood_length_m,
+          delivered_pieces, delivered_volume_m3, tally_pieces, tally_volume_m3, timber_price_per_m3
+        ) VALUES ('item-single-1', 'man-single', 't1', 'sp1', 4.0, 10, 1.5, 10, 1.5, 1000000)
+      `).run();
+
+      // Multi item manifest
+      db.prepare(`
+        INSERT INTO receiving_manifests (
+          id, tenant_id, manifest_number, receipt_date, truck_plate_number,
+          forestry_doc_number, receipt_number, contract_number, supplier_id
+        ) VALUES ('man-multi', 't1', 'MAN-M', '2026-10-18', 'B 2222 BB', 'D-2', 'KW-2', 'C-2', 's1')
+      `).run();
+      db.prepare(`
+        INSERT INTO receiving_items (
+          id, manifest_id, tenant_id, species_id, wood_length_m,
+          delivered_pieces, delivered_volume_m3, tally_pieces, tally_volume_m3, timber_price_per_m3
+        ) VALUES
+          ('item-multi-a', 'man-multi', 't1', 'sp1', 4.0, 5, 0.75, 5, 0.75, 1000000),
+          ('item-multi-b', 'man-multi', 't1', 'sp1', 4.0, 5, 0.75, 5, 0.75, 1200000)
+      `).run();
+
+      const rows = db.prepare('SELECT id, manifest_id, item_id FROM v_buku_besar_flat ORDER BY id ASC;').all() as Array<{
+        id: string;
+        manifest_id: string;
+        item_id: string;
+      }>;
+
+      assert.strictEqual(rows.length, 3);
+      const singleRow = rows.find((r) => r.manifest_id === 'man-single');
+      assert.ok(singleRow);
+      assert.strictEqual(singleRow.id, 'man-single', 'single-item manifest uses manifest_id as id');
+
+      const multiRows = rows.filter((r) => r.manifest_id === 'man-multi');
+      assert.strictEqual(multiRows.length, 2);
+      assert.strictEqual(multiRows[0].id, 'man-multi_item-multi-a');
+      assert.strictEqual(multiRows[1].id, 'man-multi_item-multi-b');
+
+      // Verify all IDs are completely unique
+      const ids = new Set(rows.map((r) => r.id));
+      assert.strictEqual(ids.size, 3, 'all row ids in v_buku_besar_flat must be strictly unique');
     } finally {
       db.close();
     }

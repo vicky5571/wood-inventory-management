@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { SqliteRecordStore, sqliteRecordStore } from '../src/persistence/sqlite-record-store.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
@@ -133,5 +136,30 @@ test('SqliteRecordStore CRUD & Contract Suite', async (t) => {
     assert.strictEqual(typeof sqliteRecordStore.save, 'function');
     assert.strictEqual(typeof sqliteRecordStore.delete, 'function');
     assert.strictEqual(typeof sqliteRecordStore.reset, 'function');
+  });
+
+  await t.test('preserves empty state across restart without resurrecting seed data when manifests are deleted', async () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'wood-test-restart-'));
+    const dbPath = join(tmpDir, 'test.db');
+    try {
+      const store1 = new SqliteRecordStore(dbPath);
+      const initial = await store1.getAll();
+      assert.ok(initial.length > 0, 'initial store must hydrate seed data');
+
+      for (const rec of initial) {
+        await store1.delete(rec.id);
+      }
+      const emptyCheck = await store1.getAll();
+      assert.strictEqual(emptyCheck.length, 0);
+      store1.close();
+
+      // Restart store on same db file
+      const store2 = new SqliteRecordStore(dbPath);
+      const afterRestart = await store2.getAll();
+      assert.strictEqual(afterRestart.length, 0, 'must not re-seed when tenants exist');
+      store2.close();
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

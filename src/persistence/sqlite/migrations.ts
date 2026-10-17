@@ -185,7 +185,11 @@ export function runMigrations(db: DatabaseSync): void {
 
     CREATE VIEW IF NOT EXISTS v_buku_besar_flat AS
     SELECT
-      m.id AS id,
+      CASE 
+        WHEN (SELECT COUNT(*) FROM receiving_items ri WHERE ri.manifest_id = m.id) = 1 
+        THEN m.id 
+        ELSE m.id || '_' || i.id 
+      END AS id,
       m.id AS manifest_id,
       i.id AS item_id,
       m.tenant_id,
@@ -196,10 +200,10 @@ export function runMigrations(db: DatabaseSync): void {
       m.receipt_number AS receiptNumber,
       m.contract_number AS contractNumber,
       sup.name AS supplierName,
-      s.common_name AS woodSpecies,
+      f.species_name AS woodSpecies,
       i.wood_length_m AS woodLengthM,
-      COALESCE(l.lot_code, '') AS kavlingNumber,
-      COALESCE(y.name, '') AS storageYard,
+      COALESCE(f.kavling_number, '') AS kavlingNumber,
+      COALESCE(f.storage_yard, '') AS storageYard,
       i.delivered_pieces AS deliveredPieces,
       i.delivered_volume_m3 AS deliveredVolumeM3,
       i.tally_pieces AS tallyPieces,
@@ -224,9 +228,6 @@ export function runMigrations(db: DatabaseSync): void {
     FROM receiving_manifests m
     JOIN suppliers sup ON m.supplier_id = sup.id
     JOIN receiving_items i ON m.id = i.manifest_id
-    JOIN wood_species s ON i.species_id = s.id
-    JOIN v_receiving_item_financials f ON i.id = f.item_id
-    LEFT JOIN storage_lots l ON i.lot_id = l.id
-    LEFT JOIN storage_yards y ON l.yard_id = y.id;
+    JOIN v_receiving_item_financials f ON i.id = f.item_id;
   `);
 }

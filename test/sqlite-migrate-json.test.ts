@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSqliteDatabase } from '../src/persistence/sqlite/db.ts';
 import { runMigrations } from '../src/persistence/sqlite/migrations.ts';
-import { migrateJsonToSqlite } from '../src/persistence/sqlite/migrate-json.ts';
+import { migrateJsonToSqlite, toCode } from '../src/persistence/sqlite/migrate-json.ts';
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
@@ -123,6 +123,67 @@ test('JSON to SQLite Migration Utility Suite', async (t) => {
 
       const items = db.prepare('SELECT * FROM receiving_items;').all() as any[];
       assert.strictEqual(items.length, 0, 'all items must be rolled back on error');
+    } finally {
+      db.close();
+    }
+  });
+
+  await t.test('toCode generates collision-resilient codes with deterministic 4-character checksum for strings > 20 chars', () => {
+    // Strings with identical 20-character prefix
+    const nameA = 'PT Kayu Nusantara Indonesia Wilayah Barat';
+    const nameB = 'PT Kayu Nusantara Indonesia Wilayah Timur';
+    const codeA = toCode(nameA, 'SUP');
+    const codeB = toCode(nameB, 'SUP');
+
+    assert.notStrictEqual(codeA, codeB, 'codes must not collide despite identical prefixes');
+    assert.strictEqual(codeA, toCode(nameA, 'SUP'), 'codes must be strictly deterministic');
+    assert.ok(codeA.startsWith('SUP-PTKAYUNUSANTARAI'));
+    assert.ok(codeB.startsWith('SUP-PTKAYUNUSANTARAI'));
+    // Ensure overall code payload length is max 20 chars (prefix + '-' + 20 chars = 24 chars)
+    assert.strictEqual(codeA.length, 4 + 20);
+
+    // Short strings
+    assert.strictEqual(toCode('Merbau', 'SP'), 'SP-MERBAU');
+    assert.strictEqual(toCode('', 'GEN'), 'GEN-GEN');
+  });
+
+  await t.test('decouples manifest_number from receiptNumber allowing multiple deliveries sharing receiptNumber', () => {
+    const db = createSqliteDatabase(':memory:');
+    try {
+      runMigrations(db);
+
+      const sharedReceipt = 'KW-SHARED-2026-001';
+      const record1: WoodReceivingRecord = {
+        ...SEED_WOOD_RECORDS[0],
+        id: 'rec-shared-deliv-1',
+        receiptNumber: sharedReceipt,
+        tallyPieces: 10,
+        tallyVolumeM3: 2.0,
+      };
+      const record2: WoodReceivingRecord = {
+        ...SEED_WOOD_RECORDS[1],
+        id: 'rec-shared-deliv-2',
+        receiptNumber: sharedReceipt,
+        tallyPieces: 15,
+        tallyVolumeM3: 3.0,
+      };
+
+      const result = migrateJsonToSqlite(db, [record1, record2]);
+      assert.strictEqual(result.manifestsCount, 2);
+      assert.strictEqual(result.itemsCount, 2);
+
+      const manifests = db.prepare('SELECT id, manifest_number, receipt_number FROM receiving_manifests ORDER BY id ASC;').all() as Array<{
+        id: string;
+        manifest_number: string;
+        receipt_number: string;
+      }>;
+
+      assert.strictEqual(manifests.length, 2);
+      assert.strictEqual(manifests[0].receipt_number, sharedReceipt);
+      assert.strictEqual(manifests[1].receipt_number, sharedReceipt);
+      assert.strictEqual(manifests[0].manifest_number, 'MAN-rec-shared-deliv-1');
+      assert.strictEqual(manifests[1].manifest_number, 'MAN-rec-shared-deliv-2');
+      assert.notStrictEqual(manifests[0].manifest_number, manifests[1].manifest_number);
     } finally {
       db.close();
     }
