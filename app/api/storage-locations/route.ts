@@ -33,7 +33,7 @@ async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> 
   return verifySessionToken(token);
 }
 
-export async function GET(_request?: Request) {
+export async function GET() {
   try {
     const data = await serverRecordStore.getStorageLocations();
     return NextResponse.json({
