@@ -9,7 +9,7 @@ import { RecordTable } from '@/src/components/ledger/RecordTable';
 import { RecordModal } from '@/src/components/ledger/RecordModal';
 import { PrintReceivingSlipModal } from '@/src/components/ledger/PrintReceivingSlipModal';
 import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
-import type { WoodReceivingRecord } from '@/src/types';
+import type { WoodReceivingRecord, ManifestFormInput } from '@/src/types';
 import { TableProperties, ShieldAlert } from 'lucide-react';
 
 export default function LedgerPage() {
@@ -22,6 +22,7 @@ export default function LedgerPage() {
     speciesList,
     setFilters,
     saveRecord,
+    saveManifest,
     deleteRecord,
     resetDemo,
     exportCsv,
@@ -47,9 +48,13 @@ export default function LedgerPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (record: WoodReceivingRecord) => {
+  const handleSave = (record: WoodReceivingRecord, manifest?: ManifestFormInput) => {
     const isEdit = Boolean(editingRecord);
-    saveRecord(record);
+    if (manifest && manifest.items && manifest.items.length > 0) {
+      saveManifest(manifest);
+    } else {
+      saveRecord(record);
+    }
 
     addLog({
       action: isEdit ? 'RECORD_UPDATED' : 'RECORD_CREATED',

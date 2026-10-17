@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import type { WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics } from '../types/index.ts';
+import type { WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics, ManifestFormInput } from '../types/index.ts';
 import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
+import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
 import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
 import { toast } from '../utils/toast-store.ts';
 import { exportRecordsToCsv } from '../utils/records-csv.ts';
-import { recordMatchesSearchQuery } from '../utils/record-search.ts';
+import { filterWoodRecords } from '../utils/record-search.ts';
 
 const STORAGE_KEY = 'wood_receiving_records_next_v1';
 
@@ -120,6 +121,31 @@ export function useWoodRecords() {
     }, true);
   }, [syncWithServer]);
 
+  const saveManifest = useCallback(async (manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> => {
+    hasMutatedRef.current = true;
+    const { next, flattened } = applyManifestToRecords(recordsRef.current, manifest);
+
+    recordsRef.current = next;
+    setAllRecords(next);
+    persistRecords(next);
+
+    syncWithServer(async () => {
+      for (const rec of flattened) {
+        const res = await fetch('/api/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rec),
+        });
+        if (!res.ok) {
+          toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+          break;
+        }
+      }
+    }, true);
+
+    return flattened;
+  }, [syncWithServer]);
+
   const restoreRecord = useCallback((record: WoodReceivingRecord, index?: number) => {
     hasMutatedRef.current = true;
     const prev = recordsRef.current;
@@ -194,25 +220,7 @@ export function useWoodRecords() {
     setFilters({});
   }, []);
 
-  const records = useMemo(() => {
-    return allRecords.filter((r) => {
-      if (filters.species && r.woodSpecies !== filters.species) return false;
-      if (filters.kavling && r.kavlingNumber !== filters.kavling) return false;
-      if (filters.startDate && r.receiptDate < filters.startDate) return false;
-      if (filters.endDate && r.receiptDate > filters.endDate) return false;
-      if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
-        const status = r.paymentStatus || 'UNPAID';
-        if (filters.paymentStatus === 'UNPAID' && status === 'PAID') return false;
-        if (filters.paymentStatus === 'PAID' && r.paymentStatus !== 'PAID') return false;
-        if (filters.paymentStatus === 'PARTIAL' && r.paymentStatus !== 'PARTIAL') return false;
-      }
-      if (filters.searchQuery && !recordMatchesSearchQuery(r, filters.searchQuery)) {
-        return false;
-      }
-      return true;
-    });
-  }, [allRecords, filters]);
-
+  const records = useMemo(() => filterWoodRecords(allRecords, filters), [allRecords, filters]);
   const metrics: DashboardMetrics = useMemo(() => aggregateDashboardMetrics(records), [records]);
   const speciesList = useMemo(() => Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean), [allRecords]);
   const exportCsv = useCallback(() => exportRecordsToCsv(records), [records]);
@@ -227,6 +235,7 @@ export function useWoodRecords() {
     isSyncing,
     setFilters,
     saveRecord,
+    saveManifest,
     deleteRecord,
     restoreRecord,
     resetDemo,

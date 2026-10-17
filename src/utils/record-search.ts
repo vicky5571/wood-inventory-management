@@ -6,7 +6,7 @@
  * calendar date strings to prevent false positive substring collisions.
  */
 
-import type { WoodReceivingRecord } from '../types/index.ts';
+import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
 
 function fieldContains(field: string | undefined | null, needle: string): boolean {
   return typeof field === 'string' && field.toLowerCase().includes(needle);
@@ -42,3 +42,27 @@ export function recordMatchesSearchQuery(record: WoodReceivingRecord, rawQuery: 
   );
 }
 
+/**
+ * Applies multi-criteria filtering across records.
+ */
+export function filterWoodRecords(
+  records: WoodReceivingRecord[],
+  filters: RecordFilterCriteria
+): WoodReceivingRecord[] {
+  return records.filter((r) => {
+    if (filters.species && r.woodSpecies !== filters.species) return false;
+    if (filters.kavling && r.kavlingNumber !== filters.kavling) return false;
+    if (filters.startDate && r.receiptDate < filters.startDate) return false;
+    if (filters.endDate && r.receiptDate > filters.endDate) return false;
+    if (filters.paymentStatus && filters.paymentStatus !== 'ALL') {
+      const status = r.paymentStatus || 'UNPAID';
+      if (filters.paymentStatus === 'UNPAID' && status === 'PAID') return false;
+      if (filters.paymentStatus === 'PAID' && r.paymentStatus !== 'PAID') return false;
+      if (filters.paymentStatus === 'PARTIAL' && r.paymentStatus !== 'PARTIAL') return false;
+    }
+    if (filters.searchQuery && !recordMatchesSearchQuery(r, filters.searchQuery)) {
+      return false;
+    }
+    return true;
+  });
+}
