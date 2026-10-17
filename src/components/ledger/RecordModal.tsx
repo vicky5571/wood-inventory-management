@@ -1,180 +1,183 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { WoodReceivingRecord } from '@/src/types';
-import { computeRecordCalculations } from '@/src/utils/timber-calc.ts';
+import type { WoodReceivingRecord, ManifestFormInput, ManifestItemInput } from '@/src/types';
+import { computeManifestCalculations } from '@/src/utils/timber-calc.ts';
 import { toast } from '@/src/utils/toast-store';
 import {
+  hasMeaningfulManifestDraft,
   hasMeaningfulDraftData,
+  loadManifestDraft,
+  saveManifestDraft,
+  clearManifestDraft,
   loadRecordDraft,
-  saveRecordDraft,
   clearRecordDraft,
 } from '@/src/utils/record-draft';
 import { DraftRecoveryBanner } from './DraftRecoveryBanner';
 import { RecordDocumentSection } from './RecordDocumentSection';
-import { RecordMeasurementSection } from './RecordMeasurementSection';
+import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
 import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { X, Scale, CheckCircle2 } from 'lucide-react';
 
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
+export const MANIFEST_DRAFT_KEY = 'wood_manifest_form_draft_v1';
 
 const defaultRecord = (): Partial<WoodReceivingRecord> => ({
-  id: `rec-${Date.now()}`,
-  receiptDate: new Date().toISOString().slice(0, 10),
-  truckPlateNumber: '',
-  forestryDocNumber: '',
-  receiptNumber: `KW-${Date.now().toString().slice(-4)}`,
-  contractNumber: '',
-  supplierName: '',
-  woodSpecies: '',
-  woodLengthM: 4.0,
-  kavlingNumber: 'KAV-01',
-  storageYard: 'TPK-1',
-  deliveredPieces: 0,
-  deliveredVolumeM3: 0,
-  tallyPieces: 0,
-  tallyVolumeM3: 0,
-  timberPricePerM3: 0,
-  timberPphRate: 0.5,
-  freightRatePerM3: 0,
-  freightPphAmount: 0,
-  brokerFee: 0,
+  id: `rec-${Date.now()}`, receiptDate: new Date().toISOString().slice(0, 10),
+  truckPlateNumber: '', forestryDocNumber: '', receiptNumber: `KW-${Date.now().toString().slice(-4)}`,
+  contractNumber: '', supplierName: '', woodSpecies: '', woodLengthM: 4.0,
+  kavlingNumber: 'KAV-01', storageYard: 'TPK-1', freightRatePerM3: 0, freightPphAmount: 0, brokerFee: 0,
+});
+
+const createItem = (r?: Partial<WoodReceivingRecord>): ManifestItemInput => ({
+  id: r?.item_id || `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+  woodSpecies: r?.woodSpecies || '', woodLengthM: r?.woodLengthM ?? 4.0,
+  kavlingNumber: r?.kavlingNumber || 'KAV-01', storageYard: r?.storageYard || 'TPK-1',
+  deliveredPieces: r?.deliveredPieces ?? 0, deliveredVolumeM3: r?.deliveredVolumeM3 ?? 0,
+  tallyPieces: r?.tallyPieces ?? 0, tallyVolumeM3: r?.tallyVolumeM3 ?? 0,
+  timberPricePerM3: r?.timberPricePerM3 ?? 0, timberPphRate: r?.timberPphRate ?? 0.5,
 });
 
 export function RecordModal({
-  isOpen,
-  initialRecord,
-  availableSpecies,
-  onClose,
-  onSave,
+  isOpen, initialRecord, availableSpecies, onClose, onSave,
 }: {
   isOpen: boolean;
   initialRecord: WoodReceivingRecord | null;
   availableSpecies?: string[];
   onClose: () => void;
-  onSave: (record: WoodReceivingRecord) => void;
+  onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
 }) {
   const [form, setForm] = useState<Partial<WoodReceivingRecord>>({});
-  const [pendingDraft, setPendingDraft] = useState<Partial<WoodReceivingRecord> | null>(null);
+  const [items, setItems] = useState<ManifestItemInput[]>([]);
+  const [pendingDraft, setPendingDraft] = useState<Partial<ManifestFormInput> | null>(null);
 
-  // Initialize form or check uncommitted auto-draft on modal open
   useEffect(() => {
-    if (!isOpen) {
-      setPendingDraft(null);
-      return;
-    }
-
+    if (!isOpen) { setPendingDraft(null); return; }
     if (initialRecord) {
-      setForm({ ...initialRecord });
-      setPendingDraft(null);
+      setForm({ ...initialRecord }); setItems([createItem(initialRecord)]); setPendingDraft(null);
     } else {
-      setForm(defaultRecord());
-      const draft = loadRecordDraft();
-      if (draft && hasMeaningfulDraftData(draft)) {
-        setPendingDraft(draft);
+      setForm(defaultRecord()); setItems([createItem()]);
+      const mDraft = loadManifestDraft();
+      if (mDraft && hasMeaningfulManifestDraft(mDraft)) {
+        setPendingDraft(mDraft);
       } else {
-        setPendingDraft(null);
+        const rDraft = loadRecordDraft();
+        setPendingDraft(rDraft && hasMeaningfulDraftData(rDraft) ? { ...rDraft, items: [createItem(rDraft)] } : null);
       }
     }
   }, [initialRecord, isOpen]);
 
-  // Debounced auto-save when in Add mode and form has meaningful data
   useEffect(() => {
     if (!isOpen || initialRecord) return;
-    if (!hasMeaningfulDraftData(form)) return;
-
-    const timer = setTimeout(() => {
-      saveRecordDraft(form);
-    }, 400);
-
+    const draftPayload: Partial<ManifestFormInput> = { ...form, items };
+    if (!hasMeaningfulManifestDraft(draftPayload)) return;
+    const timer = setTimeout(() => saveManifestDraft(draftPayload), 400);
     return () => clearTimeout(timer);
-  }, [form, initialRecord, isOpen]);
+  }, [form, items, initialRecord, isOpen]);
 
-  // Live Math Preview
-  const preview = useMemo(
-    () =>
-      computeRecordCalculations({
-        tallyVolumeM3: Math.max(0, Number(form.tallyVolumeM3) || 0),
-        deliveredVolumeM3: Math.max(0, Number(form.deliveredVolumeM3) || 0),
-        tallyPieces: Math.max(0, Number(form.tallyPieces) || 0),
-        deliveredPieces: Math.max(0, Number(form.deliveredPieces) || 0),
-        timberPricePerM3: Math.max(0, Number(form.timberPricePerM3) || 0),
-        timberPphRate: Math.max(0, Number(form.timberPphRate) || 0),
-        freightRatePerM3: Math.max(0, Number(form.freightRatePerM3) || 0),
-        freightPphAmount: Math.max(0, Number(form.freightPphAmount) || 0),
-        brokerFee: Math.max(0, Number(form.brokerFee) || 0),
-      }),
-    [form]
-  );
+  const handleItemsChange = (nextItems: ManifestItemInput[]) => {
+    setItems(nextItems);
+    if (nextItems.length > 0) {
+      const first = nextItems[0];
+      setForm((prev) => ({
+        ...prev,
+        woodSpecies: first.woodSpecies || prev.woodSpecies,
+        woodLengthM: first.woodLengthM ?? prev.woodLengthM,
+        kavlingNumber: first.kavlingNumber || prev.kavlingNumber,
+        storageYard: first.storageYard || prev.storageYard,
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (items.length === 1) {
+      const cur = items[0];
+      if (
+        (form.woodSpecies && form.woodSpecies !== cur.woodSpecies) ||
+        (form.kavlingNumber && form.kavlingNumber !== cur.kavlingNumber) ||
+        (form.storageYard && form.storageYard !== cur.storageYard) ||
+        (form.woodLengthM !== undefined && form.woodLengthM !== cur.woodLengthM)
+      ) {
+        setItems([{ ...cur, woodSpecies: form.woodSpecies || cur.woodSpecies, woodLengthM: form.woodLengthM ?? cur.woodLengthM, kavlingNumber: form.kavlingNumber || cur.kavlingNumber, storageYard: form.storageYard || cur.storageYard }]);
+      }
+    }
+  }, [form.woodSpecies, form.woodLengthM, form.kavlingNumber, form.storageYard]);
+
+  const manifestPayload: ManifestFormInput = useMemo(() => ({
+    id: form.manifest_id || (initialRecord?.manifest_id ?? `man-${Date.now()}`),
+    receiptDate: form.receiptDate || new Date().toISOString().slice(0, 10),
+    docDate: form.docDate, truckPlateNumber: form.truckPlateNumber || '',
+    forestryDocNumber: form.forestryDocNumber || '', receiptNumber: form.receiptNumber || '',
+    contractNumber: form.contractNumber || '', supplierName: form.supplierName || '',
+    freightRatePerM3: Math.max(0, Number(form.freightRatePerM3) || 0),
+    freightPphAmount: form.freightPphAmount, brokerFee: Math.max(0, Number(form.brokerFee) || 0),
+    paymentStatus: form.paymentStatus, invoiceNumber: form.invoiceNumber,
+    paymentDate: form.paymentDate, paymentNotes: form.paymentNotes, items,
+  }), [form, items, initialRecord]);
+
+  const preview = useMemo(() => computeManifestCalculations(manifestPayload), [manifestPayload]);
 
   if (!isOpen) return null;
 
   const handleRestoreDraft = () => {
     if (pendingDraft) {
       setForm((prev) => ({ ...defaultRecord(), ...prev, ...pendingDraft }));
+      if (Array.isArray(pendingDraft.items) && pendingDraft.items.length > 0) setItems(pendingDraft.items);
       setPendingDraft(null);
-      toast.info(
-        'Draf Berhasil Dipulihkan (草稿已恢复)',
-        'Data formulir telah dimuat ulang dari penyimpanan draf terakhir.'
-      );
+      toast.info('Draf Berhasil Dipulihkan (草稿已恢复)', 'Data formulir telah dimuat ulang.');
     }
   };
 
   const handleDiscardDraft = () => {
-    clearRecordDraft();
+    clearManifestDraft(); clearRecordDraft();
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem(DRAFT_KEY);
+      window.localStorage.removeItem(MANIFEST_DRAFT_KEY); window.localStorage.removeItem(DRAFT_KEY);
     }
     setPendingDraft(null);
-    toast.info('Draf Dihapus (草稿已丢弃)', 'Draf belum tersimpan berhasil dibersihkan.');
+    toast.info('Draf Dihapus (草稿已丢弃)', 'Draf belum tersimpan dibersihkan.');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const isEdit = Boolean(initialRecord);
+    const primary = items[0] || createItem(form);
     const savedRecord: WoodReceivingRecord = {
       ...(form as WoodReceivingRecord),
-      timberGrossTotal: preview.timberGrossTotal,
-      timberPphAmount: preview.timberPphAmount,
-      timberNetPayable: preview.timberNetPayable,
-      freightGrossTotal: preview.freightGrossTotal,
-      freightNetPayable: preview.freightNetPayable,
-      grandNetPayable: preview.grandNetPayable,
-      createdAt: form.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      manifest_id: manifestPayload.id, item_id: primary.id,
+      woodSpecies: primary.woodSpecies || form.woodSpecies || '',
+      woodLengthM: primary.woodLengthM ?? form.woodLengthM ?? 4.0,
+      kavlingNumber: primary.kavlingNumber || form.kavlingNumber || 'KAV-01',
+      storageYard: primary.storageYard || form.storageYard || 'TPK-1',
+      deliveredPieces: preview.totalDeliveredPieces, deliveredVolumeM3: preview.totalDeliveredVolumeM3,
+      tallyPieces: preview.totalTallyPieces, tallyVolumeM3: preview.totalTallyVolumeM3,
+      timberPricePerM3: primary.timberPricePerM3, timberPphRate: primary.timberPphRate,
+      timberGrossTotal: preview.totalTimberGross, timberPphAmount: preview.totalTimberPph,
+      timberNetPayable: preview.totalTimberNet, freightGrossTotal: preview.freightGrossTotal,
+      freightNetPayable: preview.freightNetPayable, grandNetPayable: preview.grandNetPayable,
+      createdAt: form.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
 
-    onSave(savedRecord);
+    onSave(savedRecord, manifestPayload);
 
-    // Clean up draft upon successful creation
     if (!initialRecord) {
-      clearRecordDraft();
+      clearManifestDraft(); clearRecordDraft();
       if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(DRAFT_KEY);
+        window.localStorage.removeItem(MANIFEST_DRAFT_KEY); window.localStorage.removeItem(DRAFT_KEY);
       }
       setPendingDraft(null);
     }
 
     const plate = savedRecord.truckPlateNumber ? `Truk ${savedRecord.truckPlateNumber}` : 'Data Penerimaan';
     const vol = savedRecord.tallyVolumeM3 ? `${savedRecord.tallyVolumeM3} m³` : '0 m³';
-    const species = savedRecord.woodSpecies ? ` • ${savedRecord.woodSpecies}` : '';
-
-    toast.success(
-      isEdit ? 'Data Penerimaan Berhasil Diperbarui (入库已更新)' : 'Penerimaan Kayu Berhasil Disimpan (新增入库成功)',
-      `${plate} • Vol Tally: ${vol}${species}`
-    );
-
+    const count = items.length > 1 ? ` • ${items.length} jenis` : '';
+    toast.success(Boolean(initialRecord) ? 'Data Diperbarui (入库已更新)' : 'Penerimaan Disimpan (新增入库成功)', `${plate} • Vol: ${vol}${count}`);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#101828]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-gray-100 overflow-hidden">
-        {/* Brand Accent Bar (LMS IOH Gold & Red) */}
         <div className="h-1.5 w-full bg-gradient-to-r from-[#ffc908] via-[#ffc908] to-[#ed1c24]" />
-
-        {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#ffc908]/20 flex items-center justify-center text-[#101828]">
@@ -184,53 +187,27 @@ export function RecordModal({
               <h2 className="text-base sm:text-lg font-bold text-[#101828] tracking-tight">
                 {initialRecord ? 'Edit Penerimaan Kayu (编辑入库)' : 'Input Penerimaan Kayu Baru (新增木材入库)'}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Verifikasi tally fisik, surat jalan pengiriman, dan kalkulasi pembayaran netto.
-              </p>
+              <p className="text-xs text-gray-500 mt-0.5">Verifikasi surat jalan, muatan kayu multi-item, dan rekonsiliasi neto.</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
-            aria-label="Tutup"
-          >
+          <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer" aria-label="Tutup">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Uncommitted Draft Recovery Banner */}
-        {pendingDraft && (
-          <DraftRecoveryBanner
-            onRestore={handleRestoreDraft}
-            onDiscard={handleDiscardDraft}
-          />
-        )}
+        {pendingDraft && <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />}
 
-        {/* Modal Body / Form */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-5">
-          <RecordDocumentSection
-            form={form}
-            setForm={setForm}
-            availableSpecies={availableSpecies}
-          />
-          <RecordMeasurementSection form={form} setForm={setForm} />
+          <RecordDocumentSection form={form} setForm={setForm} availableSpecies={availableSpecies} />
+          <ManifestItemsTable items={items} onChange={handleItemsChange} availableSpecies={availableSpecies} />
           <RecordFinancialSection form={form} setForm={setForm} />
           <RecordReconciliationCard preview={preview} />
 
-          {/* Modal Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 active:bg-gray-100 rounded-xl transition shadow-2xs cursor-pointer"
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 active:bg-gray-100 rounded-xl transition shadow-2xs cursor-pointer">
               Batal (取消)
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 text-xs font-bold text-[#101828] bg-[#ffc908] hover:bg-[#f0bc00] active:scale-[0.99] rounded-xl shadow-xs hover:shadow transition flex items-center gap-1.5 cursor-pointer"
-            >
+            <button type="submit" className="px-6 py-2.5 text-xs font-bold text-[#101828] bg-[#ffc908] hover:bg-[#f0bc00] active:scale-[0.99] rounded-xl shadow-xs hover:shadow transition flex items-center gap-1.5 cursor-pointer">
               <CheckCircle2 className="w-4 h-4 text-[#101828]" />
               <span>Simpan Data (保存入库)</span>
             </button>

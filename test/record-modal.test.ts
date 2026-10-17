@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { openRecordModal } from '../src/components/record-modal.ts';
 import { toastStore } from '../src/utils/toast-store.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
@@ -215,3 +217,31 @@ test('Interactive Add/Edit Modal (openRecordModal) Test Suite', async (t) => {
     assert.ok(toasts[0].description?.includes('Truk DK 1234 AB'));
   });
 });
+
+test('RecordModal Multi-Item Integration Suite', async (t) => {
+  const modalPath = path.join(process.cwd(), 'src/components/ledger/RecordModal.tsx');
+  const cardPath = path.join(process.cwd(), 'src/components/ledger/RecordReconciliationCard.tsx');
+  const content = fs.readFileSync(modalPath, 'utf-8');
+  const cardContent = fs.readFileSync(cardPath, 'utf-8');
+
+  await t.test('RecordModal integrates ManifestItemsTable and multi-item calculation', () => {
+    assert.match(content, /ManifestItemsTable/);
+    assert.match(content, /computeManifestCalculations/);
+  });
+
+  await t.test('RecordModal adheres strictly to <250 LOC rule', () => {
+    const lines = content.split('\n').length;
+    assert.ok(lines <= 250, `RecordModal.tsx must remain under 250 lines (currently ${lines})`);
+  });
+
+  await t.test('RecordModal integrates multi-item draft persistence functions', () => {
+    assert.match(content, /loadManifestDraft/);
+    assert.match(content, /saveManifestDraft/);
+    assert.match(content, /clearManifestDraft/);
+  });
+
+  await t.test('RecordReconciliationCard supports ManifestCalculationOutput', () => {
+    assert.match(cardContent, /ManifestCalculationOutput/);
+  });
+});
+

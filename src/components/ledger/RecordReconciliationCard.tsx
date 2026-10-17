@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { RecordCalculationOutput } from '@/src/types';
+import type { RecordCalculationOutput, ManifestCalculationOutput } from '@/src/types';
 import { Calculator, TrendingUp, TrendingDown } from 'lucide-react';
 
 const formatRupiah = (num: number): string =>
@@ -12,11 +12,13 @@ const formatRupiah = (num: number): string =>
   }).format(num);
 
 export interface RecordReconciliationCardProps {
-  preview: RecordCalculationOutput;
+  preview: RecordCalculationOutput | ManifestCalculationOutput;
 }
 
 export function RecordReconciliationCard({ preview }: RecordReconciliationCardProps) {
   const isSurplusOrMatch = preview.volumeDiscrepancyM3 >= 0;
+  const timberNet = 'totalTimberNet' in preview ? preview.totalTimberNet : preview.timberNetPayable;
+  const itemsCount = 'items' in preview && Array.isArray(preview.items) ? preview.items.length : null;
 
   return (
     <div className="bg-[#101828] text-white rounded-2xl p-4.5 border border-gray-800 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -45,6 +47,11 @@ export function RecordReconciliationCard({ preview }: RecordReconciliationCardPr
               {isSurplusOrMatch && '+'}
               {preview.volumeDiscrepancyM3.toFixed(2)} m³
             </span>
+            {itemsCount !== null && itemsCount > 1 && (
+              <span className="text-[11px] font-mono text-gray-400 bg-gray-800/90 px-2 py-0.5 rounded-full border border-gray-700/60">
+                {itemsCount} Muatan
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -53,7 +60,7 @@ export function RecordReconciliationCard({ preview }: RecordReconciliationCardPr
         <div className="bg-gray-800/80 px-3 py-2 rounded-xl border border-gray-700/60">
           <div className="text-[10px] uppercase text-gray-400 font-medium">Net Material Kayu</div>
           <div className="font-mono tabular-nums font-semibold text-gray-100 mt-0.5">
-            {formatRupiah(preview.timberNetPayable)}
+            {formatRupiah(timberNet)}
           </div>
         </div>
 
