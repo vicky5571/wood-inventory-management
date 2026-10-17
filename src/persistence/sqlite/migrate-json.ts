@@ -2,13 +2,13 @@
  * src/persistence/sqlite/migrate-json.ts
  *
  * JSON to SQLite Relational Data Migration Utility.
- * Migrates legacy flat wood receiving records into normalized relational entities:
+ * Migrates flat records and multi-item manifests into normalized relational entities:
  * - Tenants, Wood Species, Storage Yards & Lots, Suppliers
  * - Receiving Manifests & Receiving Items
  */
 
 import type { DatabaseSync } from 'node:sqlite';
-import type { WoodReceivingRecord } from '../../types/index.ts';
+import type { WoodReceivingRecord, ManifestFormInput } from '../../types/index.ts';
 
 export interface MigrationResult {
   manifestsCount: number;
@@ -29,11 +29,7 @@ export const toCode = (name: string, prefix: string, maxLen = 20): string => {
   return `${prefix}-${clean.slice(0, Math.max(0, maxLen - 4))}${checksum}`;
 };
 
-export function migrateJsonToSqlite(
-  db: DatabaseSync,
-  records: WoodReceivingRecord[],
-  tenantId = 'default-tenant'
-): MigrationResult {
+function ensureTenant(db: DatabaseSync, tenantId: string): void {
   const slug = tenantId === 'default-tenant'
     ? 'default'
     : (tenantId.toLowerCase().replace(/[^a-z0-9_-]+/g, '-') || 'tenant');
@@ -42,36 +38,86 @@ export function migrateJsonToSqlite(
     INSERT INTO tenants (id, name, slug) VALUES (?, ?, ?)
     ON CONFLICT(id) DO NOTHING;
   `).run(tenantId, 'Factory Workspace Tenant', slug);
+}
 
-  const upsertSupplierStmt = db.prepare(`
+function resolveSupplierId(db: DatabaseSync, tenantId: string, rawName: string): string {
+  const name = (rawName || 'Unknown Supplier').trim();
+  const row = db.prepare('SELECT id FROM suppliers WHERE tenant_id = ? AND name = ?;').get(tenantId, name) as { id: string } | undefined;
+  if (row) return row.id;
+
+  const code = toCode(name, 'SUP');
+  const newId = `sup-${Math.random().toString(36).slice(2, 9)}`;
+  const res = db.prepare(`
     INSERT INTO suppliers (id, tenant_id, code, name, contact_person, is_active)
-    VALUES (?, ?, ?, ?, ?, 1)
+    VALUES (?, ?, ?, ?, 'Contact Person', 1)
     ON CONFLICT(tenant_id, code) DO UPDATE SET name = excluded.name, updated_at = datetime('now')
     RETURNING id;
-  `);
+  `).get(newId, tenantId, code, name) as { id: string };
+  return res.id;
+}
 
-  const upsertSpeciesStmt = db.prepare(`
+function resolveSpeciesId(db: DatabaseSync, tenantId: string, rawName: string): string {
+  const name = (rawName || 'General Timber').trim();
+  const row = db.prepare('SELECT id FROM wood_species WHERE common_name = ?;').get(name) as { id: string } | undefined;
+  if (row) return row.id;
+
+  const code = toCode(name, 'SP');
+  const newId = `sp-${Math.random().toString(36).slice(2, 9)}`;
+  const res = db.prepare(`
     INSERT INTO wood_species (id, tenant_id, code, common_name)
     VALUES (?, ?, ?, ?)
     ON CONFLICT(code) DO UPDATE SET common_name = excluded.common_name, updated_at = datetime('now')
     RETURNING id;
-  `);
+  `).get(newId, tenantId, code, name) as { id: string };
+  return res.id;
+}
 
-  const upsertYardStmt = db.prepare(`
-    INSERT INTO storage_yards (id, tenant_id, yard_code, name)
-    VALUES (?, ?, ?, ?)
-    ON CONFLICT(tenant_id, yard_code) DO UPDATE SET name = excluded.name, updated_at = datetime('now')
-    RETURNING id;
-  `);
+function resolveLotId(db: DatabaseSync, tenantId: string, rawYardName: string, rawLotCode: string): string {
+  const yardName = (rawYardName || 'TPK-General').trim();
+  let yardRow = db.prepare('SELECT id FROM storage_yards WHERE tenant_id = ? AND name = ?;').get(tenantId, yardName) as { id: string } | undefined;
+  let yardId = yardRow?.id;
+  if (!yardId) {
+    const yardCode = toCode(yardName, 'YD');
+    const newId = `yard-${Math.random().toString(36).slice(2, 9)}`;
+    const res = db.prepare(`
+      INSERT INTO storage_yards (id, tenant_id, yard_code, name)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(tenant_id, yard_code) DO UPDATE SET name = excluded.name, updated_at = datetime('now')
+      RETURNING id;
+    `).get(newId, tenantId, yardCode, yardName) as { id: string };
+    yardId = res.id;
+  }
 
-  const upsertLotStmt = db.prepare(`
+  const lotCode = (rawLotCode || 'KAV-GEN').trim();
+  let lotRow = db.prepare('SELECT id FROM storage_lots WHERE tenant_id = ? AND yard_id = ? AND lot_code = ?;').get(tenantId, yardId, lotCode) as { id: string } | undefined;
+  if (lotRow) return lotRow.id;
+
+  const newId = `lot-${Math.random().toString(36).slice(2, 9)}`;
+  const res = db.prepare(`
     INSERT INTO storage_lots (id, tenant_id, yard_id, lot_code, status)
     VALUES (?, ?, ?, ?, 'ACTIVE')
     ON CONFLICT(tenant_id, yard_id, lot_code) DO UPDATE SET lot_code = excluded.lot_code, updated_at = datetime('now')
     RETURNING id;
-  `);
+  `).get(newId, tenantId, yardId, lotCode) as { id: string };
+  return res.id;
+}
 
-  const insertManifestStmt = db.prepare(`
+function saveManifestCore(
+  db: DatabaseSync,
+  manifest: ManifestFormInput,
+  tenantId: string,
+  createdAt?: string,
+  updatedAt?: string
+): string {
+  const supplierId = resolveSupplierId(db, tenantId, manifest.supplierName);
+  const manifestId = manifest.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const manifestNumber = `MAN-${manifestId}`;
+  const now = new Date().toISOString();
+  const cAt = createdAt || now;
+  const uAt = updatedAt || now;
+  const freightPphRate = (manifest as any).freightPphRate ?? 2.0;
+
+  db.prepare(`
     INSERT INTO receiving_manifests (
       id, tenant_id, manifest_number, receipt_date, doc_date, truck_plate_number,
       forestry_doc_number, receipt_number, contract_number, supplier_id,
@@ -88,7 +134,15 @@ export function migrateJsonToSqlite(
       payment_status = excluded.payment_status, invoice_number = excluded.invoice_number,
       payment_date = excluded.payment_date, payment_notes = excluded.payment_notes,
       updated_at = excluded.updated_at;
-  `);
+  `).run(
+    manifestId, tenantId, manifestNumber, manifest.receiptDate || now.split('T')[0], manifest.docDate || null,
+    manifest.truckPlateNumber || '-', manifest.forestryDocNumber || '-', manifest.receiptNumber || manifestNumber,
+    manifest.contractNumber || '-', supplierId, manifest.freightRatePerM3 || 0, freightPphRate,
+    manifest.brokerFee || 0, manifest.paymentStatus || 'UNPAID', manifest.invoiceNumber || null,
+    manifest.paymentDate || null, manifest.paymentNotes || null, cAt, uAt
+  );
+
+  db.prepare('DELETE FROM receiving_items WHERE manifest_id = ?;').run(manifestId);
 
   const insertItemStmt = db.prepare(`
     INSERT INTO receiving_items (
@@ -96,112 +150,91 @@ export function migrateJsonToSqlite(
       wood_length_m, delivered_pieces, delivered_volume_m3, tally_pieces,
       tally_volume_m3, timber_price_per_m3, timber_pph_rate, notes,
       created_at, updated_at
-    ) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET
-      manifest_id = excluded.manifest_id, tenant_id = excluded.tenant_id,
-      species_id = excluded.species_id, lot_id = excluded.lot_id,
-      wood_length_m = excluded.wood_length_m, delivered_pieces = excluded.delivered_pieces,
-      delivered_volume_m3 = excluded.delivered_volume_m3, tally_pieces = excluded.tally_pieces,
-      tally_volume_m3 = excluded.tally_volume_m3, timber_price_per_m3 = excluded.timber_price_per_m3,
-      timber_pph_rate = excluded.timber_pph_rate, updated_at = excluded.updated_at;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?);
   `);
 
-  // Pre-seed lookup maps with existing database records
-  const supplierMap = new Map<string, string>();
-  for (const s of db.prepare('SELECT id, name FROM suppliers WHERE tenant_id = ?').all(tenantId) as Array<{ id: string; name: string }>) {
-    supplierMap.set(s.name, s.id);
+  const items = manifest.items || [];
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
+    const speciesId = resolveSpeciesId(db, tenantId, item.woodSpecies);
+    const lotId = resolveLotId(db, tenantId, item.storageYard, item.kavlingNumber);
+    const itemId = item.id || `item-${manifestId}-${idx + 1}`;
+
+    insertItemStmt.run(
+      itemId, manifestId, tenantId, idx + 1, speciesId, lotId,
+      item.woodLengthM || 4.0, item.deliveredPieces || 0, item.deliveredVolumeM3 || 0,
+      item.tallyPieces || 0, item.tallyVolumeM3 || 0, item.timberPricePerM3 || 0,
+      item.timberPphRate ?? 0.5, cAt, uAt
+    );
   }
 
-  const speciesMap = new Map<string, string>();
-  for (const sp of db.prepare('SELECT id, common_name FROM wood_species').all() as Array<{ id: string; common_name: string }>) {
-    speciesMap.set(sp.common_name, sp.id);
-  }
+  return manifestId;
+}
 
-  const yardMap = new Map<string, string>();
-  for (const y of db.prepare('SELECT id, name FROM storage_yards WHERE tenant_id = ?').all(tenantId) as Array<{ id: string; name: string }>) {
-    yardMap.set(y.name, y.id);
+export function saveManifestToSqlite(
+  db: DatabaseSync,
+  manifest: ManifestFormInput,
+  tenantId = 'default-tenant'
+): string {
+  ensureTenant(db, tenantId);
+  db.exec('BEGIN TRANSACTION;');
+  try {
+    const manifestId = saveManifestCore(db, manifest, tenantId);
+    db.exec('COMMIT;');
+    return manifestId;
+  } catch (err) {
+    db.exec('ROLLBACK;');
+    throw err;
   }
+}
 
-  const lotMap = new Map<string, string>();
-  for (const l of db.prepare('SELECT id, yard_id, lot_code FROM storage_lots WHERE tenant_id = ?').all(tenantId) as Array<{ id: string; yard_id: string; lot_code: string }>) {
-    lotMap.set(`${l.yard_id}_${l.lot_code}`, l.id);
-  }
-
+export function migrateJsonToSqlite(
+  db: DatabaseSync,
+  records: WoodReceivingRecord[],
+  tenantId = 'default-tenant'
+): MigrationResult {
+  ensureTenant(db, tenantId);
   let manifestsCount = 0;
   let itemsCount = 0;
 
   db.exec('BEGIN TRANSACTION;');
   try {
     for (const rec of records) {
-      // 1. Supplier
-      const supplierName = (rec.supplierName || 'Unknown Supplier').trim();
-      let supplierId = supplierMap.get(supplierName);
-      if (!supplierId) {
-        const code = toCode(supplierName, 'SUP');
-        const newId = `sup-${Math.random().toString(36).slice(2, 9)}`;
-        const result = upsertSupplierStmt.get(newId, tenantId, code, supplierName, 'Contact Person') as { id: string };
-        supplierId = result.id;
-        supplierMap.set(supplierName, supplierId);
-      }
-
-      // 2. Wood Species
-      const speciesName = (rec.woodSpecies || 'General Timber').trim();
-      let speciesId = speciesMap.get(speciesName);
-      if (!speciesId) {
-        const code = toCode(speciesName, 'SP');
-        const newId = `sp-${Math.random().toString(36).slice(2, 9)}`;
-        const result = upsertSpeciesStmt.get(newId, tenantId, code, speciesName) as { id: string };
-        speciesId = result.id;
-        speciesMap.set(speciesName, speciesId);
-      }
-
-      // 3. Storage Yard & Lot
-      const yardName = (rec.storageYard || 'TPK-General').trim();
-      let yardId = yardMap.get(yardName);
-      if (!yardId) {
-        const yardCode = toCode(yardName, 'YD');
-        const newId = `yard-${Math.random().toString(36).slice(2, 9)}`;
-        const result = upsertYardStmt.get(newId, tenantId, yardCode, yardName) as { id: string };
-        yardId = result.id;
-        yardMap.set(yardName, yardId);
-      }
-
-      const lotCode = (rec.kavlingNumber || 'KAV-GEN').trim();
-      const lotKey = `${yardId}_${lotCode}`;
-      let lotId = lotMap.get(lotKey);
-      if (!lotId) {
-        const newId = `lot-${Math.random().toString(36).slice(2, 9)}`;
-        const result = upsertLotStmt.get(newId, tenantId, yardId, lotCode) as { id: string };
-        lotId = result.id;
-        lotMap.set(lotKey, lotId);
-      }
-
-      // 4. Manifest
-      const manifestId = rec.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      const manifestNumber = `MAN-${manifestId}`;
-      const now = new Date().toISOString();
-      const freightPphRate = (rec as any).freightPphRate ?? 2.0;
-
-      insertManifestStmt.run(
-        manifestId, tenantId, manifestNumber, rec.receiptDate || now.split('T')[0], rec.docDate || null,
-        rec.truckPlateNumber || '-', rec.forestryDocNumber || '-', rec.receiptNumber || manifestNumber, rec.contractNumber || '-',
-        supplierId, rec.freightRatePerM3 || 0, freightPphRate, rec.brokerFee || 0,
-        rec.paymentStatus || 'UNPAID', rec.invoiceNumber || null, rec.paymentDate || null,
-        rec.paymentNotes || null, rec.createdAt || now, rec.updatedAt || now
-      );
+      const manifest: ManifestFormInput = {
+        id: rec.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        receiptDate: rec.receiptDate,
+        docDate: rec.docDate,
+        truckPlateNumber: rec.truckPlateNumber,
+        forestryDocNumber: rec.forestryDocNumber,
+        receiptNumber: rec.receiptNumber,
+        contractNumber: rec.contractNumber,
+        supplierName: rec.supplierName,
+        freightRatePerM3: rec.freightRatePerM3,
+        brokerFee: rec.brokerFee,
+        paymentStatus: rec.paymentStatus,
+        invoiceNumber: rec.invoiceNumber,
+        paymentDate: rec.paymentDate,
+        paymentNotes: rec.paymentNotes,
+        items: [
+          {
+            id: `item-${rec.id}`,
+            woodSpecies: rec.woodSpecies,
+            woodLengthM: rec.woodLengthM,
+            kavlingNumber: rec.kavlingNumber,
+            storageYard: rec.storageYard,
+            deliveredPieces: rec.deliveredPieces,
+            deliveredVolumeM3: rec.deliveredVolumeM3,
+            tallyPieces: rec.tallyPieces,
+            tallyVolumeM3: rec.tallyVolumeM3,
+            timberPricePerM3: rec.timberPricePerM3,
+            timberPphRate: rec.timberPphRate,
+          },
+        ],
+      };
+      saveManifestCore(db, manifest, tenantId, rec.createdAt, rec.updatedAt);
       manifestsCount++;
-
-      // 5. Receiving Item
-      const itemId = `item-${manifestId}`;
-      insertItemStmt.run(
-        itemId, manifestId, tenantId, speciesId, lotId,
-        rec.woodLengthM || 4.0, rec.deliveredPieces || 0, rec.deliveredVolumeM3 || 0,
-        rec.tallyPieces || 0, rec.tallyVolumeM3 || 0, rec.timberPricePerM3 || 0,
-        rec.timberPphRate ?? 0.5, null, rec.createdAt || now, rec.updatedAt || now
-      );
-      itemsCount++;
+      itemsCount += manifest.items.length;
     }
-
     db.exec('COMMIT;');
   } catch (err) {
     db.exec('ROLLBACK;');

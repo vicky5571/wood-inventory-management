@@ -136,6 +136,8 @@ export type PaymentStatus = 'UNPAID' | 'PARTIAL' | 'PAID';
  */
 export interface WoodReceivingRecord {
   id: string;
+  manifest_id?: string;         // Relational manifest foreign ID
+  item_id?: string;             // Relational line item ID
 
   // Delivery & Legal Document Identifiers
   receiptDate: string;           // Penerimaan / 到货日期 (YYYY-MM-DD)

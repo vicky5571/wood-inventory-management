@@ -9,9 +9,9 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { createSqliteDatabase } from './sqlite/db.ts';
 import { runMigrations } from './sqlite/migrations.ts';
-import { migrateJsonToSqlite } from './sqlite/migrate-json.ts';
+import { migrateJsonToSqlite, saveManifestToSqlite } from './sqlite/migrate-json.ts';
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
-import type { WoodReceivingRecord } from '../types/index.ts';
+import type { WoodReceivingRecord, ManifestFormInput } from '../types/index.ts';
 
 export class SqliteRecordStore {
   private db: DatabaseSync;
@@ -74,6 +74,26 @@ export class SqliteRecordStore {
       throw new Error(`Failed to save record ${manifestId}`);
     }
     return saved;
+  }
+
+  /**
+   * Saves a multi-item manifest and returns the projected flat WoodReceivingRecord items.
+   */
+  async saveManifest(manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> {
+    this.ensureInitialized();
+    const manifestId = saveManifestToSqlite(this.db, manifest);
+    const rows = this.db.prepare('SELECT * FROM v_buku_besar_flat WHERE manifest_id = ? ORDER BY id ASC;').all(manifestId);
+    return rows as unknown as WoodReceivingRecord[];
+  }
+
+  /**
+   * Deletes a manifest by manifestId.
+   * Cascading foreign keys remove all associated line items from receiving_items.
+   */
+  async deleteManifest(manifestId: string): Promise<boolean> {
+    this.ensureInitialized();
+    const result = this.db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(manifestId);
+    return Number(result.changes) > 0;
   }
 
   /**
