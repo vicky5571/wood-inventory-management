@@ -1,0 +1,112 @@
+/**
+ * src/persistence/sqlite-record-store.ts
+ *
+ * Relational SQLite Record Store for Wood Receiving Records.
+ * Implements the asynchronous persistence contract backed by SQLite relational tables
+ * and views (v_buku_besar_flat) using Node.js 26 native node:sqlite.
+ */
+
+import type { DatabaseSync } from 'node:sqlite';
+import { createSqliteDatabase } from './sqlite/db.ts';
+import { runMigrations } from './sqlite/migrations.ts';
+import { migrateJsonToSqlite } from './sqlite/migrate-json.ts';
+import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import type { WoodReceivingRecord } from '../types/index.ts';
+
+export class SqliteRecordStore {
+  private db: DatabaseSync;
+  private initialized = false;
+
+  constructor(dbPath?: string) {
+    this.db = createSqliteDatabase(dbPath);
+    this.ensureInitialized();
+  }
+
+  private ensureInitialized(): void {
+    if (this.initialized) return;
+    runMigrations(this.db);
+
+    const countRow = this.db.prepare('SELECT COUNT(*) AS c FROM receiving_manifests;').get() as { c: number } | undefined;
+    if (!countRow || countRow.c === 0) {
+      migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
+    }
+    this.initialized = true;
+  }
+
+  /**
+   * Retrieves all flat receiving records from the relational view v_buku_besar_flat,
+   * sorted by receiptDate descending and id ascending.
+   */
+  async getAll(): Promise<WoodReceivingRecord[]> {
+    this.ensureInitialized();
+    const rows = this.db.prepare('SELECT * FROM v_buku_besar_flat ORDER BY receiptDate DESC, id ASC;').all();
+    return rows as unknown as WoodReceivingRecord[];
+  }
+
+  /**
+   * Retrieves a single flat receiving record by its manifest id from v_buku_besar_flat.
+   */
+  async getById(id: string): Promise<WoodReceivingRecord | null> {
+    this.ensureInitialized();
+    const row = this.db.prepare('SELECT * FROM v_buku_besar_flat WHERE id = ?;').get(id);
+    return (row as unknown as WoodReceivingRecord) || null;
+  }
+
+  /**
+   * Saves or updates a receiving record.
+   * Dispatches into normalized relational entities (manifest, items, supplier, species, yard, lot)
+   * and queries the dynamically computed view to return the updated record.
+   */
+  async save(record: WoodReceivingRecord): Promise<WoodReceivingRecord> {
+    this.ensureInitialized();
+    const now = new Date().toISOString();
+    const manifestId = record.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const recordToSave: WoodReceivingRecord = {
+      ...record,
+      id: manifestId,
+      createdAt: record.createdAt || now,
+      updatedAt: now,
+    };
+
+    migrateJsonToSqlite(this.db, [recordToSave]);
+    const saved = await this.getById(manifestId);
+    if (!saved) {
+      throw new Error(`Failed to save record ${manifestId}`);
+    }
+    return saved;
+  }
+
+  /**
+   * Deletes a receiving record by manifest id.
+   * Cascading foreign keys remove associated line items.
+   */
+  async delete(id: string): Promise<boolean> {
+    this.ensureInitialized();
+    const result = this.db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(id);
+    return Number(result.changes) > 0;
+  }
+
+  /**
+   * Resets receiving operational records and re-hydrates with default SEED_WOOD_RECORDS.
+   */
+  async reset(): Promise<WoodReceivingRecord[]> {
+    this.ensureInitialized();
+    this.db.exec('DELETE FROM receiving_items;');
+    this.db.exec('DELETE FROM receiving_manifests;');
+    migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
+    return this.getAll();
+  }
+
+  /**
+   * Closes database connection.
+   */
+  close(): void {
+    try {
+      this.db.close();
+    } catch {
+      // Ignore if already closed
+    }
+  }
+}
+
+export const sqliteRecordStore = new SqliteRecordStore();
