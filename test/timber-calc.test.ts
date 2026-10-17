@@ -12,7 +12,14 @@ import type {
   PaymentCalculationResult,
   RecordCalculationInput,
   RecordCalculationOutput,
+  Tenant,
+  StorageYard,
+  StorageLot,
+  ReceivingManifest,
+  ReceivingItem,
+  ManifestWithItems,
 } from '../src/types/index.ts';
+
 
 
 test('Timber Calculations & Aggregation Test Suite', async (t) => {
@@ -228,4 +235,116 @@ test('Timber Calculations & Aggregation Test Suite', async (t) => {
     assert.strictEqual(typeof output.grandNetPayable, 'number');
   });
 });
+
+test('Relational Domain Type Invariants Suite', async (t) => {
+  await t.test('ManifestWithItems matches aggregate financial properties', async () => {
+    const { getDatabaseConnection } = await import('../src/persistence/sqlite/db.ts');
+    assert.ok(getDatabaseConnection);
+
+    const tenant: Tenant = {
+      id: 'tenant-default',
+      name: 'Default Timber Enterprise',
+      slug: 'default',
+      createdAt: '2026-10-18T00:00:00.000Z',
+      updatedAt: '2026-10-18T00:00:00.000Z',
+    };
+
+    const yard: StorageYard = {
+      id: 'yard-1',
+      tenantId: tenant.id,
+      yardCode: 'TPK-01',
+      name: 'Central Log Yard',
+      description: 'Main storage yard for teak logs',
+      createdAt: '2026-10-18T00:00:00.000Z',
+      updatedAt: '2026-10-18T00:00:00.000Z',
+    };
+
+    const lot: StorageLot = {
+      id: 'lot-1',
+      tenantId: tenant.id,
+      yardId: yard.id,
+      lotCode: 'KAV-A1',
+      status: 'ACTIVE',
+      createdAt: '2026-10-18T00:00:00.000Z',
+      updatedAt: '2026-10-18T00:00:00.000Z',
+    };
+
+    const manifest: ReceivingManifest = {
+      id: 'manifest-1',
+      tenantId: tenant.id,
+      manifestNumber: 'MNF-2026-001',
+      receiptDate: '2026-10-18',
+      docDate: '2026-10-17',
+      truckPlateNumber: 'B 1234 CD',
+      forestryDocNumber: 'SKSHHK-999',
+      receiptNumber: 'KW-100',
+      contractNumber: 'CTR-2026',
+      supplierId: 'supp-1',
+      freightRatePerM3: 150000,
+      freightPphRate: 0.02,
+      brokerFee: 50000,
+      paymentStatus: 'UNPAID',
+      createdAt: '2026-10-18T00:00:00.000Z',
+      updatedAt: '2026-10-18T00:00:00.000Z',
+    };
+
+    const item: ReceivingItem = {
+      id: 'item-1',
+      manifestId: manifest.id,
+      tenantId: tenant.id,
+      itemSequence: 1,
+      speciesId: 'spec-1',
+      lotId: lot.id,
+      woodLengthM: 4.0,
+      deliveredPieces: 25,
+      deliveredVolumeM3: 2.5,
+      tallyPieces: 24,
+      tallyVolumeM3: 2.4,
+      timberPricePerM3: 3000000,
+      timberPphRate: 0.015,
+      notes: 'Slight sapwood',
+      createdAt: '2026-10-18T00:00:00.000Z',
+      updatedAt: '2026-10-18T00:00:00.000Z',
+    };
+
+    const manifestWithItems: ManifestWithItems = {
+      ...manifest,
+      supplierName: 'PT Rimba Sejahtera',
+      items: [
+        {
+          ...item,
+          speciesName: 'Teak / Jati',
+          kavlingNumber: lot.lotCode,
+          storageYard: yard.yardCode,
+          timberGrossTotal: 7200000,
+          timberPphAmount: 108000,
+          timberNetPayable: 7092000,
+          volumeDiscrepancyM3: -0.1,
+          pieceDiscrepancy: -1,
+        },
+      ],
+      summary: {
+        totalDeliveredPieces: 25,
+        totalDeliveredVolumeM3: 2.5,
+        totalTallyPieces: 24,
+        totalTallyVolumeM3: 2.4,
+        totalTimberGross: 7200000,
+        totalTimberPph: 108000,
+        totalTimberNet: 7092000,
+        freightGrossTotal: 360000,
+        freightPphAmount: 7200,
+        freightNetPayable: 352800,
+        grandNetPayable: 7092000 + 352800 + 50000,
+      },
+    };
+
+    assert.strictEqual(manifestWithItems.summary.grandNetPayable, 7494800);
+    assert.strictEqual(manifestWithItems.items[0].speciesName, 'Teak / Jati');
+    assert.strictEqual(manifestWithItems.items[0].kavlingNumber, 'KAV-A1');
+    assert.strictEqual(manifestWithItems.items[0].storageYard, 'TPK-01');
+    assert.strictEqual(manifestWithItems.paymentStatus, 'UNPAID');
+    assert.strictEqual(manifestWithItems.items.length, 1);
+  });
+});
+
 

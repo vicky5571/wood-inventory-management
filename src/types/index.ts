@@ -186,6 +186,121 @@ export interface WoodReceivingRecord {
 }
 
 /**
+ * Multi-Tenant Scoping Entity: Tenant / Organization Workspace.
+ */
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Storage Infrastructure: Log Receiving Yard (TPK).
+ */
+export interface StorageYard {
+  id: string;
+  tenantId: string;
+  yardCode: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Storage Infrastructure: Lot / Kavling inside a Yard.
+ */
+export interface StorageLot {
+  id: string;
+  tenantId: string;
+  yardId: string;
+  lotCode: string;
+  status: 'ACTIVE' | 'FULL' | 'MAINTENANCE';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Relational Delivery Header: Inbound Timber Manifest.
+ */
+export interface ReceivingManifest {
+  id: string;
+  tenantId: string;
+  manifestNumber: string;
+  receiptDate: string;
+  docDate?: string;
+  truckPlateNumber: string;
+  forestryDocNumber: string;
+  receiptNumber: string;
+  contractNumber: string;
+  supplierId: string;
+  freightRatePerM3: number;
+  freightPphRate: number;
+  brokerFee: number;
+  paymentStatus: PaymentStatus;
+  invoiceNumber?: string;
+  paymentDate?: string;
+  paymentNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Relational Delivery Line Item: Inbound Timber Tally Record.
+ */
+export interface ReceivingItem {
+  id: string;
+  manifestId: string;
+  tenantId: string;
+  itemSequence: number;
+  speciesId: string;
+  lotId?: string;
+  woodLengthM: number;
+  deliveredPieces: number;
+  deliveredVolumeM3: number;
+  tallyPieces: number;
+  tallyVolumeM3: number;
+  timberPricePerM3: number;
+  timberPphRate: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Aggregate Manifest with Line Items, Joined Master Details, and Financial Summary.
+ */
+export interface ManifestWithItems extends ReceivingManifest {
+  supplierName: string;
+  items: Array<ReceivingItem & {
+    speciesName: string;
+    kavlingNumber?: string;
+    storageYard?: string;
+    timberGrossTotal: number;
+    timberPphAmount: number;
+    timberNetPayable: number;
+    volumeDiscrepancyM3: number;
+    pieceDiscrepancy: number;
+  }>;
+  summary: {
+    totalDeliveredPieces: number;
+    totalDeliveredVolumeM3: number;
+    totalTallyPieces: number;
+    totalTallyVolumeM3: number;
+    totalTimberGross: number;
+    totalTimberPph: number;
+    totalTimberNet: number;
+    freightGrossTotal: number;
+    freightPphAmount: number;
+    freightNetPayable: number;
+    grandNetPayable: number;
+  };
+}
+
+
+/**
  * Filter & Search Criteria for Wood Receiving Records
  */
 export interface RecordFilterCriteria {
