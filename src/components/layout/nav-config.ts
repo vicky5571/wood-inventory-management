@@ -19,6 +19,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/ledger',
   },
   {
+    id: 'sales',
+    labelId: 'Penjualan',
+    labelZh: '木材销售',
+    href: '/sales',
+  },
+  {
     id: 'suppliers',
     labelId: 'Pemasok',
     labelZh: '供应商',

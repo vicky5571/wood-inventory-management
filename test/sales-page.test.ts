@@ -64,9 +64,11 @@ test('Sales Subsystem Page & Presentation Suite', async (t) => {
     assert.match(content, /PrintDeliveryOrderModal/, 'Must render PrintDeliveryOrderModal');
   });
 
-  await t.test('app/ledger/page.tsx contains link to dedicated sales ledger route', () => {
-    const content = fs.readFileSync(ledgerPath, 'utf-8');
-    assert.match(content, /\/sales/, 'app/ledger/page.tsx must provide a link to /sales route');
+  await t.test('NAV_ITEMS and Sidebar contain dedicated sales ledger route', () => {
+    const navConfigPath = path.resolve(process.cwd(), 'src/components/layout/nav-config.ts');
+    const content = fs.readFileSync(navConfigPath, 'utf-8');
+    assert.match(content, /id:\s*'sales'/, 'NAV_ITEMS must contain sales navigation item');
+    assert.match(content, /href:\s*'\/sales'/, 'NAV_ITEMS must route to /sales');
   });
 });
 

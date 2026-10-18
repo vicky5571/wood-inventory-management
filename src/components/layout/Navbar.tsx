@@ -9,6 +9,7 @@ import {
   X,
   LayoutDashboard,
   TableProperties,
+  Truck,
   Building2,
   History,
   Settings,
@@ -20,6 +21,7 @@ import { UserNav } from './UserNav';
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   analytics: LayoutDashboard,
   ledger: TableProperties,
+  sales: Truck,
   suppliers: Building2,
   activity: History,
   settings: Settings,

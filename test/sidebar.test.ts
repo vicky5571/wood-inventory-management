@@ -12,9 +12,9 @@ import path from 'node:path';
 import { NAV_ITEMS, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
-  await t.test('NAV_ITEMS contains all 5 operational routes with bilingual labels', () => {
-    assert.strictEqual(NAV_ITEMS.length, 5);
-    const expectedRoutes = ['/', '/ledger', '/suppliers', '/activity', '/settings'];
+  await t.test('NAV_ITEMS contains all operational routes with bilingual labels', () => {
+    assert.strictEqual(NAV_ITEMS.length, 6);
+    const expectedRoutes = ['/', '/ledger', '/sales', '/suppliers', '/activity', '/settings'];
     const actualRoutes = NAV_ITEMS.map((item) => item.href);
     assert.deepStrictEqual(actualRoutes, expectedRoutes);
   });

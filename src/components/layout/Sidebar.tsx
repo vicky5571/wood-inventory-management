@@ -7,6 +7,7 @@ import {
   Trees,
   LayoutDashboard,
   TableProperties,
+  Truck,
   Building2,
   History,
   Settings,
@@ -20,6 +21,7 @@ import { UserNav } from './UserNav';
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   analytics: LayoutDashboard,
   ledger: TableProperties,
+  sales: Truck,
   suppliers: Building2,
   activity: History,
   settings: Settings,
@@ -36,14 +38,8 @@ export function Sidebar() {
 
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
-    if (isMobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    document.body.style.overflow = isMobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
   }, [isMobileOpen]);
 
   // Handle ESC key to dismiss mobile drawer
