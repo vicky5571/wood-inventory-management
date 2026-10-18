@@ -50,7 +50,7 @@ export async function GET(request?: Request): Promise<NextResponse> {
         const rawSortOrder = searchParams.get('sortOrder')?.trim().toUpperCase();
 
         const params: RecordQueryParams = {
-          page: searchParams.get('page') !== null ? (parseInt(searchParams.get('page')!, 10) || 1) : 1,
+          page: Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1),
           pageSize: searchParams.get('pageSize') !== null ? (parseInt(searchParams.get('pageSize')!, 10) || 50) : 50,
           searchQuery: (searchParams.get('searchQuery') || searchParams.get('query') || '').trim() || undefined,
           species: searchParams.get('species')?.trim() || undefined,
