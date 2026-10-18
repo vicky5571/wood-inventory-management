@@ -66,15 +66,14 @@ export function Sidebar() {
           <Link
             key={item.id}
             href={item.href}
+            prefetch={true}
+            onClick={() => setIsMobileOpen(false)}
             aria-current={isActive ? 'page' : undefined}
-            className={`
-              group flex items-center justify-between text-xs sm:text-sm py-2.5 transition-all duration-200 cursor-pointer
-              ${
-                isActive
-                  ? 'bg-amber-50 text-amber-950 font-bold border-l-4 border-amber-600 pl-3 pr-3.5 rounded-r-xl shadow-xs'
-                  : 'text-gray-600 hover:text-gray-950 hover:bg-gray-100/80 font-medium px-3.5 rounded-xl'
-              }
-            `}
+            className={`group flex items-center justify-between text-xs sm:text-sm py-2.5 transition-all duration-200 cursor-pointer ${
+              isActive
+                ? 'bg-amber-50 text-amber-950 font-bold border-l-4 border-amber-600 pl-3 pr-3.5 rounded-r-xl shadow-xs'
+                : 'text-gray-600 hover:text-gray-950 hover:bg-gray-100/80 font-medium px-3.5 rounded-xl'
+            }`}
           >
             <div className="flex items-center gap-3 min-w-0">
               {Icon && (

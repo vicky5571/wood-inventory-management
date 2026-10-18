@@ -56,4 +56,24 @@ test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
     // Must apply desktop sidebar offset padding to prevent overlap
     assert.match(content, /lg:pl-64/);
   });
+
+  await t.test('Sidebar conforms to strict coordinator complexity budget (< 250 LOC)', () => {
+    const sidebarPath = path.resolve(process.cwd(), 'src/components/layout/Sidebar.tsx');
+    const content = fs.readFileSync(sidebarPath, 'utf-8');
+    const lineCount = content.split('\n').length;
+    assert.ok(lineCount < 250, `Sidebar.tsx has ${lineCount} lines, expected < 250`);
+  });
+
+  await t.test('Sidebar links include prefetch optimization and immediate drawer closing', () => {
+    const sidebarPath = path.resolve(process.cwd(), 'src/components/layout/Sidebar.tsx');
+    const content = fs.readFileSync(sidebarPath, 'utf-8');
+    assert.match(content, /prefetch=\{true\}/, 'Must configure prefetch={true} for instant routing');
+    assert.match(content, /setIsMobileOpen\(false\)/, 'Must dismiss mobile drawer on link click');
+  });
+
+  await t.test('Root loading.tsx exists to provide instant skeleton loader on page switch', () => {
+    const loadingPath = path.resolve(process.cwd(), 'app/loading.tsx');
+    assert.ok(fs.existsSync(loadingPath), 'app/loading.tsx must exist');
+  });
 });
+
