@@ -5,6 +5,7 @@ import type { WoodReceivingRecord } from '@/src/types';
 import { SearchX, RotateCcw, FileSpreadsheet, LayoutList, Printer } from 'lucide-react';
 import { RecordTableCompactView, type SortField, type SortDirection } from './RecordTableCompactView';
 import { RecordTableExcelView } from './RecordTableExcelView';
+import { RecordTablePagination } from './RecordTablePagination';
 
 // Subcomponents provide print action trigger: title="Cetak Tanda Terima (打印进厂单)" invoking onPrint?.(r) with <Printer />
 
@@ -28,6 +29,12 @@ export function RecordTable({
   const [viewMode, setViewMode] = useState<'compact' | 'excel'>('excel');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [records, searchQuery]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -49,6 +56,12 @@ export function RecordTable({
       return sortDirection === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
     });
   }, [records, sortField, sortDirection]);
+
+  const displayedRecords = React.useMemo(() => {
+    if (pageSize === -1) return sortedRecords;
+    const start = (currentPage - 1) * pageSize;
+    return sortedRecords.slice(start, start + pageSize);
+  }, [sortedRecords, currentPage, pageSize]);
 
   if (records.length === 0) {
     return (
@@ -123,7 +136,7 @@ export function RecordTable({
       {/* Render Active Table View */}
       {viewMode === 'excel' ? (
         <RecordTableExcelView
-          records={sortedRecords}
+          records={displayedRecords}
           canWrite={canWrite}
           searchQuery={searchQuery}
           sortField={sortField}
@@ -135,7 +148,7 @@ export function RecordTable({
         />
       ) : (
         <RecordTableCompactView
-          records={sortedRecords}
+          records={displayedRecords}
           canWrite={canWrite}
           searchQuery={searchQuery}
           sortField={sortField}
@@ -146,6 +159,18 @@ export function RecordTable({
           onPrint={onPrint}
         />
       )}
+
+      {/* Pagination Footer */}
+      <RecordTablePagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalRecords={sortedRecords.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }
