@@ -41,3 +41,4 @@ test('Mobile Tally Workstation Subcomponents Suite', async (t) => {
     assert.match(content, /Surplus\s*\(超出\)|Surplus/, 'Must display Surplus status');
   });
 });
+

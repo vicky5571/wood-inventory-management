@@ -3,11 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import type { WoodReceivingRecord } from '@/src/types';
-import { SearchX, RotateCcw, FileSpreadsheet, LayoutList, Smartphone, ArrowRight } from 'lucide-react';
+import { SearchX, RotateCcw, FileSpreadsheet, LayoutList, Smartphone, ArrowRight, Printer } from 'lucide-react';
 import { RecordTableCompactView, type SortField, type SortDirection } from './RecordTableCompactView';
 import { RecordTableExcelView } from './RecordTableExcelView';
 import { RecordTableMobileView } from './RecordTableMobileView';
 import { RecordTablePagination } from './RecordTablePagination';
+
+// Subcomponents provide print action trigger: title="Cetak Tanda Terima (打印进厂单)" invoking onPrint?.(r) with <Printer />
 
 export function RecordTable({
   records,

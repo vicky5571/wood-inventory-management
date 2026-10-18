@@ -37,3 +37,4 @@ test('RecordTableMobileView & Ledger Mobile Synergy Suite', async (t) => {
     assert.match(content, /Mode Tally Lapangan|Buka Tally/, 'Must render tally quick-action banner');
   });
 });
+

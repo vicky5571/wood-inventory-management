@@ -30,3 +30,4 @@ test('Mobile Tally Dedicated Route Integration Suite', async (t) => {
     assert.match(content, /supplierName/, 'Must capture supplierName');
   });
 });
+

@@ -18,12 +18,12 @@ export interface TallyMeasurementPadProps {
 
 export function TallyMeasurementPad({ onApplyMeasurement, initialPieces = 1 }: TallyMeasurementPadProps) {
   const [mode, setMode] = useState<'SAWN' | 'ROUND'>('SAWN');
-  const [thicknessCm, setThicknessCm] = useState<number>(20);
-  const [widthCm, setWidthCm] = useState<number>(25);
-  const [lengthCm, setLengthCm] = useState<number>(400);
-  const [diameterCm, setDiameterCm] = useState<number>(40);
-  const [lengthM, setLengthM] = useState<number>(4);
-  const [pieces, setPieces] = useState<number>(Math.max(1, initialPieces));
+  const [thicknessCm, setThicknessCm] = useState(20);
+  const [widthCm, setWidthCm] = useState(25);
+  const [lengthCm, setLengthCm] = useState(400);
+  const [diameterCm, setDiameterCm] = useState(40);
+  const [lengthM, setLengthM] = useState(4);
+  const [pieces, setPieces] = useState(Math.max(1, initialPieces));
   const [applied, setApplied] = useState(false);
 
   const calculatedVolumeM3 = useMemo(() => {
@@ -31,9 +31,7 @@ export function TallyMeasurementPad({ onApplyMeasurement, initialPieces = 1 }: T
       return mode === 'SAWN'
         ? calculateCubicFromCentimeters(thicknessCm, widthCm, lengthCm, pieces)
         : calculateRoundLogVolumeM3(diameterCm, lengthM, pieces);
-    } catch {
-      return 0;
-    }
+    } catch { return 0; }
   }, [mode, thicknessCm, widthCm, lengthCm, diameterCm, lengthM, pieces]);
 
   const dimensionSummary = useMemo(() => {
@@ -58,18 +56,14 @@ export function TallyMeasurementPad({ onApplyMeasurement, initialPieces = 1 }: T
           <button
             type="button"
             onClick={() => setMode('SAWN')}
-            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-              mode === 'SAWN' ? 'bg-[#ffc908] text-[#101828] shadow-2xs' : 'text-gray-500 hover:text-gray-900'
-            }`}
+            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${mode === 'SAWN' ? 'bg-[#ffc908] text-[#101828] shadow-2xs' : 'text-gray-500 hover:text-gray-900'}`}
           >
             Balok / Sawn (成材)
           </button>
           <button
             type="button"
             onClick={() => setMode('ROUND')}
-            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-              mode === 'ROUND' ? 'bg-[#ffc908] text-[#101828] shadow-2xs' : 'text-gray-500 hover:text-gray-900'
-            }`}
+            className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${mode === 'ROUND' ? 'bg-[#ffc908] text-[#101828] shadow-2xs' : 'text-gray-500 hover:text-gray-900'}`}
           >
             <CircleDot className="w-3 h-3 inline mr-1" />
             Log Bulat (原木)
@@ -100,12 +94,7 @@ export function TallyMeasurementPad({ onApplyMeasurement, initialPieces = 1 }: T
           <div className="flex gap-1.5 overflow-x-auto text-[9px] font-semibold text-gray-600">
             <span className="text-gray-400 py-1">Preset:</span>
             {[{ t: 20, w: 25, l: 400 }, { t: 15, w: 20, l: 400 }, { t: 12, w: 15, l: 300 }].map((p, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => { setThicknessCm(p.t); setWidthCm(p.w); setLengthCm(p.l); }}
-                className="px-2 py-0.5 bg-gray-100 hover:bg-amber-100 rounded-md border border-gray-200 transition cursor-pointer"
-              >
+              <button key={idx} type="button" onClick={() => { setThicknessCm(p.t); setWidthCm(p.w); setLengthCm(p.l); }} className="px-2 py-0.5 bg-gray-100 hover:bg-amber-100 rounded-md border border-gray-200 transition cursor-pointer">
                 {p.t}×{p.w}×{p.l}
               </button>
             ))}
@@ -117,33 +106,17 @@ export function TallyMeasurementPad({ onApplyMeasurement, initialPieces = 1 }: T
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[10px] font-bold text-gray-600 mb-0.5">Diameter Rata-rata (cm)</label>
-              <input
-                type="number"
-                value={diameterCm || ''}
-                onChange={(e) => setDiameterCm(Math.max(0, Number(e.target.value) || 0))}
-                className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold text-xs focus:bg-white focus:border-amber-400 outline-none"
-              />
+              <input type="number" value={diameterCm || ''} onChange={(e) => setDiameterCm(Math.max(0, Number(e.target.value) || 0))} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold text-xs focus:bg-white focus:border-amber-400 outline-none" />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-600 mb-0.5">Panjang Batang (m)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={lengthM || ''}
-                onChange={(e) => setLengthM(Math.max(0, Number(e.target.value) || 0))}
-                className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold text-xs focus:bg-white focus:border-amber-400 outline-none"
-              />
+              <input type="number" step="0.1" value={lengthM || ''} onChange={(e) => setLengthM(Math.max(0, Number(e.target.value) || 0))} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-xl text-center font-bold text-xs focus:bg-white focus:border-amber-400 outline-none" />
             </div>
           </div>
           <div className="flex gap-1.5 overflow-x-auto text-[9px] font-semibold text-gray-600">
             <span className="text-gray-400 py-1">Preset:</span>
             {[{ d: 30, l: 4 }, { d: 40, l: 4 }, { d: 50, l: 4 }].map((p, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => { setDiameterCm(p.d); setLengthM(p.l); }}
-                className="px-2 py-0.5 bg-gray-100 hover:bg-amber-100 rounded-md border border-gray-200 transition cursor-pointer"
-              >
+              <button key={idx} type="button" onClick={() => { setDiameterCm(p.d); setLengthM(p.l); }} className="px-2 py-0.5 bg-gray-100 hover:bg-amber-100 rounded-md border border-gray-200 transition cursor-pointer">
                 Ø{p.d}cm × {p.l}m
               </button>
             ))}
