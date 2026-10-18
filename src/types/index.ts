@@ -402,6 +402,43 @@ export interface RecordFilterCriteria {
 }
 
 /**
+ * Standard server-driven pagination metadata
+ */
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  totalRecords: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+/**
+ * Generic paginated result envelope
+ */
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
+
+/**
+ * Query parameters for paginated and filtered wood receiving record queries
+ */
+export interface RecordQueryParams {
+  page?: number;
+  pageSize?: number;
+  searchQuery?: string;
+  species?: string;
+  kavling?: string;
+  yard?: string;
+  startDate?: string;
+  endDate?: string;
+  paymentStatus?: PaymentStatus | 'ALL';
+  sortBy?: 'receiptDate' | 'truckPlateNumber' | 'supplierName' | 'tallyVolumeM3' | 'grandNetPayable' | 'createdAt';
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+/**
  * Executive Dashboard Aggregate Metrics
  */
 export interface DashboardMetrics {

@@ -105,4 +105,11 @@ export class LocalStorageAdapter implements StorageAdapter {
   }
 }
 
-export const defaultStorage = new LocalStorageAdapter();
+import { IndexedDbAdapter } from './indexed-db-adapter.ts';
+
+export const defaultStorage: StorageAdapter =
+  typeof window !== 'undefined' && 'indexedDB' in window
+    ? new IndexedDbAdapter()
+    : new LocalStorageAdapter();
+
+export { IndexedDbAdapter };
