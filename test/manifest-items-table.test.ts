@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getLotsForYard, resetStorageLocations } from '../src/utils/storage-locations.ts';
+import { getYards, getLotsForYard, resetStorageLocations } from '../src/utils/storage-locations.ts';
 
 test('Manifest Items Table Components Invariant Suite', async (t) => {
   const rowPath = path.join(process.cwd(), 'src/components/ledger/ManifestItemRow.tsx');
@@ -64,6 +64,39 @@ test('Manifest Items Table Components Invariant Suite', async (t) => {
 
     // Empty yard has no valid lots
     assert.strictEqual(isLotValidForYard('', 'KAV-01'), false);
+
+    // Intermediate keystrokes simulation
+    const computeNextKavling = (currentKavling: string, newYard: string) => {
+      let nextKavling = currentKavling || '';
+      const trimmed = newYard.trim();
+      if (!trimmed) {
+        nextKavling = '';
+      } else {
+        const norm = trimmed.toLowerCase();
+        const isRecognized = getYards().some(
+          (y) => y.name.toLowerCase() === norm || y.yardCode.toLowerCase() === norm || y.id.toLowerCase() === norm
+        );
+        if (isRecognized && nextKavling) {
+          const validLots = getLotsForYard(trimmed);
+          const exists = validLots.some((lot) => lot.lotCode.toLowerCase() === nextKavling.toLowerCase());
+          if (!exists) nextKavling = '';
+        }
+      }
+      return nextKavling;
+    };
+
+    // Partial unconfirmed search string does NOT reset existing kavling
+    assert.strictEqual(computeNextKavling('KAV-01', 'TP'), 'KAV-01');
+    assert.strictEqual(computeNextKavling('KAV-01', 'TPK-'), 'KAV-01');
+
+    // Confirmed recognized yard with mismatching lot resets kavling
+    assert.strictEqual(computeNextKavling('KAV-01', 'TPK-Utara'), '');
+
+    // Confirmed recognized yard with matching lot preserves kavling
+    assert.strictEqual(computeNextKavling('KAV-01', 'TPK-Timur'), 'KAV-01');
+
+    // Empty yard resets kavling
+    assert.strictEqual(computeNextKavling('KAV-01', ''), '');
   });
 
   await t.test('ManifestItemRow implements live discrepancy badge, subtotal net, and guarded delete', () => {
@@ -89,5 +122,6 @@ test('Manifest Items Table Components Invariant Suite', async (t) => {
     assert.match(content, /handleDeleteItem/);
     assert.match(content, /handleUpdateItem/);
     assert.match(content, /ManifestItemRow/);
+    assert.match(content, /storageYard:\s*lastItem\s*\?\s*lastItem\.storageYard\s*:\s*['"]TPK-Timur['"]/);
   });
 });

@@ -244,6 +244,10 @@ test('RecordModal Multi-Item Integration Suite', async (t) => {
     assert.match(cardContent, /ManifestCalculationOutput/);
   });
 
+  await t.test('RecordModal configures canonical TPK-Timur as default storageYard', () => {
+    assert.match(content, /storageYard:\s*['"]TPK-Timur['"]/);
+  });
+
   await t.test('RecordModal accepts allRecords and configures deduplicated sections', () => {
     assert.match(content, /allRecords\?: WoodReceivingRecord\[\]/);
     assert.match(content, /hideSpeciesSection=\{true\}/);

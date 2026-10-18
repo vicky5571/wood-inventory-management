@@ -58,6 +58,7 @@ test('Cascading Storage Select Components Suite (YardSelect & KavlingSelect)', a
     assert.match(content, /Pilih TPK terlebih dahulu/);
     assert.match(content, /Tambah Kavling/);
     assert.match(content, /添加批号/);
+    assert.match(content, /onFocus=\{[^}]*setLotsVersion/);
   });
 
   await t.test('Cascade logic: KavlingSelect is disabled when selectedYard is empty, enabled when selectedYard is set', () => {

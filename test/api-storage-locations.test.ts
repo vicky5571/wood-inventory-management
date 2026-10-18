@@ -307,4 +307,37 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     const afterBody = await afterRes.json();
     assert.strictEqual(afterBody.data.yards.length, initialYardCount);
   });
+
+  await t.test('POST /api/storage-locations resolves case-insensitive yard names cleanly without phantom yards', async () => {
+    const beforeRes = await GET();
+    const beforeBody = await beforeRes.json();
+    const initialYardCount = beforeBody.data.yards.length;
+
+    // Use lowercase 'tpk-timur' instead of exact 'TPK-Timur' or 'yard-timur'
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify({
+        type: 'lot',
+        yardId: 'tpk-timur',
+        lotCode: 'KAV-CASE-01',
+        status: 'ACTIVE',
+      }),
+    });
+
+    const res = await POST(req);
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    // Must resolve to canonical yard id 'yard-timur', NOT a new yard named 'tpk-timur'
+    assert.strictEqual(body.data.yardId, 'yard-timur');
+    assert.strictEqual(body.data.lotCode, 'KAV-CASE-01');
+
+    const afterRes = await GET();
+    const afterBody = await afterRes.json();
+    assert.strictEqual(afterBody.data.yards.length, initialYardCount, 'No phantom yard should have been created');
+  });
 });

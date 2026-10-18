@@ -131,7 +131,9 @@ export function KavlingSelect({
             setIsOpen(true);
             setHighlightedIndex(-1);
           }}
-          onFocus={() => !isDisabled && setIsOpen(true)}
+          onFocus={() => {
+            if (!isDisabled) { setLotsVersion((v) => v + 1); setIsOpen(true); }
+          }}
           onKeyDown={handleKeyDown}
           autoComplete="off"
           role="combobox"

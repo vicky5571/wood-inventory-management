@@ -5,7 +5,7 @@ import type { ManifestItemInput } from '@/src/types';
 import { SpeciesCombobox } from './SpeciesCombobox';
 import { YardSelect } from './YardSelect';
 import { KavlingSelect } from './KavlingSelect';
-import { getLotsForYard } from '@/src/utils/storage-locations';
+import { getYards, getLotsForYard } from '@/src/utils/storage-locations';
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 
 const formatRupiah = (num: number): string =>
@@ -26,13 +26,7 @@ export interface ManifestItemRowProps {
 }
 
 export function ManifestItemRow({
-  item,
-  index,
-  totalItems,
-  onChange,
-  onDelete,
-  availableSpecies,
-  disabledDelete,
+  item, index, totalItems, onChange, onDelete, availableSpecies, disabledDelete,
 }: ManifestItemRowProps) {
   const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0);
   const delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
@@ -56,10 +50,19 @@ export function ManifestItemRow({
 
   const handleYardChange = (newYard: string) => {
     let nextKavling = item.kavlingNumber || '';
-    if (nextKavling) {
-      const validLots = getLotsForYard(newYard);
-      const exists = validLots.some((lot) => lot.lotCode.toLowerCase() === nextKavling.toLowerCase());
-      if (!exists) nextKavling = '';
+    const trimmed = newYard.trim();
+    if (!trimmed) {
+      nextKavling = '';
+    } else {
+      const norm = trimmed.toLowerCase();
+      const isRecognized = getYards().some(
+        (y) => y.name.toLowerCase() === norm || y.yardCode.toLowerCase() === norm || y.id.toLowerCase() === norm
+      );
+      if (isRecognized && nextKavling) {
+        const validLots = getLotsForYard(trimmed);
+        const exists = validLots.some((lot) => lot.lotCode.toLowerCase() === nextKavling.toLowerCase());
+        if (!exists) nextKavling = '';
+      }
     }
     onChange({ ...item, storageYard: newYard, kavlingNumber: nextKavling });
   };

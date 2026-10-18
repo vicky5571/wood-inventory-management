@@ -27,13 +27,13 @@ const defaultRecord = (): Partial<WoodReceivingRecord> => ({
   id: `rec-${Date.now()}`, receiptDate: new Date().toISOString().slice(0, 10),
   truckPlateNumber: '', forestryDocNumber: '', receiptNumber: `KW-${Date.now().toString().slice(-4)}`,
   contractNumber: '', supplierName: '', woodSpecies: '', woodLengthM: 4.0,
-  kavlingNumber: 'KAV-01', storageYard: 'TPK-1', freightRatePerM3: 0, freightPphAmount: 0, brokerFee: 0,
+  kavlingNumber: 'KAV-01', storageYard: 'TPK-Timur', freightRatePerM3: 0, freightPphAmount: 0, brokerFee: 0,
 });
 
 const createItem = (r?: Partial<WoodReceivingRecord>): ManifestItemInput => ({
   id: r?.item_id || `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
   woodSpecies: r?.woodSpecies || '', woodLengthM: r?.woodLengthM ?? 4.0,
-  kavlingNumber: r?.kavlingNumber || 'KAV-01', storageYard: r?.storageYard || 'TPK-1',
+  kavlingNumber: r?.kavlingNumber || 'KAV-01', storageYard: r?.storageYard || 'TPK-Timur',
   deliveredPieces: r?.deliveredPieces ?? 0, deliveredVolumeM3: r?.deliveredVolumeM3 ?? 0,
   tallyPieces: r?.tallyPieces ?? 0, tallyVolumeM3: r?.tallyVolumeM3 ?? 0,
   timberPricePerM3: r?.timberPricePerM3 ?? 0, timberPphRate: r?.timberPphRate ?? 0.5,
@@ -171,7 +171,7 @@ export function RecordModal({
       woodSpecies: primary.woodSpecies || form.woodSpecies || '',
       woodLengthM: primary.woodLengthM ?? form.woodLengthM ?? 4.0,
       kavlingNumber: primary.kavlingNumber || form.kavlingNumber || 'KAV-01',
-      storageYard: primary.storageYard || form.storageYard || 'TPK-1',
+      storageYard: primary.storageYard || form.storageYard || 'TPK-Timur',
       deliveredPieces: preview.totalDeliveredPieces, deliveredVolumeM3: preview.totalDeliveredVolumeM3,
       tallyPieces: preview.totalTallyPieces, tallyVolumeM3: preview.totalTallyVolumeM3,
       timberPricePerM3: primary.timberPricePerM3, timberPphRate: primary.timberPphRate,

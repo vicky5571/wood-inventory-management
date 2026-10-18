@@ -33,7 +33,7 @@ export function ManifestItemsTable({
       woodSpecies: '',
       woodLengthM: lastItem ? lastItem.woodLengthM : 4.0,
       kavlingNumber: lastItem ? lastItem.kavlingNumber : 'KAV-01',
-      storageYard: lastItem ? lastItem.storageYard : 'TPK-1',
+      storageYard: lastItem ? lastItem.storageYard : 'TPK-Timur',
       deliveredPieces: 0,
       deliveredVolumeM3: 0,
       tallyPieces: 0,

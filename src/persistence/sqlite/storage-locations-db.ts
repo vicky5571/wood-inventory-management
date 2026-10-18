@@ -155,7 +155,9 @@ export function saveStorageLotToDb(
   const now = new Date().toISOString();
 
   let yardRow = db
-    .prepare('SELECT id FROM storage_yards WHERE id = ? OR name = ? OR yard_code = ?;')
+    .prepare(
+      'SELECT id FROM storage_yards WHERE LOWER(id) = LOWER(?) OR LOWER(name) = LOWER(?) OR LOWER(yard_code) = LOWER(?);'
+    )
     .get(lot.yardId, lot.yardId, lot.yardId) as { id: string } | undefined;
 
   let yardId = yardRow?.id;

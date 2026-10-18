@@ -179,7 +179,7 @@ export function RecordDocumentSection({
               </label>
               <input
                 type="text"
-                placeholder="TPK-1"
+                placeholder="TPK-Timur"
                 value={form.storageYard || ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, storageYard: e.target.value }))}
                 className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs"
