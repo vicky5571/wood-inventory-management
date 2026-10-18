@@ -77,21 +77,21 @@
   - `POST /api/sales`: validates payload, enforces Level 1 RBAC, saves to SQLite, returns saved record.
   - `DELETE /api/sales?id=XXX`: deletes record with Level 1 RBAC guard.
 
-- [ ] **Step 1: Write failing integration test in `test/api-sales.test.ts`**
+- [x] **Step 1: Write failing integration test in `test/api-sales.test.ts`**
   Asserts that:
   - `GET /api/sales` returns array of sales records.
   - `POST /api/sales` validates required fields (`customerName`, `storageYard`, `kavlingNumber`, `pieces`, `volumeM3`).
   - Rejects write operations when unauthorized.
   - Deletes sales records by id.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/api-sales.test.ts`
-- [ ] **Step 3: Implement SQLite migrations, `sales-queries.ts`, and `app/api/sales/route.ts`**
+- [x] **Step 3: Implement SQLite migrations, `sales-queries.ts`, and `app/api/sales/route.ts`**
   Add `sales_records` table, query helpers with SQL injection safety, and Next.js Route Handler.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/api-sales.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/persistence/sqlite/sales-queries.ts app/api/sales/route.ts` && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/persistence/sqlite/migrations.ts src/persistence/sqlite/sales-queries.ts app/api/sales/route.ts test/api-sales.test.ts && git commit -m "feat(api): implement sales SQLite schema and REST API endpoint"`
 
 ---

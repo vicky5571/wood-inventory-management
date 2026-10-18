@@ -209,6 +209,14 @@ export class SqliteRecordStore {
   }
 
   /**
+   * Returns active database instance after ensuring initialization.
+   */
+  public getDatabase(): DatabaseSync {
+    this.ensureInitialized();
+    return this.db;
+  }
+
+  /**
    * Closes database connection.
    */
   close(): void {
