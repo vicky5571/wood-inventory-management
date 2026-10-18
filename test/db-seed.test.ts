@@ -71,3 +71,4 @@ test('Database Seeding Suite', async (t) => {
     assert.ok(customers.has('CV Furnitur Sejahtera'));
   });
 });
+

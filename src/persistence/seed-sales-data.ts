@@ -109,3 +109,4 @@ export const SEED_WOOD_SALES: WoodSalesRecord[] = [
     updatedAt: '2026-10-15T15:45:00.000Z',
   },
 ];
+
