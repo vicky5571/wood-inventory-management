@@ -17,8 +17,11 @@ import {
   saveStorageLotToDb,
 } from './sqlite/storage-locations-db.ts';
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import { queryPaginatedRecords } from './sqlite/record-queries.ts';
 import type {
   WoodReceivingRecord,
+  RecordQueryParams,
+  PaginatedResult,
   ManifestFormInput,
   StorageYard,
   StorageLot,
@@ -58,6 +61,14 @@ export class SqliteRecordStore {
     this.ensureInitialized();
     const rows = this.db.prepare('SELECT * FROM v_buku_besar_flat ORDER BY receiptDate DESC, id ASC;').all();
     return rows as unknown as WoodReceivingRecord[];
+  }
+
+  /**
+   * Retrieves paginated and filtered records from v_buku_besar_flat with metadata.
+   */
+  async getPaginated(params: RecordQueryParams = {}): Promise<PaginatedResult<WoodReceivingRecord>> {
+    this.ensureInitialized();
+    return queryPaginatedRecords(this.db, params);
   }
 
   /**
