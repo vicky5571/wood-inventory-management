@@ -1,33 +1,78 @@
 import { NextResponse } from 'next/server.js';
 import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
 import { verifySessionToken, COOKIE_NAME } from '../../../src/auth/session.ts';
-import type { AuthUser, WoodReceivingRecord, ManifestFormInput } from '../../../src/types/index.ts';
+import type {
+  AuthUser,
+  WoodReceivingRecord,
+  ManifestFormInput,
+  RecordQueryParams,
+  PaymentStatus,
+} from '../../../src/types/index.ts';
 
 export const dynamic = 'force-dynamic';
 
-async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
-  let token: string | undefined;
+const PAGINATION_PARAM_KEYS = [
+  'page', 'pageSize', 'searchQuery', 'query', 'species',
+  'kavling', 'yard', 'startDate', 'endDate', 'paymentStatus', 'sortBy', 'sortOrder',
+] as const;
 
-  // Extract from Request headers first (compatible with unit tests and edge/node runtime)
+const VALID_SORT_COLUMNS = new Set<string>([
+  'receiptDate', 'truckPlateNumber', 'supplierName',
+  'tallyVolumeM3', 'grandNetPayable', 'createdAt',
+]);
+
+async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
   const rawHeader = request.headers.get('cookie') || '';
   const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
-  if (match) {
-    token = match[1];
-  } else {
+  let token = match ? match[1] : undefined;
+  if (!token) {
     try {
       const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      token = cookieStore.get(COOKIE_NAME)?.value;
+      token = (await cookies()).get(COOKIE_NAME)?.value;
     } catch {
       token = undefined;
     }
   }
-
   return verifySessionToken(token);
 }
 
-export async function GET() {
+export async function GET(): Promise<NextResponse>;
+export async function GET(request: Request): Promise<NextResponse>;
+export async function GET(request?: Request): Promise<NextResponse> {
   try {
+    if (request?.url) {
+      const { searchParams } = new URL(request.url, 'http://localhost');
+      const hasPaginationParams = PAGINATION_PARAM_KEYS.some((key) => searchParams.has(key));
+
+      if (hasPaginationParams) {
+        const rawPayment = searchParams.get('paymentStatus')?.trim().toUpperCase();
+        const rawSortBy = searchParams.get('sortBy')?.trim();
+        const rawSortOrder = searchParams.get('sortOrder')?.trim().toUpperCase();
+
+        const params: RecordQueryParams = {
+          page: searchParams.get('page') !== null ? (parseInt(searchParams.get('page')!, 10) || 1) : 1,
+          pageSize: searchParams.get('pageSize') !== null ? (parseInt(searchParams.get('pageSize')!, 10) || 50) : 50,
+          searchQuery: (searchParams.get('searchQuery') || searchParams.get('query') || '').trim() || undefined,
+          species: searchParams.get('species')?.trim() || undefined,
+          kavling: searchParams.get('kavling')?.trim() || undefined,
+          yard: searchParams.get('yard')?.trim() || undefined,
+          startDate: searchParams.get('startDate')?.trim() || undefined,
+          endDate: searchParams.get('endDate')?.trim() || undefined,
+          paymentStatus: (rawPayment === 'UNPAID' || rawPayment === 'PARTIAL' || rawPayment === 'PAID' || rawPayment === 'ALL') ? (rawPayment as PaymentStatus | 'ALL') : undefined,
+          sortBy: rawSortBy && VALID_SORT_COLUMNS.has(rawSortBy) ? (rawSortBy as RecordQueryParams['sortBy']) : undefined,
+          sortOrder: rawSortOrder === 'ASC' ? 'ASC' : (rawSortOrder === 'DESC' ? 'DESC' : undefined),
+        };
+
+        const result = await serverRecordStore.getPaginated(params);
+        return NextResponse.json({
+          success: true,
+          data: result.data,
+          pagination: result.pagination,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+
     const records = await serverRecordStore.getAll();
     return NextResponse.json({
       success: true,
