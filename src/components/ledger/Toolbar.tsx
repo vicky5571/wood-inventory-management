@@ -110,9 +110,9 @@ export function Toolbar({
           </button>
         </div>
 
-        {canWrite && (
-          <div className="flex items-center gap-2">
-            {/* Reset Demo */}
+        <div className="flex items-center gap-2">
+          {/* Reset Demo */}
+          {canWrite && (
             <button
               type="button"
               onClick={onResetDemo}
@@ -122,18 +122,18 @@ export function Toolbar({
               <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
               <span>Reset Demo</span>
             </button>
+          )}
 
-            {/* New Entry CTA (IOH Gold) */}
-            <button
-              type="button"
-              onClick={onNewEntry}
-              className="inline-flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-[#101828] bg-[#ffc908] hover:bg-[#f0bc00] active:scale-[0.99] rounded-xl shadow-xs hover:shadow transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-[#101828]" />
-              <span>Input Penerimaan (新增入库)</span>
-            </button>
-          </div>
-        )}
+          {/* New Entry CTA (IOH Gold) */}
+          <button
+            type="button"
+            onClick={onNewEntry}
+            className="inline-flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-[#101828] bg-[#ffc908] hover:bg-[#f0bc00] active:scale-[0.99] rounded-xl shadow-xs hover:shadow transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-[#101828]" />
+            <span>Input Penerimaan (新增入库)</span>
+          </button>
+        </div>
       </div>
 
       {/* Quick-Filter Payment Status Pills */}

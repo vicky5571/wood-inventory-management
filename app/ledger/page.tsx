@@ -37,7 +37,6 @@ export default function LedgerPage() {
 
 
   const handleNewEntry = () => {
-    if (!canWrite) return;
     setEditingRecord(null);
     setIsModalOpen(true);
   };
@@ -150,16 +149,14 @@ export default function LedgerPage() {
       )}
 
       {/* Input / Edit Modal */}
-      {canWrite && (
-        <RecordModal
-          isOpen={isModalOpen}
-          initialRecord={editingRecord}
-          allRecords={records}
-          availableSpecies={speciesList}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSave}
-        />
-      )}
+      <RecordModal
+        isOpen={isModalOpen}
+        initialRecord={editingRecord}
+        allRecords={records}
+        availableSpecies={speciesList}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+      />
 
       {/* Printable Receiving Slip Modal */}
       <PrintReceivingSlipModal
