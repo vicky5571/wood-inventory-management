@@ -164,3 +164,4 @@ Query construction:
 4. **Full Regression**:
    - `npm test` verifying all 365+ tests pass with 0 failures.
    - `npm run build:check` verifying clean Next.js production build.
+

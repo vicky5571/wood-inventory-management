@@ -40,17 +40,17 @@
     - Auto-migration from `localStorage` on initial open.
   - Integration in `src/persistence/storage.ts`: default storage uses `IndexedDbAdapter` when available.
 
-- [ ] **Step 1: Write failing unit test in `test/indexed-db-adapter.test.ts`**
+- [x] **Step 1: Write failing unit test in `test/indexed-db-adapter.test.ts`**
   Asserts that `IndexedDbAdapter` fulfills the `StorageAdapter` contract, falls back cleanly in Node/mock environments, and migrates legacy `localStorage` keys into IndexedDB.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/indexed-db-adapter.test.ts`
-- [ ] **Step 3: Define types in `src/types/index.ts` and implement `IndexedDbAdapter`**
+- [x] **Step 3: Define types in `src/types/index.ts` and implement `IndexedDbAdapter`**
   Implement native IndexedDB wrapper with `<200 LOC` and wire into `src/persistence/storage.ts`.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/indexed-db-adapter.test.ts`
-- [ ] **Step 5: Run full test suite to ensure existing storage tests pass**
+- [x] **Step 5: Run full test suite to ensure existing storage tests pass**
   `npm test`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/types/index.ts src/persistence/indexed-db-adapter.ts src/persistence/storage.ts test/indexed-db-adapter.test.ts && git commit -m "feat(storage): implement native zero-dependency IndexedDbAdapter with localStorage auto-migration"`
 
 ---
@@ -68,15 +68,15 @@
   - `sqliteRecordStore.getPaginated(params: RecordQueryParams): Promise<PaginatedResult<WoodReceivingRecord>>`
   - `serverRecordStore.getPaginated(params: RecordQueryParams): Promise<PaginatedResult<WoodReceivingRecord>>`
 
-- [ ] **Step 1: Write failing unit test in `test/sqlite-pagination.test.ts`**
+- [x] **Step 1: Write failing unit test in `test/sqlite-pagination.test.ts`**
   Asserts that `getPaginated` returns correct page slices (`page=1&pageSize=2`), accurate `totalRecords` and `totalPages`, and handles multi-field filtering (species, kavling, query).
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/sqlite-pagination.test.ts`
-- [ ] **Step 3: Implement `getPaginated` in `SqliteRecordStore` and `ServerRecordStore`**
+- [x] **Step 3: Implement `getPaginated` in `SqliteRecordStore` and `ServerRecordStore`**
   Build parameterized SQL queries over `v_buku_besar_flat` and compute `PaginationMeta`. Keep files under 250 LOC.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/sqlite-pagination.test.ts`
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   `git add src/persistence/sqlite-record-store.ts src/persistence/server-record-store.ts test/sqlite-pagination.test.ts && git commit -m "feat(persistence): implement parameterized pagination and filtering in SqliteRecordStore"`
 
 ---
@@ -93,15 +93,15 @@
   - `GET /api/records?page=1&pageSize=10` returning `{ success: true, data: WoodReceivingRecord[], pagination: PaginationMeta }`
   - `GET /api/records` (no query params) returning `{ success: true, data: WoodReceivingRecord[] }`
 
-- [ ] **Step 1: Write failing integration test in `test/api-records-pagination.test.ts`**
+- [x] **Step 1: Write failing integration test in `test/api-records-pagination.test.ts`**
   Verifies that paginated requests return slice data and `pagination` metadata, and unpaginated requests return all records without breaking existing API contracts.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/api-records-pagination.test.ts`
-- [ ] **Step 3: Update `GET` handler in `app/api/records/route.ts`**
+- [x] **Step 3: Update `GET` handler in `app/api/records/route.ts`**
   Parse pagination search parameters when present, route to `serverRecordStore.getPaginated()`, and preserve backward-compatible full response when omitted.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/api-records-pagination.test.ts test/api-records.test.ts`
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
   `git add app/api/records/route.ts test/api-records-pagination.test.ts && git commit -m "feat(api): support pagination query parameters in records GET endpoint"`
 
 ---
@@ -119,17 +119,17 @@
   - Subcomponent `RecordTablePagination`: page sizing (`25`, `50`, `100`, `Semua`), navigation buttons, bilingual counters.
   - Upgraded `RecordTable.tsx`: slices records for active page, mounts pagination bar, and resets page to 1 on filter/search changes.
 
-- [ ] **Step 1: Write failing component test in `test/record-table-pagination.test.ts`**
+- [x] **Step 1: Write failing component test in `test/record-table-pagination.test.ts`**
   Verifies that `RecordTable` slices records according to `pageSize`, changes pages on click, displays bilingual record counts, and satisfies `<250 LOC`.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/record-table-pagination.test.ts`
-- [ ] **Step 3: Implement `RecordTablePagination.tsx` and integrate into `RecordTable.tsx`**
+- [x] **Step 3: Implement `RecordTablePagination.tsx` and integrate into `RecordTable.tsx`**
   Build pagination controls (<150 LOC) and connect slicing in `RecordTable.tsx` (<250 LOC).
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/record-table-pagination.test.ts test/record-table.test.ts`
-- [ ] **Step 5: Verify LOC limit**
+- [x] **Step 5: Verify LOC limit**
   `wc -l src/components/ledger/RecordTablePagination.tsx src/components/ledger/RecordTable.tsx`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/components/ledger/RecordTablePagination.tsx src/components/ledger/RecordTable.tsx test/record-table-pagination.test.ts && git commit -m "feat(ledger): add RecordTablePagination subcomponent and slice records in RecordTable"`
 
 ---
@@ -139,11 +139,12 @@
 **Files:**
 - All touched files
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
   `npm test` (verify 370+ passing tests with 0 failures)
-- [ ] **Step 2: Run Next.js production build**
+- [x] **Step 2: Run Next.js production build**
   `npm run build:check` (verify 0 TypeScript, lint, or static generation errors)
-- [ ] **Step 3: Whole-plan code review**
+- [x] **Step 3: Whole-plan code review**
   Perform diff inspection across all commits and confirm global constraints.
-- [ ] **Step 4: Finalize and commit**
+- [x] **Step 4: Finalize and commit**
   `git commit --allow-empty -m "chore(release): complete Phase 5 IndexedDB and server pagination"`
+
