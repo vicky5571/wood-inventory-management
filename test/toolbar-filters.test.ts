@@ -119,4 +119,28 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
     const dateResults = applyFilters(testRecords, { searchQuery: '2026-10-01' });
     assert.strictEqual(dateResults.length, 0);
   });
+
+  await t.test('Toolbar Input Penerimaan button always renders but is strictly disabled for Level 2 (canWrite = false)', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const toolbarPath = path.resolve(process.cwd(), 'src/components/ledger/Toolbar.tsx');
+    assert.ok(fs.existsSync(toolbarPath), 'Toolbar.tsx must exist');
+
+    const content = fs.readFileSync(toolbarPath, 'utf-8');
+    const lines = content.split('\n');
+    assert.ok(lines.length <= 250, `Toolbar.tsx must not exceed 250 LOC (currently ${lines.length})`);
+
+    // Verify button is unconditionally mounted in DOM (no {canWrite && <button ... Input Penerimaan})
+    assert.doesNotMatch(content, /\{canWrite\s*&&\s*\(\s*<button[^>]*>[^<]*Input Penerimaan/s);
+
+    // Verify button enforces disabled state on DOM element
+    assert.match(content, /disabled=\{!canWrite\}/, 'Button must bind disabled={!canWrite}');
+    assert.match(content, /onClick=\{canWrite \? onNewEntry : undefined\}/, 'Button must guard onClick handler');
+
+    // Verify tooltip explains Level 1 only rights
+    assert.match(content, /Hanya Level 1 yang memiliki hak input data/, 'Must have Level 1 restricted tooltip');
+
+    // Verify disabled visual cues (opacity-40 and cursor-not-allowed)
+    assert.match(content, /opacity-40\s+cursor-not-allowed/, 'Must apply disabled visual styles when canWrite is false');
+  });
 });

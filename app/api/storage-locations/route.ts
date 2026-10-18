@@ -59,9 +59,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (user.roleLevel > 2) {
+    if (user.roleLevel !== 1) {
       return NextResponse.json(
-        { success: false, error: 'Akses ditolak: Hanya Level 1 dan 2 yang dapat membuat atau mengubah data' },
+        { success: false, error: 'Akses ditolak: Hanya Level 1 yang dapat membuat atau mengubah data' },
         { status: 403 }
       );
     }

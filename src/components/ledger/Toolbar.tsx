@@ -127,8 +127,14 @@ export function Toolbar({
           {/* New Entry CTA (IOH Gold) */}
           <button
             type="button"
-            onClick={onNewEntry}
-            className="inline-flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-[#101828] bg-[#ffc908] hover:bg-[#f0bc00] active:scale-[0.99] rounded-xl shadow-xs hover:shadow transition cursor-pointer"
+            disabled={!canWrite}
+            onClick={canWrite ? onNewEntry : undefined}
+            title={!canWrite ? 'Hanya Level 1 yang memiliki hak input data (仅Level 1有权录入)' : 'Tambah data penerimaan kayu baru'}
+            className={`inline-flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-[#101828] bg-[#ffc908] rounded-xl transition ${
+              canWrite
+                ? 'hover:bg-[#f0bc00] active:scale-[0.99] shadow-xs hover:shadow cursor-pointer'
+                : 'opacity-40 cursor-not-allowed shadow-none hover:bg-[#ffc908] active:scale-100'
+            }`}
           >
             <Plus className="w-4 h-4 text-[#101828]" />
             <span>Input Penerimaan (新增入库)</span>

@@ -15,6 +15,14 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
     title: 'Operations Manager',
   });
 
+  const level2Token = createSessionToken({
+    id: 'usr-lvl2',
+    email: 'level2@timber.id',
+    name: 'Auditor Level 2',
+    roleLevel: 2,
+    title: 'Level 2 Auditor',
+  });
+
   const viewerToken = createSessionToken({
     id: 'usr-view',
     email: 'viewer@timber.id',
@@ -122,6 +130,20 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
     const viewerRes = await POST(viewerReq);
     assert.equal(viewerRes.status, 403);
 
+    // 2b. Level 2 (Strictly View-Only) -> 403
+    const level2Req = new Request('http://localhost:3000/api/sales', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: `${COOKIE_NAME}=${level2Token}`,
+      },
+      body: JSON.stringify(salePayload),
+    });
+    const level2Res = await POST(level2Req);
+    assert.equal(level2Res.status, 403);
+    const level2Body = await level2Res.json();
+    assert.match(level2Body.error, /Hanya Level 1/);
+
     // 3. Manager (Level 1) -> 200
     const managerReq = new Request('http://localhost:3000/api/sales', {
       method: 'POST',
@@ -137,7 +159,17 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
     assert.equal(json.success, true);
     assert.equal(json.data.customerName, 'PT Kayu Nusantara');
 
-    // 4. DELETE /api/sales?id=XXX with Level 1
+    // 4. DELETE /api/sales?id=XXX with Level 2 -> 403
+    const deleteLvl2Req = new Request(`http://localhost:3000/api/sales?id=${json.data.id}`, {
+      method: 'DELETE',
+      headers: {
+        cookie: `${COOKIE_NAME}=${level2Token}`,
+      },
+    });
+    const deleteLvl2Res = await DELETE(deleteLvl2Req);
+    assert.equal(deleteLvl2Res.status, 403);
+
+    // 5. DELETE /api/sales?id=XXX with Level 1 -> 200
     const deleteReq = new Request(`http://localhost:3000/api/sales?id=${json.data.id}`, {
       method: 'DELETE',
       headers: {

@@ -330,7 +330,7 @@ test('Records API Route Handlers Suite', async (t) => {
     assert.equal(resNaN.status, 400);
   });
 
-  await t.test('POST /api/records with roleLevel 1 or 2 saves valid record', async () => {
+  await t.test('POST /api/records with roleLevel 1 saves valid record while roleLevel 2 is rejected', async () => {
     const payload = {
       woodSpecies: 'Mahoni (桃花心木)',
       tallyVolumeM3: 8.5,
@@ -358,11 +358,26 @@ test('Records API Route Handlers Suite', async (t) => {
       grandNetPayable: 18264500,
     };
 
-    const req = new Request('http://localhost:3000/api/records', {
+    // Test POST with Level 2 returns 403 (strictly view-only)
+    const reqLevel2 = new Request('http://localhost:3000/api/records', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const resLevel2 = await POST(reqLevel2);
+    assert.equal(resLevel2.status, 403);
+    const bodyLevel2 = await resLevel2.json();
+    assert.ok(bodyLevel2.error.includes('Hanya Level 1'));
+
+    // Test POST with Level 1 returns 200
+    const req = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
       },
       body: JSON.stringify(payload),
     });
@@ -383,6 +398,16 @@ test('Records API Route Handlers Suite', async (t) => {
     });
     const delUnauthRes = await DELETE(delUnauthReq);
     assert.equal(delUnauthRes.status, 401);
+
+    // Test DELETE with roleLevel 2 returns 403 (strictly view-only)
+    const delLevel2Req = new Request(`http://localhost:3000/api/records?id=${createdId}`, {
+      method: 'DELETE',
+      headers: { cookie: `${COOKIE_NAME}=${staffToken}` },
+    });
+    const delLevel2Res = await DELETE(delLevel2Req);
+    assert.equal(delLevel2Res.status, 403);
+    const level2DelBody = await delLevel2Res.json();
+    assert.ok(level2DelBody.error.includes('Hanya Level 1'));
 
     // Test DELETE with roleLevel 3 returns 403
     const delForbiddenReq = new Request(`http://localhost:3000/api/records?id=${createdId}`, {

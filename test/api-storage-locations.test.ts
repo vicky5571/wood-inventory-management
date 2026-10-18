@@ -215,12 +215,29 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     assert.strictEqual(body.success, false);
   });
 
-  await t.test('POST /api/storage-locations validates payload type and required fields', async () => {
+  await t.test('POST /api/storage-locations rejects Level 2 role (roleLevel 2) with 403 (Strictly View-Only)', async () => {
     const req = new Request('http://localhost:3000/api/storage-locations', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify({ type: 'yard', name: 'TPK-Level2-Yard' }),
+    });
+
+    const res = await POST(req);
+    assert.strictEqual(res.status, 403);
+    const body = await res.json();
+    assert.strictEqual(body.success, false);
+    assert.match(body.error, /Hanya Level 1/);
+  });
+
+  await t.test('POST /api/storage-locations validates payload type and required fields', async () => {
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
       },
       body: JSON.stringify({ type: 'invalid_type' }),
     });
@@ -236,7 +253,7 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        cookie: `${COOKIE_NAME}=${staffToken}`,
+        cookie: `${COOKIE_NAME}=${managerToken}`,
       },
       body: JSON.stringify({
         type: 'lot',
@@ -285,7 +302,7 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        cookie: `${COOKIE_NAME}=${staffToken}`,
+        cookie: `${COOKIE_NAME}=${managerToken}`,
       },
       body: JSON.stringify({
         type: 'lot',
@@ -318,7 +335,7 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        cookie: `${COOKIE_NAME}=${staffToken}`,
+        cookie: `${COOKIE_NAME}=${managerToken}`,
       },
       body: JSON.stringify({
         type: 'lot',

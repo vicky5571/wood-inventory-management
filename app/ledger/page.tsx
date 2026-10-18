@@ -37,6 +37,7 @@ export default function LedgerPage() {
 
 
   const handleNewEntry = () => {
+    if (!canWrite) return;
     setEditingRecord(null);
     setIsModalOpen(true);
   };
@@ -48,6 +49,7 @@ export default function LedgerPage() {
   };
 
   const handleSave = (record: WoodReceivingRecord, manifest?: ManifestFormInput) => {
+    if (!canWrite) return;
     const isEdit = Boolean(editingRecord);
     if (manifest && manifest.items && manifest.items.length > 0) {
       saveManifest(manifest);
@@ -65,6 +67,7 @@ export default function LedgerPage() {
   };
 
   const handleDelete = (id: string) => {
+    if (!canWrite) return;
     const target = records.find((r) => r.id === id);
     deleteRecord(id);
 
@@ -80,6 +83,7 @@ export default function LedgerPage() {
   };
 
   const handleResetDemo = () => {
+    if (!canWrite) return;
     resetDemo();
     addLog({
       action: 'DEMO_RESET',
@@ -118,7 +122,7 @@ export default function LedgerPage() {
               Akses Mode Monitor (Level 3 - 高管监控)
             </h3>
             <p className="text-xs text-gray-600 mt-1">
-              Buku besar penerimaan terperinci dan penambahan data hanya dapat dimodifikasi oleh Level 1 dan Level 2. Silakan gunakan halaman Ringkasan untuk memantau metrik eksekutif.
+              Buku besar penerimaan terperinci dan penambahan data hanya dapat dimodifikasi oleh Level 1. Silakan gunakan halaman Ringkasan untuk memantau metrik eksekutif.
             </p>
           </div>
         </div>
@@ -149,14 +153,16 @@ export default function LedgerPage() {
       )}
 
       {/* Input / Edit Modal */}
-      <RecordModal
-        isOpen={isModalOpen}
-        initialRecord={editingRecord}
-        allRecords={records}
-        availableSpecies={speciesList}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-      />
+      {canWrite && (
+        <RecordModal
+          isOpen={isModalOpen}
+          initialRecord={editingRecord}
+          allRecords={records}
+          availableSpecies={speciesList}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
+        />
+      )}
 
       {/* Printable Receiving Slip Modal */}
       <PrintReceivingSlipModal
@@ -178,7 +184,7 @@ export default function LedgerPage() {
         cancelLabel="Batal"
         isDestructive={true}
         onConfirm={() => {
-          if (pendingDeleteId) {
+          if (pendingDeleteId && canWrite) {
             handleDelete(pendingDeleteId);
           }
           setPendingDeleteId(null);
