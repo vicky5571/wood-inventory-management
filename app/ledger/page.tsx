@@ -118,7 +118,7 @@ export default function LedgerPage() {
               Akses Mode Monitor (Level 3 - 高管监控)
             </h3>
             <p className="text-xs text-gray-600 mt-1">
-              Buku besar penerimaan terperinci dan penambahan data hanya dapat dimodifikasi oleh Level 1 (Manager) dan Level 2 (Admin). Silakan gunakan halaman Ringkasan untuk memantau metrik eksekutif.
+              Buku besar penerimaan terperinci dan penambahan data hanya dapat dimodifikasi oleh Level 1 dan Level 2. Silakan gunakan halaman Ringkasan untuk memantau metrik eksekutif.
             </p>
           </div>
         </div>

@@ -105,7 +105,7 @@ export default function SettingsPage() {
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
               <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Tingkat Hak Akses</span>
               <span className="font-bold text-gray-800 text-sm mt-0.5 block">
-                Level {user?.roleLevel} — {user?.roleLevel === 1 ? 'Manager (Write)' : user?.roleLevel === 2 ? 'Admin (Audit)' : 'Monitor (View Only)'}
+                Level {user?.roleLevel} — {user?.roleLevel === 1 ? 'Level 1 (Write)' : user?.roleLevel === 2 ? 'Level 2 (Audit)' : 'Level 3 (View Only)'}
               </span>
             </div>
 

@@ -17,7 +17,7 @@ export const PRESET_USERS: UserRecord[] = [
     email: 'manager@timber.id',
     name: 'Budi Santoso',
     roleLevel: 1,
-    title: 'Kepala Operasional Gudang (Operations Manager)',
+    title: 'Level 1',
     passwordHash: hashPassword('password123'),
   },
   {
@@ -25,7 +25,7 @@ export const PRESET_USERS: UserRecord[] = [
     email: 'admin@timber.id',
     name: 'Siti Rahmawati',
     roleLevel: 2,
-    title: 'Auditor Keuangan & Pajak (Finance Auditor)',
+    title: 'Level 2',
     passwordHash: hashPassword('password123'),
   },
   {
@@ -33,7 +33,7 @@ export const PRESET_USERS: UserRecord[] = [
     email: 'viewer@timber.id',
     name: 'Robert Tan',
     roleLevel: 3,
-    title: 'Direktur Eksekutif (Executive Director)',
+    title: 'Level 3',
     passwordHash: hashPassword('password123'),
   },
 ];

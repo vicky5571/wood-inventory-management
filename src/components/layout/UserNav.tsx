@@ -5,9 +5,9 @@ import { useAuth } from '@/src/hooks/useAuth';
 import { LogOut, UserCheck } from 'lucide-react';
 
 const ROLE_BADGES: Record<number, { label: string; short: string; color: string }> = {
-  1: { label: 'Manager', short: 'L1', color: 'bg-emerald-50 text-emerald-600 border-emerald-200/80' },
-  2: { label: 'Admin', short: 'L2', color: 'bg-blue-50 text-blue-600 border-blue-200/80' },
-  3: { label: 'Monitor', short: 'L3', color: 'bg-amber-50 text-amber-600 border-amber-200/80' },
+  1: { label: 'Level 1', short: 'L1', color: 'bg-emerald-50 text-emerald-600 border-emerald-200/80' },
+  2: { label: 'Level 2', short: 'L2', color: 'bg-blue-50 text-blue-600 border-blue-200/80' },
+  3: { label: 'Level 3', short: 'L3', color: 'bg-amber-50 text-amber-600 border-amber-200/80' },
 };
 
 export function UserNav() {
