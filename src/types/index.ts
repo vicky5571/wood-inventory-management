@@ -739,3 +739,26 @@ export interface LotStockBalance {
   remainingVolumeM3: number;
 }
 
+/**
+ * Sales Entry Modal component properties.
+ */
+export interface SalesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (sale: SalesFormInput) => Promise<void>;
+  inboundRecords: WoodReceivingRecord[];
+  existingSales: WoodSalesRecord[];
+  customerHistory: string[];
+  initialData?: WoodSalesRecord | null;
+}
+
+/**
+ * Printable delivery order (Surat Jalan Keluar) modal properties.
+ */
+export interface PrintDeliveryOrderModalProps {
+  isOpen: boolean;
+  record: WoodSalesRecord | null;
+  onClose: () => void;
+}
+
+
