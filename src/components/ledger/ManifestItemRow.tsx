@@ -28,17 +28,12 @@ export interface ManifestItemRowProps {
 export function ManifestItemRow({
   item, index, totalItems, onChange, onDelete, availableSpecies, disabledDelete,
 }: ManifestItemRowProps) {
-  const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0);
-  const delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
-  const tallyPcs = Math.max(0, Number(item.tallyPieces) || 0);
-  const delivPcs = Math.max(0, Number(item.deliveredPieces) || 0);
-  const pricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0);
-  const pphRate = Math.max(0, Number(item.timberPphRate) || 0);
+  const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0), delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
+  const tallyPcs = Math.max(0, Number(item.tallyPieces) || 0), delivPcs = Math.max(0, Number(item.deliveredPieces) || 0);
+  const pricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0), pphRate = Math.max(0, Number(item.timberPphRate) || 0);
 
-  const volDiff = Number((tallyVol - delivVol).toFixed(4));
-  const pcsDiff = tallyPcs - delivPcs;
-  const timberGross = Math.round(tallyVol * pricePerM3);
-  const timberPph = Math.round(timberGross * (pphRate / 100));
+  const volDiff = Number((tallyVol - delivVol).toFixed(4)), pcsDiff = tallyPcs - delivPcs;
+  const timberGross = Math.round(tallyVol * pricePerM3), timberPph = Math.round(timberGross * (pphRate / 100));
   const timberNet = timberGross - timberPph;
 
   const isSurplusOrMatch = volDiff >= 0;
@@ -50,18 +45,12 @@ export function ManifestItemRow({
 
   const handleYardChange = (newYard: string) => {
     let nextKavling = item.kavlingNumber || '';
-    const trimmed = newYard.trim();
+    const trimmed = newYard.trim(), norm = trimmed.toLowerCase();
     if (!trimmed) {
       nextKavling = '';
-    } else {
-      const norm = trimmed.toLowerCase();
-      const isRecognized = getYards().some(
-        (y) => y.name.toLowerCase() === norm || y.yardCode.toLowerCase() === norm || y.id.toLowerCase() === norm
-      );
-      if (isRecognized && nextKavling) {
-        const validLots = getLotsForYard(trimmed);
-        const exists = validLots.some((lot) => lot.lotCode.toLowerCase() === nextKavling.toLowerCase());
-        if (!exists) nextKavling = '';
+    } else if (getYards().some((y) => y.name.toLowerCase() === norm || y.yardCode.toLowerCase() === norm || y.id.toLowerCase() === norm)) {
+      if (nextKavling && !getLotsForYard(trimmed).some((l) => l.lotCode.toLowerCase() === nextKavling.toLowerCase())) {
+        nextKavling = '';
       }
     }
     onChange({ ...item, storageYard: newYard, kavlingNumber: nextKavling });
@@ -110,10 +99,7 @@ export function ManifestItemRow({
           </div>
 
           <button
-            type="button"
-            onClick={onDelete}
-            disabled={cannotDelete}
-            aria-label={`Hapus baris ${index + 1}`}
+            type="button" onClick={onDelete} disabled={cannotDelete} aria-label={`Hapus baris ${index + 1}`}
             title={cannotDelete ? 'Manifest harus memiliki minimal 1 baris kayu' : 'Hapus baris kayu ini'}
             className="p-1.5 text-gray-400 hover:text-[#ed1c24] hover:bg-rose-50 rounded-lg transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 cursor-pointer disabled:cursor-not-allowed"
           >
@@ -122,121 +108,85 @@ export function ManifestItemRow({
         </div>
       </div>
 
-      {/* Row Form Inputs Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2.5">
-        {/* 1. Species Combobox */}
-        <div className="col-span-2 sm:col-span-2 md:col-span-2 lg:col-span-2">
+      {/* Tier 1: Spesifikasi Kayu & Lokasi Penempatan */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
+        <div className="sm:col-span-2 lg:col-span-5">
           <label className={labelCls}>Jenis Kayu (树种) <span className="text-[#ed1c24]">*</span></label>
-          <SpeciesCombobox
-            value={item.woodSpecies || ''}
-            onChange={(val) => updateField('woodSpecies', val)}
-            availableSpecies={availableSpecies}
-            required
-            id={`species-combobox-${item.id || index}`}
-          />
+          <SpeciesCombobox value={item.woodSpecies || ''} onChange={(val) => updateField('woodSpecies', val)}
+            availableSpecies={availableSpecies} required id={`species-combobox-${item.id || index}`} />
         </div>
-        {/* 2. Panjang (m) */}
-        <div className="col-span-1">
+        <div className="lg:col-span-2">
           <label className={labelCls}>Panjang m (长)</label>
-          <input
-            type="number"
-            step="0.1"
-            min="0"
-            value={item.woodLengthM ?? 4.0}
-            onChange={(e) => updateField('woodLengthM', parseFloat(e.target.value) || 0)}
-            className={inputCls}
-          />
+          <input type="number" step="0.1" min="0" value={item.woodLengthM ?? 4.0}
+            onChange={(e) => updateField('woodLengthM', parseFloat(e.target.value) || 0)} className={inputCls} />
         </div>
-        {/* 3. Yard / TPK */}
-        <div className="col-span-1">
+        <div className="lg:col-span-2">
           <label className={labelCls}>TPK (场地)</label>
-          <YardSelect
-            id={`yard-select-${item.id || index}`}
-            value={item.storageYard || ''}
-            onChange={(yard) => handleYardChange(yard)}
-          />
+          <YardSelect id={`yard-select-${item.id || index}`} value={item.storageYard || ''} onChange={handleYardChange} />
         </div>
-        {/* 4. Kavling */}
-        <div className="col-span-1">
+        <div className="lg:col-span-3">
           <label className={labelCls}>Kavling (批号) <span className="text-[#ed1c24]">*</span></label>
-          <KavlingSelect
-            id={`kavling-select-${item.id || index}`}
-            selectedYard={item.storageYard || ''}
-            value={item.kavlingNumber || ''}
-            onChange={(lot) => updateField('kavlingNumber', lot)}
-            required
-          />
+          <KavlingSelect id={`kavling-select-${item.id || index}`} selectedYard={item.storageYard || ''}
+            value={item.kavlingNumber || ''} onChange={(lot) => updateField('kavlingNumber', lot)} required />
         </div>
-        {/* 5. Delivered Pieces */}
-        <div className="col-span-1">
-          <label className="block text-[10px] font-semibold text-gray-600 mb-1">SJ Btg (送货)</label>
-          <input
-            type="number"
-            min="0"
-            value={item.deliveredPieces ?? 0}
-            onChange={(e) => updateField('deliveredPieces', parseInt(e.target.value, 10) || 0)}
-            className={inputCls}
-          />
+      </div>
+
+      {/* Tier 2: Rekonsiliasi Dokumen SJ vs Tally Fisik & Finansial */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 pt-2 border-t border-gray-100">
+        {/* Cluster A: Surat Jalan (SJ) */}
+        <div className="md:col-span-4 bg-gray-50/70 p-2.5 rounded-xl border border-gray-200/70 flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Surat Jalan (SJ - 送货)</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls}>SJ Btg (根)</label>
+              <input type="number" min="0" value={item.deliveredPieces ?? 0}
+                onChange={(e) => updateField('deliveredPieces', parseInt(e.target.value, 10) || 0)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>SJ Vol m³ (方)</label>
+              <input type="number" step="0.01" min="0" value={item.deliveredVolumeM3 ?? 0}
+                onChange={(e) => updateField('deliveredVolumeM3', parseFloat(e.target.value) || 0)} className={inputCls} />
+            </div>
+          </div>
         </div>
-        {/* 6. Delivered Volume */}
-        <div className="col-span-1">
-          <label className="block text-[10px] font-semibold text-gray-600 mb-1">SJ Vol m³ (送方)</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={item.deliveredVolumeM3 ?? 0}
-            onChange={(e) => updateField('deliveredVolumeM3', parseFloat(e.target.value) || 0)}
-            className={inputCls}
-          />
+
+        {/* Cluster B: Tally Fisik TPK */}
+        <div className="md:col-span-4 bg-amber-50/80 p-2.5 rounded-xl border border-amber-300/80 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-950">
+              Tally Fisik (TPK - 检尺) <span className="text-[#ed1c24]">*</span>
+            </span>
+            <span className="text-[9px] font-bold text-amber-800 bg-amber-200/60 px-1.5 py-0.2 rounded">Wajib</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-amber-950 mb-1">Tally Btg (检根) <span className="text-[#ed1c24]">*</span></label>
+              <input type="number" required min="0" value={item.tallyPieces ?? 0}
+                onChange={(e) => updateField('tallyPieces', parseInt(e.target.value, 10) || 0)} className={tallyCls} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-amber-950 mb-1">Tally m³ (检方) <span className="text-[#ed1c24]">*</span></label>
+              <input type="number" step="0.01" required min="0" value={item.tallyVolumeM3 ?? 0}
+                onChange={(e) => updateField('tallyVolumeM3', parseFloat(e.target.value) || 0)} className={tallyCls} />
+            </div>
+          </div>
         </div>
-        {/* 7. Tally Pieces */}
-        <div className="col-span-1 bg-[#ffc908]/10 p-1.5 rounded-lg border border-[#ffc908]/40">
-          <label className="block text-[10px] font-bold text-[#101828] mb-0.5">Tally Btg (检根) <span className="text-[#ed1c24]">*</span></label>
-          <input
-            type="number"
-            required
-            min="0"
-            value={item.tallyPieces ?? 0}
-            onChange={(e) => updateField('tallyPieces', parseInt(e.target.value, 10) || 0)}
-            className={tallyCls}
-          />
-        </div>
-        {/* 8. Tally Volume */}
-        <div className="col-span-1 bg-[#ffc908]/10 p-1.5 rounded-lg border border-[#ffc908]/40">
-          <label className="block text-[10px] font-bold text-[#101828] mb-0.5">Tally m³ (检方) <span className="text-[#ed1c24]">*</span></label>
-          <input
-            type="number"
-            step="0.01"
-            required
-            min="0"
-            value={item.tallyVolumeM3 ?? 0}
-            onChange={(e) => updateField('tallyVolumeM3', parseFloat(e.target.value) || 0)}
-            className={tallyCls}
-          />
-        </div>
-        {/* 9. Timber Price / m3 */}
-        <div className="col-span-1">
-          <label className={labelCls}>Harga / m³ (单价)</label>
-          <input
-            type="number"
-            min="0"
-            value={item.timberPricePerM3 ?? 0}
-            onChange={(e) => updateField('timberPricePerM3', parseFloat(e.target.value) || 0)}
-            className={inputCls}
-          />
-        </div>
-        {/* 10. Timber PPh Rate */}
-        <div className="col-span-1">
-          <label className={labelCls}>PPh % (税率)</label>
-          <input
-            type="number"
-            step="0.1"
-            min="0"
-            value={item.timberPphRate ?? 0.5}
-            onChange={(e) => updateField('timberPphRate', parseFloat(e.target.value) || 0)}
-            className={inputCls}
-          />
+
+        {/* Cluster C: Finansial Kayu */}
+        <div className="md:col-span-4 bg-gray-50/70 p-2.5 rounded-xl border border-gray-200/70 flex flex-col gap-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Komersial & Pajak (定价)</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls}>Harga / m³ (单价)</label>
+              <input type="number" min="0" value={item.timberPricePerM3 ?? 0}
+                onChange={(e) => updateField('timberPricePerM3', parseFloat(e.target.value) || 0)} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>PPh % (税率)</label>
+              <input type="number" step="0.1" min="0" value={item.timberPphRate ?? 0.5}
+                onChange={(e) => updateField('timberPphRate', parseFloat(e.target.value) || 0)} className={inputCls} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
