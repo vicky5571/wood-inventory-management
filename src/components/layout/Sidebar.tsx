@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useNavigation } from '@/src/context/NavigationContext';
 import {
   Trees,
   LayoutDashboard,
@@ -19,16 +20,13 @@ import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  analytics: LayoutDashboard,
-  ledger: TableProperties,
-  sales: Truck,
-  suppliers: Building2,
-  activity: History,
-  settings: Settings,
+  analytics: LayoutDashboard, ledger: TableProperties, sales: Truck,
+  suppliers: Building2, activity: History, settings: Settings,
 };
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { targetHref, navigateTo } = useNavigation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Auto-close mobile drawer on route change
@@ -36,30 +34,27 @@ export function Sidebar() {
     setIsMobileOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when mobile drawer is open
+  // Lock body scroll and dismiss on ESC when mobile drawer is open
   useEffect(() => {
     document.body.style.overflow = isMobileOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [isMobileOpen]);
-
-  // Handle ESC key to dismiss mobile drawer
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMobileOpen) {
-        setIsMobileOpen(false);
-      }
+      if (e.key === 'Escape' && isMobileOpen) setIsMobileOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isMobileOpen]);
 
   const operationalItems = NAV_ITEMS.filter((item) => item.id !== 'settings');
   const systemItems = NAV_ITEMS.filter((item) => item.id === 'settings');
+  const effectivePath = targetHref || pathname;
 
   const renderNavLinks = (items: typeof NAV_ITEMS) => (
     <div className="flex flex-col gap-1">
       {items.map((item) => {
-        const isActive = isNavItemActive(item.href, pathname);
+        const isActive = isNavItemActive(item.href, effectivePath);
         const Icon = ICON_MAP[item.id];
 
         return (
@@ -67,7 +62,11 @@ export function Sidebar() {
             key={item.id}
             href={item.href}
             prefetch={true}
-            onClick={() => setIsMobileOpen(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              setIsMobileOpen(false);
+              navigateTo(item.href);
+            }}
             aria-current={isActive ? 'page' : undefined}
             className={`group flex items-center justify-between text-xs sm:text-sm py-2.5 transition-all duration-200 cursor-pointer ${
               isActive
@@ -77,16 +76,9 @@ export function Sidebar() {
           >
             <div className="flex items-center gap-3 min-w-0">
               {Icon && (
-                <div
-                  className={`
-                    w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200
-                    ${
-                      isActive
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200/90 group-hover:text-gray-700'
-                    }
-                  `}
-                >
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
+                  isActive ? 'bg-amber-600 text-white shadow-xs' : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200/90 group-hover:text-gray-700'
+                }`}>
                   <Icon className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -98,9 +90,7 @@ export function Sidebar() {
               </div>
             </div>
 
-            {isActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-600 flex-shrink-0" />
-            )}
+            {isActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-600 flex-shrink-0" />}
           </Link>
         );
       })}
@@ -111,7 +101,11 @@ export function Sidebar() {
     <>
       {/* 1. Mobile Top Header Bar (< lg) */}
       <header className="lg:hidden sticky top-0 z-30 w-full h-14 bg-white/95 backdrop-blur-md border-b border-gray-200/80 px-4 flex items-center justify-between shadow-xs">
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link
+          href="/"
+          onClick={(e) => { e.preventDefault(); setIsMobileOpen(false); navigateTo('/'); }}
+          className="flex items-center gap-2.5 group"
+        >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 text-[#101828] flex items-center justify-center flex-shrink-0 shadow-xs">
             <Trees className="w-4 h-4 text-amber-800" />
           </div>
@@ -159,7 +153,11 @@ export function Sidebar() {
       >
         {/* Top Brand Identity Section */}
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group cursor-pointer min-w-0">
+          <Link
+            href="/"
+            onClick={(e) => { e.preventDefault(); setIsMobileOpen(false); navigateTo('/'); }}
+            className="flex items-center gap-3 group cursor-pointer min-w-0"
+          >
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/90 text-[#101828] shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform">
               <Trees className="w-5 h-5 text-amber-800" />
               <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white shadow-xs" />

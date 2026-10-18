@@ -75,5 +75,13 @@ test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
     const loadingPath = path.resolve(process.cwd(), 'app/loading.tsx');
     assert.ok(fs.existsSync(loadingPath), 'app/loading.tsx must exist');
   });
+
+  await t.test('Sidebar integrates useNavigation for 0ms optimistic active highlighting', () => {
+    const sidebarPath = path.resolve(process.cwd(), 'src/components/layout/Sidebar.tsx');
+    const content = fs.readFileSync(sidebarPath, 'utf-8');
+    assert.match(content, /useNavigation/);
+    assert.match(content, /targetHref/);
+    assert.match(content, /navigateTo/);
+  });
 });
 
