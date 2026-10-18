@@ -71,7 +71,7 @@ export function RecordTablePagination({
       <div className="flex items-center gap-1.5">
         <button
           type="button"
-          onClick={() => onPageChange(currentPage - 1)}
+          onClick={() => onPageChange(validPage - 1)}
           disabled={currentPage <= 1 || pageSize === -1}
           className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
           title="Halaman Sebelumnya (上一页)"
@@ -81,12 +81,12 @@ export function RecordTablePagination({
         </button>
 
         <span className="px-3 py-1 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg shadow-2xs">
-          {currentPage} / {totalPages}
+          {validPage} / {totalPages}
         </span>
 
         <button
           type="button"
-          onClick={() => onPageChange(currentPage + 1)}
+          onClick={() => onPageChange(validPage + 1)}
           disabled={currentPage >= totalPages || pageSize === -1}
           className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
           title="Halaman Berikutnya (下一页)"
