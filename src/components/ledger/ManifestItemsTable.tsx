@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import type { ManifestItemInput } from '@/src/types';
 import { ManifestItemRow } from './ManifestItemRow';
 import { Layers, Plus } from 'lucide-react';
@@ -12,22 +12,61 @@ export interface ManifestItemsTableProps {
   availableSpecies?: string[];
 }
 
+interface MemoRowProps {
+  item: ManifestItemInput;
+  index: number;
+  totalItems: number;
+  onUpdate: (index: number, updated: ManifestItemInput) => void;
+  onDelete: (index: number) => void;
+  availableSpecies?: string[];
+  disabledDelete?: boolean;
+}
+
+const MemoizedManifestRow = React.memo(function MemoizedManifestRow({
+  item, index, totalItems, onUpdate, onDelete, availableSpecies, disabledDelete,
+}: MemoRowProps) {
+  const handleChange = useCallback((updated: ManifestItemInput) => onUpdate(index, updated), [onUpdate, index]);
+  const handleDelete = useCallback(() => onDelete(index), [onDelete, index]);
+
+  return (
+    <ManifestItemRow
+      item={item}
+      index={index}
+      totalItems={totalItems}
+      onChange={handleChange}
+      onDelete={handleDelete}
+      availableSpecies={availableSpecies}
+      disabledDelete={disabledDelete}
+    />
+  );
+});
+
 export function ManifestItemsTable({
   items,
   onChange,
   setItems,
   availableSpecies,
 }: ManifestItemsTableProps) {
-  const updateItems = (nextItems: ManifestItemInput[]) => {
-    if (onChange) {
-      onChange(nextItems);
-    } else if (setItems) {
-      setItems(nextItems);
-    }
-  };
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
-  const handleAddItem = () => {
-    const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
+  const handleUpdateItem = useCallback((index: number, updated: ManifestItemInput) => {
+    const next = [...itemsRef.current];
+    next[index] = updated;
+    if (onChange) onChange(next);
+    else if (setItems) setItems(next);
+  }, [onChange, setItems]);
+
+  const handleDeleteItem = useCallback((index: number) => {
+    if (itemsRef.current.length <= 1) return;
+    const next = itemsRef.current.filter((_, i) => i !== index);
+    if (onChange) onChange(next);
+    else if (setItems) setItems(next);
+  }, [onChange, setItems]);
+
+  const handleAddItem = useCallback(() => {
+    const cur = itemsRef.current;
+    const lastItem = cur.length > 0 ? cur[cur.length - 1] : undefined;
     const newItem: ManifestItemInput = {
       id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       woodSpecies: '',
@@ -41,20 +80,10 @@ export function ManifestItemsTable({
       timberPricePerM3: lastItem ? lastItem.timberPricePerM3 : 0,
       timberPphRate: lastItem ? lastItem.timberPphRate : 0.5,
     };
-    updateItems([...items, newItem]);
-  };
-
-  const handleUpdateItem = (index: number, updated: ManifestItemInput) => {
-    const next = [...items];
-    next[index] = updated;
-    updateItems(next);
-  };
-
-  const handleDeleteItem = (index: number) => {
-    if (items.length <= 1) return;
-    const next = items.filter((_, i) => i !== index);
-    updateItems(next);
-  };
+    const next = [...cur, newItem];
+    if (onChange) onChange(next);
+    else if (setItems) setItems(next);
+  }, [onChange, setItems]);
 
   return (
     <div className="bg-gray-50/70 border border-gray-200/70 rounded-2xl p-4.5">
@@ -99,13 +128,13 @@ export function ManifestItemsTable({
           </div>
         ) : (
           items.map((item, index) => (
-            <ManifestItemRow
+            <MemoizedManifestRow
               key={item.id || `item-${index}`}
               item={item}
               index={index}
               totalItems={items.length}
-              onChange={(updated) => handleUpdateItem(index, updated)}
-              onDelete={() => handleDeleteItem(index)}
+              onUpdate={handleUpdateItem}
+              onDelete={handleDeleteItem}
               availableSpecies={availableSpecies}
               disabledDelete={items.length <= 1}
             />

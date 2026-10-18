@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ChevronDown, Check, Plus, X, Building2 } from 'lucide-react';
-import { useSuppliers } from '@/src/hooks/useSuppliers';
+import { SupplierRepository } from '@/src/persistence/supplier-repository';
 
 export interface SupplierOption {
   name: string;
@@ -19,6 +19,8 @@ export interface SupplierComboboxProps {
   id?: string;
 }
 
+const repo = new SupplierRepository();
+
 export function SupplierCombobox({
   value,
   onChange,
@@ -28,47 +30,32 @@ export function SupplierCombobox({
   placeholder = 'Pilih atau ketik nama pemasok...',
   id = 'supplier-combobox',
 }: SupplierComboboxProps) {
-  const { suppliers: defaultSuppliers } = useSuppliers();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value || '');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Synchronize internal query with external value changes
-  useEffect(() => {
-    setQuery(value || '');
-  }, [value]);
+  useEffect(() => { setQuery(value || ''); }, [value]);
 
   const allSuppliers: SupplierOption[] = useMemo(() => {
-    if (availableSuppliers && availableSuppliers.length > 0) {
-      return availableSuppliers;
-    }
-    return defaultSuppliers.map((s) => ({
-      name: s.name || s.supplierName,
-      code: s.code,
-    }));
-  }, [availableSuppliers, defaultSuppliers]);
+    if (availableSuppliers && availableSuppliers.length > 0) return availableSuppliers;
+    return repo.getAll().map((s) => ({ name: s.name, code: s.code }));
+  }, [availableSuppliers]);
 
   const filteredOptions = useMemo(() => {
     if (!query.trim()) return allSuppliers;
     const q = query.toLowerCase().trim();
-    return allSuppliers.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        (s.code && s.code.toLowerCase().includes(q))
-    );
+    return allSuppliers.filter((s) => s.name.toLowerCase().includes(q) || (s.code && s.code.toLowerCase().includes(q)));
   }, [allSuppliers, query]);
 
   const hasExactMatch = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return true;
-    return allSuppliers.some((s) => s.name.toLowerCase() === trimmed);
+    return !trimmed || allSuppliers.some((s) => s.name.toLowerCase() === trimmed);
   }, [allSuppliers, query]);
 
   const showCustomOption = query.trim().length > 0 && !hasExactMatch;
 
-  // Handle outside click to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -76,21 +63,16 @@ export function SupplierCombobox({
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectOption = useCallback(
-    (supplierName: string) => {
-      onChange(supplierName);
-      setQuery(supplierName);
-      setIsOpen(false);
-      setHighlightedIndex(-1);
-      inputRef.current?.focus();
-    },
-    [onChange]
-  );
+  const selectOption = useCallback((supplierName: string) => {
+    onChange(supplierName);
+    setQuery(supplierName);
+    setIsOpen(false);
+    setHighlightedIndex(-1);
+    inputRef.current?.focus();
+  }, [onChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -113,9 +95,7 @@ export function SupplierCombobox({
       setIsOpen(true);
       return;
     }
-
     const totalItems = filteredOptions.length + (showCustomOption ? 1 : 0);
-
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev + 1 < totalItems ? prev + 1 : 0));
@@ -163,7 +143,7 @@ export function SupplierCombobox({
               type="button"
               onClick={handleClear}
               aria-label="Hapus pilihan pemasok"
-              className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition"
+              className="p-1 text-gray-400 hover:text-gray-600 rounded-lg transition cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -174,13 +154,9 @@ export function SupplierCombobox({
             disabled={disabled}
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label="Buka daftar rekanan pemasok"
-            className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition"
+            className="p-1 text-gray-400 hover:text-gray-700 rounded-lg transition cursor-pointer"
           >
-            <ChevronDown
-              className={`w-4 h-4 transition-transform duration-200 ${
-                isOpen ? 'rotate-180 text-sky-700' : ''
-              }`}
-            />
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-sky-700' : ''}`} />
           </button>
         </div>
       </div>
@@ -188,24 +164,19 @@ export function SupplierCombobox({
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Custom Entry Option */}
           {showCustomOption && (
             <button
               type="button"
               onClick={() => selectOption(query.trim())}
-              className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between border-b border-gray-100 transition ${
-                highlightedIndex === filteredOptions.length
-                  ? 'bg-amber-100 text-[#101828] font-semibold'
-                  : 'hover:bg-amber-50 text-gray-800'
+              className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between border-b border-gray-100 transition cursor-pointer ${
+                highlightedIndex === filteredOptions.length ? 'bg-amber-100 text-[#101828] font-semibold' : 'hover:bg-amber-50 text-gray-800'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0">
                   <Plus className="w-3.5 h-3.5" />
                 </span>
-                <span className="truncate">
-                  Gunakan: <strong className="text-[#101828]">"{query.trim()}"</strong>
-                </span>
+                <span className="truncate">Gunakan: <strong className="text-[#101828]">"{query.trim()}"</strong></span>
               </div>
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 ml-2 flex-shrink-0">
                 Kustom (自定义)
@@ -213,7 +184,6 @@ export function SupplierCombobox({
             </button>
           )}
 
-          {/* Filtered Options List */}
           {filteredOptions.length > 0 ? (
             filteredOptions.map((opt, index) => {
               const isSelected = value.trim().toLowerCase() === opt.name.toLowerCase();
@@ -224,12 +194,8 @@ export function SupplierCombobox({
                   key={opt.name}
                   type="button"
                   onClick={() => selectOption(opt.name)}
-                  className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition ${
-                    isHighlighted
-                      ? 'bg-sky-50 text-sky-950 font-medium'
-                      : isSelected
-                      ? 'bg-sky-50/70 text-sky-950 font-semibold'
-                      : 'hover:bg-gray-50 text-gray-700'
+                  className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition cursor-pointer ${
+                    isHighlighted ? 'bg-sky-50 text-sky-950 font-medium' : isSelected ? 'bg-sky-50/70 text-sky-950 font-semibold' : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -241,9 +207,7 @@ export function SupplierCombobox({
                       </span>
                     )}
                   </div>
-                  {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-2" />
-                  )}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 ml-2" />}
                 </button>
               );
             })

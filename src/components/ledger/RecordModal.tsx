@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'react';
 import type { WoodReceivingRecord, ManifestFormInput, ManifestItemInput } from '@/src/types';
 import { computeManifestCalculations } from '@/src/utils/timber-calc.ts';
 import { toast } from '@/src/utils/toast-store';
@@ -88,45 +88,9 @@ export function RecordModal({
     return () => clearTimeout(timer);
   }, [form, items, initialRecord, isOpen]);
 
-  const handleItemsChange = (nextItems: ManifestItemInput[]) => {
+  const handleItemsChange = useCallback((nextItems: ManifestItemInput[]) => {
     setItems(nextItems);
-    if (nextItems.length > 0) {
-      const first = nextItems[0];
-      setForm((prev) => ({
-        ...prev,
-        woodSpecies: first.woodSpecies || prev.woodSpecies,
-        woodLengthM: first.woodLengthM ?? prev.woodLengthM,
-        kavlingNumber: first.kavlingNumber || prev.kavlingNumber,
-        storageYard: first.storageYard || prev.storageYard,
-        timberPricePerM3: first.timberPricePerM3 ?? prev.timberPricePerM3,
-        timberPphRate: first.timberPphRate ?? prev.timberPphRate,
-      }));
-    }
-  };
-
-  useEffect(() => {
-    if (items.length === 1) {
-      const cur = items[0];
-      if (
-        (form.woodSpecies && form.woodSpecies !== cur.woodSpecies) ||
-        (form.kavlingNumber && form.kavlingNumber !== cur.kavlingNumber) ||
-        (form.storageYard && form.storageYard !== cur.storageYard) ||
-        (form.woodLengthM !== undefined && form.woodLengthM !== cur.woodLengthM) ||
-        (form.timberPricePerM3 !== undefined && form.timberPricePerM3 !== cur.timberPricePerM3) ||
-        (form.timberPphRate !== undefined && form.timberPphRate !== cur.timberPphRate)
-      ) {
-        setItems([{
-          ...cur,
-          woodSpecies: form.woodSpecies || cur.woodSpecies,
-          woodLengthM: form.woodLengthM ?? cur.woodLengthM,
-          kavlingNumber: form.kavlingNumber || cur.kavlingNumber,
-          storageYard: form.storageYard || cur.storageYard,
-          timberPricePerM3: form.timberPricePerM3 ?? cur.timberPricePerM3,
-          timberPphRate: form.timberPphRate ?? cur.timberPphRate,
-        }]);
-      }
-    }
-  }, [form.woodSpecies, form.woodLengthM, form.kavlingNumber, form.storageYard, form.timberPricePerM3, form.timberPphRate]);
+  }, []);
 
   const manifestPayload: ManifestFormInput = useMemo(() => ({
     id: form.manifest_id || (initialRecord?.manifest_id ?? `man-${Date.now()}`),
@@ -140,7 +104,8 @@ export function RecordModal({
     paymentDate: form.paymentDate, paymentNotes: form.paymentNotes, items,
   }), [form, items, initialRecord]);
 
-  const preview = useMemo(() => computeManifestCalculations(manifestPayload), [manifestPayload]);
+  const deferredManifestPayload = useDeferredValue(manifestPayload);
+  const preview = useMemo(() => computeManifestCalculations(deferredManifestPayload), [deferredManifestPayload]);
 
   if (!isOpen) return null;
 
@@ -164,6 +129,7 @@ export function RecordModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const submitPreview = computeManifestCalculations(manifestPayload);
     const primary = items[0] || createItem(form);
     const savedRecord: WoodReceivingRecord = {
       ...(form as WoodReceivingRecord),
@@ -172,12 +138,12 @@ export function RecordModal({
       woodLengthM: primary.woodLengthM ?? form.woodLengthM ?? 4.0,
       kavlingNumber: primary.kavlingNumber || form.kavlingNumber || 'KAV-01',
       storageYard: primary.storageYard || form.storageYard || 'TPK-Timur',
-      deliveredPieces: preview.totalDeliveredPieces, deliveredVolumeM3: preview.totalDeliveredVolumeM3,
-      tallyPieces: preview.totalTallyPieces, tallyVolumeM3: preview.totalTallyVolumeM3,
+      deliveredPieces: submitPreview.totalDeliveredPieces, deliveredVolumeM3: submitPreview.totalDeliveredVolumeM3,
+      tallyPieces: submitPreview.totalTallyPieces, tallyVolumeM3: submitPreview.totalTallyVolumeM3,
       timberPricePerM3: primary.timberPricePerM3, timberPphRate: primary.timberPphRate,
-      timberGrossTotal: preview.totalTimberGross, timberPphAmount: preview.totalTimberPph,
-      timberNetPayable: preview.totalTimberNet, freightGrossTotal: preview.freightGrossTotal,
-      freightNetPayable: preview.freightNetPayable, grandNetPayable: preview.grandNetPayable,
+      timberGrossTotal: submitPreview.totalTimberGross, timberPphAmount: submitPreview.totalTimberPph,
+      timberNetPayable: submitPreview.totalTimberNet, freightGrossTotal: submitPreview.freightGrossTotal,
+      freightNetPayable: submitPreview.freightNetPayable, grandNetPayable: submitPreview.grandNetPayable,
       createdAt: form.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
 

@@ -13,7 +13,7 @@ export interface RecordDocumentSectionProps {
   hideSpeciesSection?: boolean;
 }
 
-export function RecordDocumentSection({
+export const RecordDocumentSection = React.memo(function RecordDocumentSection({
   form,
   setForm,
   availableSpecies,
@@ -190,4 +190,4 @@ export function RecordDocumentSection({
       )}
     </>
   );
-}
+});

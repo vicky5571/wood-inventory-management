@@ -4,18 +4,19 @@ import React from 'react';
 import type { RecordCalculationOutput, ManifestCalculationOutput } from '@/src/types';
 import { Calculator, TrendingUp, TrendingDown } from 'lucide-react';
 
-const formatRupiah = (num: number): string =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(num);
+const idrFormatter = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  maximumFractionDigits: 0,
+});
+
+const formatRupiah = (num: number): string => idrFormatter.format(num);
 
 export interface RecordReconciliationCardProps {
   preview: RecordCalculationOutput | ManifestCalculationOutput;
 }
 
-export function RecordReconciliationCard({ preview }: RecordReconciliationCardProps) {
+export const RecordReconciliationCard = React.memo(function RecordReconciliationCard({ preview }: RecordReconciliationCardProps) {
   const isSurplusOrMatch = preview.volumeDiscrepancyM3 >= 0;
   const timberNet = 'totalTimberNet' in preview ? preview.totalTimberNet : preview.timberNetPayable;
   const itemsCount = 'items' in preview && Array.isArray(preview.items) ? preview.items.length : null;
@@ -80,4 +81,4 @@ export function RecordReconciliationCard({ preview }: RecordReconciliationCardPr
       </div>
     </div>
   );
-}
+});

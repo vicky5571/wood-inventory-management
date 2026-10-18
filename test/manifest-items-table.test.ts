@@ -13,7 +13,7 @@ test('Manifest Items Table Components Invariant Suite', async (t) => {
     const content = fs.readFileSync(rowPath, 'utf-8');
     const lines = content.split('\n').length;
     assert.ok(lines < 250, `ManifestItemRow.tsx must be <250 LOC (got ${lines})`);
-    assert.match(content, /export function ManifestItemRow/);
+    assert.match(content, /export (?:const|function) ManifestItemRow/);
     assert.match(content, /SpeciesCombobox/);
     assert.match(content, /woodSpecies/);
     assert.match(content, /woodLengthM/);

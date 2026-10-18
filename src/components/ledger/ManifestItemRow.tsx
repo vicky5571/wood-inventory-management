@@ -8,8 +8,8 @@ import { KavlingSelect } from './KavlingSelect';
 import { getYards, getLotsForYard } from '@/src/utils/storage-locations';
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 
-const formatRupiah = (num: number): string =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+const idrFormatter = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+const formatRupiah = (num: number): string => idrFormatter.format(num);
 
 const inputCls = 'w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent font-mono tabular-nums shadow-2xs';
 const tallyCls = 'w-full text-xs px-2 py-1 bg-white border border-[#ffc908] rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] font-mono tabular-nums font-bold';
@@ -25,7 +25,7 @@ export interface ManifestItemRowProps {
   disabledDelete?: boolean;
 }
 
-export function ManifestItemRow({
+export const ManifestItemRow = React.memo(function ManifestItemRow({
   item, index, totalItems, onChange, onDelete, availableSpecies, disabledDelete,
 }: ManifestItemRowProps) {
   const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0), delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
@@ -191,4 +191,4 @@ export function ManifestItemRow({
       </div>
     </div>
   );
-}
+});

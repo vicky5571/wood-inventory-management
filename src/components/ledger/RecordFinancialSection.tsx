@@ -10,7 +10,7 @@ export interface RecordFinancialSectionProps {
   hideTimberPricing?: boolean;
 }
 
-export function RecordFinancialSection({
+export const RecordFinancialSection = React.memo(function RecordFinancialSection({
   form,
   setForm,
   hideTimberPricing = false,
@@ -199,4 +199,4 @@ export function RecordFinancialSection({
       </div>
     </div>
   );
-}
+});
