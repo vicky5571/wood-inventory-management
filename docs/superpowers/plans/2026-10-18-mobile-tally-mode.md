@@ -38,17 +38,17 @@
   - Throws `RangeError` on negative inputs.
   - Returns `0` when any dimension or piece count is `0`.
 
-- [ ] **Step 1: Write failing unit test in `test/timber-calc.test.ts`**
+- [x] **Step 1: Write failing unit test in `test/timber-calc.test.ts`**
   Asserts that `calculateRoundLogVolumeM3` accurately computes volume for typical log sizes (e.g., $D=40\,\text{cm}, L=4\,\text{m}, P=1 \implies 0.5027\,\text{m}^3$), handles zero inputs cleanly, and throws `RangeError` on negative inputs.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/timber-calc.test.ts`
-- [ ] **Step 3: Implement `calculateRoundLogVolumeM3` in `src/utils/timber-calc.ts`**
+- [x] **Step 3: Implement `calculateRoundLogVolumeM3` in `src/utils/timber-calc.ts`**
   Add mathematical function and export with JSDoc comments. Keep `timber-calc.ts` < 250 LOC (currently 196 LOC).
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/timber-calc.test.ts`
-- [ ] **Step 5: Verify LOC limit and TypeScript compile**
+- [x] **Step 5: Verify LOC limit and TypeScript compile**
   `wc -l src/utils/timber-calc.ts` (< 250 LOC) && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/utils/timber-calc.ts test/timber-calc.test.ts && git commit -m "feat(timber-calc): add calculateRoundLogVolumeM3 formula with unit tests"`
 
 ---
@@ -83,22 +83,22 @@
   }
   ```
 
-- [ ] **Step 1: Write failing component tests in `test/tally-components.test.ts`**
+- [x] **Step 1: Write failing component tests in `test/tally-components.test.ts`**
   Asserts that:
   - `TallyMeasurementPad` toggles between Sawn Timber mode and Round Log mode.
   - Stepper buttons (`+1`, `+5`, `+10`, `-1`) correctly adjust piece count.
   - Dimension presets auto-populate dimensions and update computed volume on the fly.
   - `TallyDiscrepancyCard` computes $\Delta V$ and $\Delta B$, displaying bilingual badges: `Cocok / 匹配` (green), `Surplus / 超出` (blue), and `Penyusutan / 亏损` (red).
   - Both components adhere to `< 200 LOC` and `< 120 LOC` constraints.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/tally-components.test.ts`
-- [ ] **Step 3: Implement `TallyMeasurementPad.tsx` and `TallyDiscrepancyCard.tsx`**
+- [x] **Step 3: Implement `TallyMeasurementPad.tsx` and `TallyDiscrepancyCard.tsx`**
   Implement both components using Tailwind CSS, bilingual labels, and Lucide icons.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/tally-components.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/components/tally/TallyMeasurementPad.tsx src/components/tally/TallyDiscrepancyCard.tsx` && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/components/tally/ test/tally-components.test.ts && git commit -m "feat(tally): create TallyMeasurementPad and TallyDiscrepancyCard components"`
 
 ---
@@ -185,3 +185,4 @@
   Perform diff inspection across all commits and confirm global constraints.
 - [ ] **Step 4: Finalize and commit**
   `git commit --allow-empty -m "chore(release): complete Phase 6 Mobile Tally Mode and Field Ledger Synergy"`
+

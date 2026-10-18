@@ -194,3 +194,4 @@ export function calculateRoundLogVolumeM3(
    - Run `npx tsc --noEmit` (0 errors).
    - Run `npm test` (all 410+ tests passing, 0 failures).
    - Run `npm run build:check` (Next.js production build clean).
+
