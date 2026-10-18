@@ -9,7 +9,8 @@
     "build:check": "NEXT_DIST_DIR=.next-check next build",
     "start": "next start",
     "test": "node --test",
-    "test:smoke": "node --test test/smoke.test.ts"
+    "test:smoke": "node --test test/smoke.test.ts",
+    "db:seed": "node scripts/seed-db.ts"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

@@ -189,3 +189,5 @@ export const SEED_SUPPLIERS: Supplier[] = [
   },
 ];
 
+export { SEED_WOOD_SALES } from './seed-sales-data.ts';
+

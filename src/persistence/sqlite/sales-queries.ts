@@ -7,6 +7,7 @@
 
 import type { DatabaseSync } from 'node:sqlite';
 import type { WoodSalesRecord, PaymentStatus } from '../../types/index.ts';
+import { SEED_WOOD_SALES } from '../seed-sales-data.ts';
 
 export function ensureSalesTable(db: DatabaseSync): void {
   db.exec(`
@@ -174,5 +175,47 @@ export class SalesQueries {
   public delete(id: string): void {
     const stmt = this.db.prepare('DELETE FROM sales_records WHERE id = ?');
     stmt.run(id);
+  }
+
+  public deleteAll(): void {
+    this.db.exec('DELETE FROM sales_records;');
+  }
+}
+
+export function seedSalesIfEmpty(db: DatabaseSync, seedData: WoodSalesRecord[] = SEED_WOOD_SALES): void {
+  ensureSalesTable(db);
+  const row = db.prepare('SELECT COUNT(*) AS c FROM sales_records;').get() as { c: number } | undefined;
+  if (row && row.c > 0) return;
+
+  const stmt = db.prepare(`
+    INSERT INTO sales_records (
+      id, sale_date, delivery_order_number, truck_plate_number, driver_name,
+      customer_name, storage_yard, kavling_number, wood_species,
+      pieces, volume_m3, price_per_m3, total_price, payment_status,
+      invoice_number, notes, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const s of seedData) {
+    stmt.run(
+      s.id,
+      s.saleDate,
+      s.deliveryOrderNumber,
+      s.truckPlateNumber,
+      s.driverName || null,
+      s.customerName,
+      s.storageYard,
+      s.kavlingNumber,
+      s.woodSpecies,
+      s.pieces,
+      s.volumeM3,
+      s.pricePerM3,
+      s.totalPrice,
+      s.paymentStatus || 'UNPAID',
+      s.invoiceNumber || null,
+      s.notes || null,
+      s.createdAt || new Date().toISOString(),
+      s.updatedAt || new Date().toISOString()
+    );
   }
 }

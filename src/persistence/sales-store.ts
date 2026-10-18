@@ -6,7 +6,7 @@
  */
 
 import { sqliteRecordStore } from './sqlite-record-store.ts';
-import { SalesQueries } from './sqlite/sales-queries.ts';
+import { SalesQueries, seedSalesIfEmpty } from './sqlite/sales-queries.ts';
 import type { WoodSalesRecord, SalesFormInput } from '../types/index.ts';
 
 class SalesStore {
@@ -73,6 +73,15 @@ class SalesStore {
 
   public delete(id: string): void {
     this.getQueries().delete(id);
+  }
+
+  public deleteAll(): void {
+    this.getQueries().deleteAll();
+  }
+
+  public seed(sales?: WoodSalesRecord[]): WoodSalesRecord[] {
+    seedSalesIfEmpty(sqliteRecordStore.getDatabase(), sales);
+    return this.getAll();
   }
 }
 

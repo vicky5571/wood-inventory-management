@@ -18,6 +18,7 @@ import {
 } from './sqlite/storage-locations-db.ts';
 import { SEED_WOOD_RECORDS } from './seed-data.ts';
 import { queryPaginatedRecords } from './sqlite/record-queries.ts';
+import { seedSalesIfEmpty } from './sqlite/sales-queries.ts';
 import type {
   WoodReceivingRecord,
   RecordQueryParams,
@@ -49,6 +50,7 @@ export class SqliteRecordStore {
 
     if (isBrandNewDb) {
       migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
+      seedSalesIfEmpty(this.db);
     }
     this.initialized = true;
   }
