@@ -31,8 +31,8 @@ export class IndexedDbAdapter implements StorageAdapter {
     this.fallback = new MemoryStorageAdapter();
   }
 
-  private isAvailable(): boolean {
-    return typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
+  private  isAvailable(): boolean {
+    return typeof window !== 'undefined' && Boolean(window.indexedDB);
   }
 
   private getDb(): Promise<IDBDatabase> {
@@ -78,6 +78,7 @@ export class IndexedDbAdapter implements StorageAdapter {
       const req = action(store);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
+      tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);
     });
   }

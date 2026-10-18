@@ -5,6 +5,8 @@
  * Provides resilient offline/local memory fallback with remote synchronization contracts.
  */
 
+import { IndexedDbAdapter } from './indexed-db-adapter.ts';
+
 export interface StorageAdapter {
   getItem<T = any>(key: string): Promise<T | null>;
   setItem<T = any>(key: string, value: T): Promise<void>;
@@ -104,8 +106,6 @@ export class LocalStorageAdapter implements StorageAdapter {
     }
   }
 }
-
-import { IndexedDbAdapter } from './indexed-db-adapter.ts';
 
 export const defaultStorage: StorageAdapter =
   typeof window !== 'undefined' && 'indexedDB' in window
