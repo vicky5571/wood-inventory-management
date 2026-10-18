@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useWoodRecords } from '@/src/hooks/useWoodRecords';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useActivityLog } from '@/src/hooks/useActivityLog';
@@ -10,7 +11,7 @@ import { RecordModal } from '@/src/components/ledger/RecordModal';
 import { PrintReceivingSlipModal } from '@/src/components/ledger/PrintReceivingSlipModal';
 import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
 import type { WoodReceivingRecord, ManifestFormInput } from '@/src/types';
-import { TableProperties, ShieldAlert } from 'lucide-react';
+import { TableProperties, ShieldAlert, Truck } from 'lucide-react';
 
 export default function LedgerPage() {
   const { canWrite, isMonitorOnly, user } = useAuth();
@@ -104,9 +105,18 @@ export default function LedgerPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
-          <span className="text-gray-500">Total Baris:</span>
-          <span className="font-bold text-gray-900">{records.length} Transaksi</span>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/sales"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-xl border border-amber-200 transition shadow-2xs"
+          >
+            <Truck className="w-3.5 h-3.5 text-amber-700" />
+            <span>Buku Penjualan & DO (木材销售) →</span>
+          </Link>
+          <div className="flex items-center gap-2 text-xs font-mono bg-white px-3 py-1.5 rounded-xl border border-gray-200/80 shadow-2xs">
+            <span className="text-gray-500">Total Baris:</span>
+            <span className="font-bold text-gray-900">{records.length} Transaksi</span>
+          </div>
         </div>
       </div>
 
