@@ -120,21 +120,21 @@
   - High-contrast outdoor header with offline/online indicator.
   - Manifest construction and direct saving to IndexedDB / API sync.
 
-- [ ] **Step 1: Write failing integration test in `test/tally-page.test.ts`**
+- [x] **Step 1: Write failing integration test in `test/tally-page.test.ts`**
   Asserts that:
   - `app/tally/page.tsx` exists and imports required subcomponents.
   - Adheres to `< 250 LOC` Strangler invariant.
   - Enforces `canWrite` (Level 1 / Owner) check for the commit button.
   - Form validation requires truck plate number, supplier, wood species, and storage yard.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/tally-page.test.ts`
-- [ ] **Step 3: Implement `app/tally/page.tsx`**
+- [x] **Step 3: Implement `app/tally/page.tsx`**
   Build the streamlined mobile field workstation with sticky action footer and direct manifest saving.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/tally-page.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l app/tally/page.tsx` (< 200 LOC) && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add app/tally/page.tsx test/tally-page.test.ts && git commit -m "feat(tally): implement dedicated mobile tally workstation page"`
 
 ---
