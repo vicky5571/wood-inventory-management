@@ -152,22 +152,22 @@
   - `RecordTableMobileView.tsx` (< 180 LOC): renders incoming trucks as touch-friendly cards with plate, supplier, yard/kavling pills, delivered vs tally volume, payment badge, and action triggers (Edit, Delete, Cetak).
   - Upgraded `RecordTable.tsx` (< 220 LOC): adds mobile view mode toggle (`'excel' | 'compact' | 'mobile'`) and renders a prominent quick-action banner: `"📱 Mode Tally Lapangan (打开检尺工作台)"` linking to `/tally`.
 
-- [ ] **Step 1: Write failing component test in `test/record-table-mobile.test.ts`**
+- [x] **Step 1: Write failing component test in `test/record-table-mobile.test.ts`**
   Asserts that:
   - `RecordTableMobileView.tsx` renders record cards with correct data attributes.
   - Edit and Delete actions are hidden or disabled when `canWrite = false`.
   - `RecordTable.tsx` supports `'mobile'` view mode.
   - `RecordTable.tsx` contains the shortcut banner linking to `/tally`.
   - Both files satisfy `< 250 LOC` ceiling.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/record-table-mobile.test.ts`
-- [ ] **Step 3: Implement `RecordTableMobileView.tsx` and integrate into `RecordTable.tsx`**
+- [x] **Step 3: Implement `RecordTableMobileView.tsx` and integrate into `RecordTable.tsx`**
   Build mobile card component and wire view switcher into `RecordTable.tsx`.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/record-table-mobile.test.ts test/record-table.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/components/ledger/RecordTableMobileView.tsx src/components/ledger/RecordTable.tsx` && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/components/ledger/RecordTableMobileView.tsx src/components/ledger/RecordTable.tsx test/record-table-mobile.test.ts && git commit -m "feat(ledger): add RecordTableMobileView and mobile tally shortcut banner"`
 
 ---

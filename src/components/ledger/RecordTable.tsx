@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import type { WoodReceivingRecord } from '@/src/types';
-import { SearchX, RotateCcw, FileSpreadsheet, LayoutList, Printer } from 'lucide-react';
+import { SearchX, RotateCcw, FileSpreadsheet, LayoutList, Smartphone, ArrowRight } from 'lucide-react';
 import { RecordTableCompactView, type SortField, type SortDirection } from './RecordTableCompactView';
 import { RecordTableExcelView } from './RecordTableExcelView';
+import { RecordTableMobileView } from './RecordTableMobileView';
 import { RecordTablePagination } from './RecordTablePagination';
-
-// Subcomponents provide print action trigger: title="Cetak Tanda Terima (打印进厂单)" invoking onPrint?.(r) with <Printer />
 
 export function RecordTable({
   records,
@@ -26,15 +26,13 @@ export function RecordTable({
   onPrint?: (record: WoodReceivingRecord) => void;
   onResetFilters?: () => void;
 }) {
-  const [viewMode, setViewMode] = useState<'compact' | 'excel'>('excel');
+  const [viewMode, setViewMode] = useState<'compact' | 'excel' | 'mobile'>('excel');
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(50);
 
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [records, searchQuery]);
+  React.useEffect(() => { setCurrentPage(1); }, [records, searchQuery]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -72,12 +70,8 @@ export function RecordTable({
           <SearchX className="w-6 h-6" />
         </div>
         <div className="max-w-md">
-          <h4 className="text-sm font-bold text-gray-900 mb-1">
-            Tidak Ada Data Ditemukan (未找到相关记录)
-          </h4>
-          <p className="text-xs text-gray-500">
-            Tidak ada catatan penerimaan kayu yang cocok dengan kriteria filter atau kata kunci saat ini.
-          </p>
+          <h4 className="text-sm font-bold text-gray-900 mb-1">Tidak Ada Data Ditemukan (未找到相关记录)</h4>
+          <p className="text-xs text-gray-500">Tidak ada catatan penerimaan kayu yang cocok dengan kriteria filter saat ini.</p>
         </div>
         {onResetFilters && (
           <button
@@ -95,15 +89,26 @@ export function RecordTable({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden flex flex-col">
+      {/* Quick Action Banner for Mobile Tally Workstation */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-transparent border-b border-amber-300/40 px-4 py-2 flex items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-gray-900 font-bold">
+          <span className="p-1 rounded bg-[#ffc908] text-[#101828]">📱</span>
+          <span>Mode Tally Lapangan (现场检尺): Catat ukuran kayu langsung di bak truk.</span>
+        </div>
+        <Link
+          href="/tally"
+          className="px-3 py-1 bg-[#101828] hover:bg-gray-800 text-white rounded-lg font-bold text-[11px] shrink-0 transition flex items-center gap-1 shadow-2xs"
+        >
+          <span>Buka Tally (打开检尺台)</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       {/* Top Table Mode Switcher Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-gray-50/70 border-b border-gray-200/80">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-            Format Tampilan (视图格式):
-          </span>
-          <span className="text-[11px] text-gray-400 font-mono">
-            {records.length} Baris Data
-          </span>
+          <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">Format Tampilan (视图格式):</span>
+          <span className="text-[11px] text-gray-400 font-mono">{records.length} Baris Data</span>
         </div>
 
         {/* View Switcher Segmented Control */}
@@ -112,9 +117,7 @@ export function RecordTable({
             type="button"
             onClick={() => setViewMode('excel')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              viewMode === 'excel'
-                ? 'bg-white text-[#101828] shadow-xs'
-                : 'text-gray-600 hover:text-gray-900'
+              viewMode === 'excel' ? 'bg-white text-[#101828] shadow-xs' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             <FileSpreadsheet className={`w-3.5 h-3.5 ${viewMode === 'excel' ? 'text-amber-600' : 'text-gray-400'}`} />
@@ -124,13 +127,21 @@ export function RecordTable({
             type="button"
             onClick={() => setViewMode('compact')}
             className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              viewMode === 'compact'
-                ? 'bg-white text-[#101828] shadow-xs'
-                : 'text-gray-600 hover:text-gray-900'
+              viewMode === 'compact' ? 'bg-white text-[#101828] shadow-xs' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             <LayoutList className={`w-3.5 h-3.5 ${viewMode === 'compact' ? 'text-amber-600' : 'text-gray-400'}`} />
             <span>Ringkas (简略视图)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('mobile')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              viewMode === 'mobile' ? 'bg-white text-[#101828] shadow-xs' : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Smartphone className={`w-3.5 h-3.5 ${viewMode === 'mobile' ? 'text-amber-600' : 'text-gray-400'}`} />
+            <span>Kartu (卡片)</span>
           </button>
         </div>
       </div>
@@ -148,7 +159,7 @@ export function RecordTable({
           onDelete={onDelete}
           onPrint={onPrint}
         />
-      ) : (
+      ) : viewMode === 'compact' ? (
         <RecordTableCompactView
           records={displayedRecords}
           canWrite={canWrite}
@@ -156,6 +167,14 @@ export function RecordTable({
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onPrint={onPrint}
+        />
+      ) : (
+        <RecordTableMobileView
+          records={displayedRecords}
+          canWrite={canWrite}
           onEdit={onEdit}
           onDelete={onDelete}
           onPrint={onPrint}
