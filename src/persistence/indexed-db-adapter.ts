@@ -12,6 +12,7 @@ const DEFAULT_STORE_NAME = 'keyval';
 const DB_VERSION = 1;
 
 const DEFAULT_MIGRATION_KEYS = [
+  'wood_receiving_records_next_v1',
   'wood_receiving_records_v1',
   'wood_suppliers_v1',
   'wood_storage_locations_v1',
@@ -24,6 +25,7 @@ export class IndexedDbAdapter implements StorageAdapter {
   private storeName: string;
   private fallback: MemoryStorageAdapter;
   private dbPromise: Promise<IDBDatabase> | null = null;
+  private hasMigrated = false;
 
   constructor(dbName: string = DEFAULT_DB_NAME, storeName: string = DEFAULT_STORE_NAME) {
     this.dbName = dbName;
@@ -51,6 +53,10 @@ export class IndexedDbAdapter implements StorageAdapter {
           const db = request.result;
           db.onclose = () => { this.dbPromise = null; };
           db.onversionchange = () => { db.close(); this.dbPromise = null; };
+          if (!this.hasMigrated) {
+            this.hasMigrated = true;
+            this.migrateFromLocalStorage().catch(() => {});
+          }
           resolve(db);
         };
         request.onerror = () => {
@@ -76,7 +82,23 @@ export class IndexedDbAdapter implements StorageAdapter {
       const tx = db.transaction(this.storeName, mode);
       const store = tx.objectStore(this.storeName);
       const req = action(store);
-      req.onsuccess = () => resolve();
+
+      let resolved = false;
+      const done = () => {
+        if (!resolved) {
+          resolved = true;
+          resolve();
+        }
+      };
+
+      if ('oncomplete' in tx) {
+        tx.oncomplete = () => done();
+      }
+      req.onsuccess = () => {
+        if (!('oncomplete' in tx) || !tx.oncomplete) {
+          done();
+        }
+      };
       req.onerror = () => reject(req.error);
       tx.onerror = () => reject(tx.error);
       tx.onabort = () => reject(tx.error);

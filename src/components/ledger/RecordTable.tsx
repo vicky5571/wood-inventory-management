@@ -59,7 +59,9 @@ export function RecordTable({
 
   const displayedRecords = React.useMemo(() => {
     if (pageSize === -1) return sortedRecords;
-    const start = (currentPage - 1) * pageSize;
+    const totalPages = Math.max(1, Math.ceil(sortedRecords.length / pageSize));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+    const start = (safePage - 1) * pageSize;
     return sortedRecords.slice(start, start + pageSize);
   }, [sortedRecords, currentPage, pageSize]);
 
