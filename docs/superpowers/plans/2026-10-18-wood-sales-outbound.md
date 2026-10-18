@@ -42,21 +42,21 @@
   - `validateSalesStockAllowance(balance: LotStockBalance, requestedVolumeM3: number, requestedPieces: number): { isAllowed: boolean; warning?: string }`
   - `calculateSalesFinancials(volumeM3: number, pricePerM3: number): { totalPrice: number }`
 
-- [ ] **Step 1: Write failing unit test in `test/stock-balance.test.ts`**
+- [x] **Step 1: Write failing unit test in `test/stock-balance.test.ts`**
   Asserts that:
   - `calculateLotStockBalance` computes $V_{\text{in}} - V_{\text{out}}$ and $B_{\text{in}} - B_{\text{out}}$ accurately for a specific yard and kavling.
   - Handles cases where kavling has zero sales or zero inbound records without `NaN` or negative results.
   - `validateSalesStockAllowance` permits sales within remaining stock and returns descriptive warning when overdrawn.
   - `calculateSalesFinancials` computes accurate rounded gross sales revenue.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/stock-balance.test.ts`
-- [ ] **Step 3: Define types in `src/types/index.ts` and implement `src/utils/stock-balance.ts`**
+- [x] **Step 3: Define types in `src/types/index.ts` and implement `src/utils/stock-balance.ts`**
   Implement pure calculation engine with zero side effects. Keep `src/utils/stock-balance.ts` < 150 LOC.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/stock-balance.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/utils/stock-balance.ts` (< 150 LOC) && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/types/index.ts src/utils/stock-balance.ts test/stock-balance.test.ts && git commit -m "feat(sales): add sales SSOT domain types and stock balance calculation engine"`
 
 ---
@@ -228,3 +228,4 @@
   Perform diff inspection across all commits and confirm global constraints.
 - [ ] **Step 4: Finalize and commit**
   `git commit --allow-empty -m "chore(release): complete Phase 7 Wood Sales and Outbound Stock Ledger"`
+

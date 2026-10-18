@@ -679,3 +679,63 @@ export interface PrintReceivingSlipModalProps {
   onClose: () => void;
 }
 
+/**
+ * Operational Work Item: Wood Sales & Outbound Shipment Record.
+ * Represents timber leaving the log yard / mill to a customer.
+ */
+export interface WoodSalesRecord {
+  id: string;                     // e.g. SLS-1734567890
+  saleDate: string;               // YYYY-MM-DD
+  deliveryOrderNumber: string;    // No. Surat Jalan Keluar / DO
+  truckPlateNumber: string;       // No. Plat Truk
+  driverName?: string;            // Nama Sopir
+  customerName: string;           // Nama Pembeli (freeform)
+  storageYard: string;            // TPK sumber (e.g. TPK-Timur)
+  kavlingNumber: string;          // Kavling sumber (e.g. KAV-01)
+  woodSpecies: string;            // Jenis Kayu (e.g. Meranti)
+  pieces: number;                 // Batang terjual
+  volumeM3: number;               // Volume terjual (m³)
+  pricePerM3: number;             // Harga jual per m³ (IDR)
+  totalPrice: number;             // Total nilai jual (pricePerM3 * volumeM3)
+  paymentStatus: PaymentStatus;   // UNPAID | PARTIAL | PAID
+  invoiceNumber?: string;         // No. Faktur Penjualan jika ada
+  notes?: string;                 // Keterangan tambahan
+  createdAt: string;              // ISO timestamp
+  updatedAt: string;              // ISO timestamp
+}
+
+/**
+ * Payload input for creating or updating a sales record.
+ */
+export interface SalesFormInput {
+  id?: string;
+  saleDate: string;
+  deliveryOrderNumber: string;
+  truckPlateNumber: string;
+  driverName?: string;
+  customerName: string;
+  storageYard: string;
+  kavlingNumber: string;
+  woodSpecies: string;
+  pieces: number;
+  volumeM3: number;
+  pricePerM3: number;
+  paymentStatus?: PaymentStatus;
+  invoiceNumber?: string;
+  notes?: string;
+}
+
+/**
+ * Net stock balance available inside a specific storage yard and kavling lot.
+ */
+export interface LotStockBalance {
+  storageYard: string;
+  kavlingNumber: string;
+  inboundPieces: number;
+  inboundVolumeM3: number;
+  outboundPieces: number;
+  outboundVolumeM3: number;
+  remainingPieces: number;
+  remainingVolumeM3: number;
+}
+
