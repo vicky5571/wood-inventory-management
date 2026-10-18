@@ -163,80 +163,26 @@ export function classifyDiscrepancy(diff: number, tolerance: number = 0.001): Di
 }
 
 /**
- * Computes pure domain calculations and financial aggregations for multi-item receiving manifests.
- * Handles per-line timber totals, aggregate delivered/tally volumes, volumetric discrepancies,
- * truck freight on total tally volume, and grand net payable.
+ * Calculates cubic meters for round logs (kayu bulat) using standard cylindrical formula:
+ * Volume (m³) = 0.7854 * (diameterCm)^2 * (lengthM) / 10,000 * pieces
+ *
+ * @param diameterCm - Average log diameter in centimeters
+ * @param lengthM - Log length in meters
+ * @param pieces - Quantity of logs (defaults to 1)
  */
-export function computeManifestCalculations(manifest: ManifestFormInput): ManifestCalculationOutput {
-  let totalDeliveredPieces = 0, totalDeliveredVolumeM3 = 0;
-  let totalTallyPieces = 0, totalTallyVolumeM3 = 0;
-  let totalTimberGross = 0, totalTimberPph = 0, totalTimberNet = 0;
-
-  const items = (manifest.items || []).map((item) => {
-    const deliveredPieces = Math.max(0, Number(item.deliveredPieces) || 0);
-    const deliveredVolumeM3 = Math.max(0, Number(item.deliveredVolumeM3) || 0);
-    const tallyPieces = Math.max(0, Number(item.tallyPieces) || 0);
-    const tallyVolumeM3 = Math.max(0, Number(item.tallyVolumeM3) || 0);
-    const timberPricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0);
-    const timberPphRate = Math.max(0, Number(item.timberPphRate) || 0);
-
-    const pieceDiscrepancy = tallyPieces - deliveredPieces;
-    const volumeDiscrepancyM3 = Number((tallyVolumeM3 - deliveredVolumeM3).toFixed(4));
-    const timberGrossTotal = Math.round(tallyVolumeM3 * timberPricePerM3);
-    const timberPphAmount = Math.round(timberGrossTotal * (timberPphRate / 100));
-    const timberNetPayable = timberGrossTotal - timberPphAmount;
-
-    totalDeliveredPieces += deliveredPieces;
-    totalDeliveredVolumeM3 += deliveredVolumeM3;
-    totalTallyPieces += tallyPieces;
-    totalTallyVolumeM3 += tallyVolumeM3;
-    totalTimberGross += timberGrossTotal;
-    totalTimberPph += timberPphAmount;
-    totalTimberNet += timberNetPayable;
-
-    return {
-      ...item,
-      deliveredPieces,
-      deliveredVolumeM3,
-      tallyPieces,
-      tallyVolumeM3,
-      timberPricePerM3,
-      timberPphRate,
-      timberGrossTotal,
-      timberPphAmount,
-      timberNetPayable,
-      volumeDiscrepancyM3,
-      pieceDiscrepancy,
-    };
-  });
-
-  totalDeliveredVolumeM3 = Number(totalDeliveredVolumeM3.toFixed(4));
-  totalTallyVolumeM3 = Number(totalTallyVolumeM3.toFixed(4));
-  const volumeDiscrepancyM3 = Number((totalTallyVolumeM3 - totalDeliveredVolumeM3).toFixed(4));
-  const pieceDiscrepancy = totalTallyPieces - totalDeliveredPieces;
-
-  const freightRatePerM3 = Math.max(0, Number(manifest.freightRatePerM3) || 0);
-  const freightGrossTotal = Math.round(totalTallyVolumeM3 * freightRatePerM3);
-  const freightPphAmount = Math.round(freightGrossTotal * 0.02);
-  const freightNetPayable = freightGrossTotal - freightPphAmount;
-  const brokerFee = Math.max(0, Number(manifest.brokerFee) || 0);
-  const grandNetPayable = totalTimberNet + freightNetPayable + brokerFee;
-
-  return {
-    totalDeliveredPieces,
-    totalDeliveredVolumeM3,
-    totalTallyPieces,
-    totalTallyVolumeM3,
-    volumeDiscrepancyM3,
-    pieceDiscrepancy,
-    totalTimberGross,
-    totalTimberPph,
-    totalTimberNet,
-    freightGrossTotal,
-    freightPphAmount,
-    freightNetPayable,
-    brokerFee,
-    grandNetPayable,
-    items,
-  };
+export function calculateRoundLogVolumeM3(
+  diameterCm: number,
+  lengthM: number,
+  pieces: number = 1
+): number {
+  if (diameterCm < 0 || lengthM < 0 || pieces < 0) {
+    throw new RangeError('Dimensions and pieces must be non-negative values');
+  }
+  if (diameterCm === 0 || lengthM === 0 || pieces === 0) {
+    return 0;
+  }
+  const rawVolume = (0.7854 * Math.pow(diameterCm, 2) * lengthM * pieces) / 10000;
+  return Number(rawVolume.toFixed(4));
 }
+
+export { computeManifestCalculations } from './manifest-calc.ts';

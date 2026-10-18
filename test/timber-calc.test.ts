@@ -5,6 +5,7 @@ import {
   calculateFreightPayment,
   computeRecordCalculations,
   aggregateDashboardMetrics,
+  calculateRoundLogVolumeM3,
 } from '../src/utils/timber-calc.ts';
 import type {
   WoodReceivingRecord,
@@ -344,6 +345,30 @@ test('Relational Domain Type Invariants Suite', async (t) => {
     assert.strictEqual(manifestWithItems.items[0].storageYard, 'TPK-01');
     assert.strictEqual(manifestWithItems.paymentStatus, 'UNPAID');
     assert.strictEqual(manifestWithItems.items.length, 1);
+  });
+
+  await t.test('calculateRoundLogVolumeM3 computes accurate cubic volume for round logs', () => {
+    // D=40cm, L=4m, 1 pc => 0.7854 * 1600 * 4 * 1 / 10000 = 0.5027 m³
+    const vol1 = calculateRoundLogVolumeM3(40, 4, 1);
+    assert.strictEqual(vol1, 0.5027);
+
+    // D=30cm, L=3m, 5 pcs => 0.7854 * 900 * 3 * 5 / 10000 = 1.0603 m³
+    const vol2 = calculateRoundLogVolumeM3(30, 3, 5);
+    assert.strictEqual(vol2, 1.0603);
+
+    // Default pieces = 1
+    const volDefault = calculateRoundLogVolumeM3(40, 4);
+    assert.strictEqual(volDefault, 0.5027);
+
+    // Zero dimensions or pieces returns 0
+    assert.strictEqual(calculateRoundLogVolumeM3(0, 4, 1), 0);
+    assert.strictEqual(calculateRoundLogVolumeM3(40, 0, 1), 0);
+    assert.strictEqual(calculateRoundLogVolumeM3(40, 4, 0), 0);
+
+    // Negative dimensions throw RangeError
+    assert.throws(() => calculateRoundLogVolumeM3(-10, 4, 1), RangeError);
+    assert.throws(() => calculateRoundLogVolumeM3(40, -2, 1), RangeError);
+    assert.throws(() => calculateRoundLogVolumeM3(40, 4, -1), RangeError);
   });
 });
 
