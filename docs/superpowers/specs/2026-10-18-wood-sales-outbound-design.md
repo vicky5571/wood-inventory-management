@@ -251,3 +251,4 @@ app/
    - 100% test pass rate with 0 failures (`npm test`).
    - 0 TypeScript compiler errors (`npx tsc --noEmit`).
    - 0 Next.js build errors across all 15 routes (`npm run build:check`).
+

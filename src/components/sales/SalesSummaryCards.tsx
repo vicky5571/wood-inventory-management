@@ -79,3 +79,4 @@ export function SalesSummaryCards({ sales }: SalesSummaryCardsProps) {
     </div>
   );
 }
+

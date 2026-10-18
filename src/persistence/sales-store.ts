@@ -77,3 +77,4 @@ class SalesStore {
 }
 
 export const salesStore = new SalesStore();
+

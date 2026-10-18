@@ -112,21 +112,21 @@
     - `getLotBalance: (yard: string, kavling: string) => LotStockBalance`
     - `customerHistory: string[]` (unique customer names for datalist / auto-suggest)
 
-- [ ] **Step 1: Write failing hook test in `test/use-wood-sales-records.test.ts`**
+- [x] **Step 1: Write failing hook test in `test/use-wood-sales-records.test.ts`**
   Asserts that:
   - Initializes with local storage / IndexedDB cache and syncs with `/api/sales`.
   - `saveSale` computes total price, updates state immediately, persists to storage, and dispatches background sync.
   - `getLotBalance` correctly computes remaining lot stock using current inbound and sales records.
   - Extracts unique `customerHistory` for convenient autofill.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/use-wood-sales-records.test.ts`
-- [ ] **Step 3: Implement `src/hooks/useWoodSalesRecords.ts`**
+- [x] **Step 3: Implement `src/hooks/useWoodSalesRecords.ts`**
   Build hook respecting offline-first resilience and concurrency ref guards. Keep < 200 LOC.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/use-wood-sales-records.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/hooks/useWoodSalesRecords.ts` (< 200 LOC) && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/hooks/useWoodSalesRecords.ts test/use-wood-sales-records.test.ts && git commit -m "feat(sales): implement useWoodSalesRecords offline-first hook"`
 
 ---
@@ -160,7 +160,7 @@
   }
   ```
 
-- [ ] **Step 1: Write failing component tests in `test/sales-components.test.ts`**
+- [x] **Step 1: Write failing component tests in `test/sales-components.test.ts`**
   Asserts that:
   - `SalesModal.tsx` contains freeform customer input with `<datalist>` auto-suggest.
   - Integrates `YardSelect` and `KavlingSelect`.
@@ -168,15 +168,15 @@
   - Displays warning message when requested volume exceeds remaining stock.
   - `PrintDeliveryOrderModal.tsx` formats bilingual delivery order with `@media print` styles.
   - Both files satisfy `< 220 LOC` and `< 180 LOC` constraints.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/sales-components.test.ts`
-- [ ] **Step 3: Implement `SalesModal.tsx` and `PrintDeliveryOrderModal.tsx`**
+- [x] **Step 3: Implement `SalesModal.tsx` and `PrintDeliveryOrderModal.tsx`**
   Build accessible, touch-friendly modals with Tailwind CSS and Lucide icons.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/sales-components.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/components/sales/SalesModal.tsx src/components/sales/PrintDeliveryOrderModal.tsx` && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/components/sales/ test/sales-components.test.ts && git commit -m "feat(sales): create SalesModal with live stock gauge and PrintDeliveryOrderModal"`
 
 ---
@@ -196,21 +196,21 @@
   - `SalesTable.tsx` (< 220 LOC): Desktop & touch-friendly card presentation with Cetak DO, Edit, Delete triggers.
   - `app/sales/page.tsx` (< 220 LOC): Full Outbound Sales Workstation page with search and filter toolbar.
 
-- [ ] **Step 1: Write failing page integration test in `test/sales-page.test.ts`**
+- [x] **Step 1: Write failing page integration test in `test/sales-page.test.ts`**
   Asserts that:
   - `app/sales/page.tsx` exists and satisfies `< 220 LOC` ceiling.
   - Wires `useWoodSalesRecords`, `useWoodRecords`, and `useAuth`.
   - Contains summary cards and sales table.
   - Enforces `canWrite` Level 1 guard for sales creation.
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
   `node --test test/sales-page.test.ts`
-- [ ] **Step 3: Implement `SalesSummaryCards.tsx`, `SalesTable.tsx`, and `app/sales/page.tsx`**
+- [x] **Step 3: Implement `SalesSummaryCards.tsx`, `SalesTable.tsx`, and `app/sales/page.tsx`**
   Build clean sales ledger interface and link seamlessly in header navigation.
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
   `node --test test/sales-page.test.ts`
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
   `wc -l src/components/sales/SalesSummaryCards.tsx src/components/sales/SalesTable.tsx app/sales/page.tsx` && `npx tsc --noEmit`
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   `git add src/components/sales/ app/sales/ app/ledger/page.tsx test/sales-page.test.ts && git commit -m "feat(sales): implement dedicated sales ledger route and table"`
 
 ---
@@ -220,12 +220,13 @@
 **Files:**
 - All touched files
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
   `npm test` (verify 430+ passing tests with 0 failures)
-- [ ] **Step 2: Run Next.js production build**
+- [x] **Step 2: Run Next.js production build**
   `npm run build:check` (verify 0 TypeScript, lint, or static generation errors across all 15 routes)
-- [ ] **Step 3: Whole-plan code review**
+- [x] **Step 3: Whole-plan code review**
   Perform diff inspection across all commits and confirm global constraints.
-- [ ] **Step 4: Finalize and commit**
+- [x] **Step 4: Finalize and commit**
   `git commit --allow-empty -m "chore(release): complete Phase 7 Wood Sales and Outbound Stock Ledger"`
+
 

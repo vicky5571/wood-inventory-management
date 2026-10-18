@@ -69,3 +69,4 @@ test('Sales Subsystem Page & Presentation Suite', async (t) => {
     assert.match(content, /\/sales/, 'app/ledger/page.tsx must provide a link to /sales route');
   });
 });
+

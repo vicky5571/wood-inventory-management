@@ -94,3 +94,4 @@ test('Sales Subsystem UI Components Suite', async (t) => {
     assert.match(content, /window\.print\(\)/, 'Must provide print trigger');
   });
 });
+

@@ -135,3 +135,4 @@ export function SalesTable({ sales, onPrint, onEdit, onDelete, canWrite }: Sales
     </div>
   );
 }
+

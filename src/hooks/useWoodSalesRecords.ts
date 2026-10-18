@@ -162,3 +162,4 @@ export function useWoodSalesRecords(inboundRecords: WoodReceivingRecord[] = []) 
     customerHistory,
   };
 }
+

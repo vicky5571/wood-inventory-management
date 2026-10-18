@@ -103,3 +103,4 @@ export function calculateSalesFinancials(
     totalPrice: Math.round(vol * price),
   };
 }
+
