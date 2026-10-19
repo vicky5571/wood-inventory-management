@@ -2,21 +2,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { useActivityLog } from '@/src/hooks/useActivityLog';
-import { useAuth } from '@/src/hooks/useAuth';
 import { ActivityTimeline } from '@/src/components/activity/ActivityTimeline';
-import type { ActivityActionType } from '@/src/types';
 import {
   History,
-  Trash2,
-  RotateCcw,
-  PlusCircle,
-  Edit3,
+  ShieldCheck,
   Filter,
 } from 'lucide-react';
 
 export default function ActivityPage() {
-  const { logs, clearLogs, resetLogs } = useActivityLog();
-  const { canWrite } = useAuth();
+  const { logs } = useActivityLog();
   const [selectedAction, setSelectedAction] = useState<string>('ALL');
 
   const filteredLogs = useMemo(() => {
@@ -26,17 +20,16 @@ export default function ActivityPage() {
 
   const stats = useMemo(() => {
     const total = logs.length;
-    const created = logs.filter((l) => l.action === 'RECORD_CREATED').length;
-    const updated = logs.filter((l) => l.action === 'RECORD_UPDATED').length;
-    const deleted = logs.filter((l) => l.action === 'RECORD_DELETED').length;
-    return { total, created, updated, deleted };
+    const inbound = logs.filter((l) => l.action === 'RECORD_CREATED').length;
+    const outbound = logs.filter((l) => l.action === 'SALE_CREATED').length;
+    const changes = logs.filter((l) =>
+      l.action === 'RECORD_UPDATED' ||
+      l.action === 'SETTINGS_UPDATED' ||
+      l.action === 'STORAGE_UPDATED' ||
+      l.action === 'SUPPLIER_UPDATED'
+    ).length;
+    return { total, inbound, outbound, changes };
   }, [logs]);
-
-  const handleClear = () => {
-    if (confirm('Apakah Anda yakin ingin menghapus seluruh riwayat log aktivitas? (确定清空审计日志？)')) {
-      clearLogs();
-    }
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,33 +41,16 @@ export default function ActivityPage() {
             <span>Jejak Audit Aktivitas & Transaksi (审计与操作日志)</span>
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Log kronologis setiap penambahan data truk, koreksi hasil tally, dan perubahan pengaturan sistem.
+            Log kronologis immutable server untuk setiap penambahan data truk, penjualan, lokasi, dan konfigurasi sistem.
           </p>
         </div>
 
-        {canWrite && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={resetLogs}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition shadow-2xs cursor-pointer"
-              title="Reset ke log awal"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
-              <span>Reset Log Awal</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleClear}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-xl transition shadow-2xs cursor-pointer"
-              title="Kosongkan riwayat log"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-              <span>Hapus Semua Log</span>
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 rounded-xl shadow-2xs">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Immutable Server Ledger (不可篡改)</span>
+          </span>
+        </div>
       </div>
 
       {/* KPI Stats */}
@@ -90,28 +66,28 @@ export default function ActivityPage() {
 
         <div className="bg-white p-3.5 rounded-2xl border border-gray-200/80 shadow-xs">
           <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-            Penerimaan Baru
+            Penerimaan Masuk
           </span>
           <span className="block text-xl font-bold font-mono text-emerald-700 mt-1">
-            {stats.created} Event
+            {stats.inbound} Event
           </span>
         </div>
 
         <div className="bg-white p-3.5 rounded-2xl border border-gray-200/80 shadow-xs">
           <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-            Pembaruan Data
+            Penjualan Keluar
+          </span>
+          <span className="block text-xl font-bold font-mono text-indigo-700 mt-1">
+            {stats.outbound} DO
+          </span>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-2xl border border-gray-200/80 shadow-xs">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+            Pembaruan & Konfigurasi
           </span>
           <span className="block text-xl font-bold font-mono text-blue-700 mt-1">
-            {stats.updated} Edit
-          </span>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-2xl border border-gray-200/80 shadow-xs">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
-            Penghapusan
-          </span>
-          <span className="block text-xl font-bold font-mono text-rose-700 mt-1">
-            {stats.deleted} Hapus
+            {stats.changes} Edit
           </span>
         </div>
       </div>
@@ -125,9 +101,11 @@ export default function ActivityPage() {
 
         {[
           { id: 'ALL', label: 'Semua (全部)' },
-          { id: 'RECORD_CREATED', label: 'Penerimaan Baru' },
-          { id: 'RECORD_UPDATED', label: 'Pembaruan Data' },
-          { id: 'RECORD_DELETED', label: 'Penghapusan' },
+          { id: 'RECORD_CREATED', label: 'Penerimaan' },
+          { id: 'SALE_CREATED', label: 'Penjualan' },
+          { id: 'SETTINGS_UPDATED', label: 'Pengaturan' },
+          { id: 'RECORD_UPDATED', label: 'Edit Penerimaan' },
+          { id: 'RECORD_DELETED', label: 'Hapus Penerimaan' },
           { id: 'DEMO_RESET', label: 'Reset Data' },
         ].map((tab) => {
           const isSelected = selectedAction === tab.id;

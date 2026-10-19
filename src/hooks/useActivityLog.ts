@@ -50,20 +50,39 @@ export function useActivityLog() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           setLogs(parsed);
           setIsHydrated(true);
-          return;
         }
       }
     } catch (e) {
       console.warn('Failed to parse activity logs:', e);
     }
-    setLogs(INITIAL_LOGS);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_LOGS));
-    } catch {}
-    setIsHydrated(true);
+
+    if (!isHydrated) {
+      setLogs(INITIAL_LOGS);
+      setIsHydrated(true);
+    }
+
+    let isMounted = true;
+    fetch('/api/activity')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted || !json?.success || !Array.isArray(json.data)) return;
+        if (json.data.length > 0) {
+          setLogs(json.data);
+          try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          } catch {}
+        }
+      })
+      .catch((err) => {
+        console.warn('[useActivityLog] Background sync failed, using local cache:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const persist = useCallback((nextLogs: ActivityLogEntry[]) => {
@@ -75,29 +94,40 @@ export function useActivityLog() {
     }
   }, []);
 
-  const addLog = useCallback((params: {
-    action: ActivityActionType;
-    entityId?: string;
-    entitySummary: string;
-    operatorName?: string;
-    operatorRole?: string;
-    metadata?: Record<string, unknown>;
-  }) => {
-    const newEntry = createActivityLog({
-      action: params.action,
-      entityId: params.entityId,
-      entitySummary: params.entitySummary,
-      operatorName: params.operatorName || 'System Operator',
-      operatorRole: params.operatorRole || 'Operator',
-      metadata: params.metadata,
-    });
+  const addLog = useCallback(
+    (params: {
+      action: ActivityActionType;
+      entityId?: string;
+      entitySummary: string;
+      operatorName?: string;
+      operatorRole?: string;
+      metadata?: Record<string, unknown>;
+    }) => {
+      const newEntry = createActivityLog({
+        action: params.action,
+        entityId: params.entityId,
+        entitySummary: params.entitySummary,
+        operatorName: params.operatorName || 'System Operator',
+        operatorRole: params.operatorRole || 'Operator',
+        metadata: params.metadata,
+      });
 
-    setLogs((prev) => {
-      const updated = [newEntry, ...prev];
-      persist(updated);
-      return updated;
-    });
-  }, [persist]);
+      setLogs((prev) => {
+        const updated = [newEntry, ...prev];
+        persist(updated);
+        return updated;
+      });
+
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry),
+      }).catch((err) => {
+        console.warn('[useActivityLog] Failed to append server activity log:', err);
+      });
+    },
+    [persist]
+  );
 
   const clearLogs = useCallback(() => {
     persist([]);

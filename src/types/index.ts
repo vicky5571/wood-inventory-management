@@ -632,7 +632,13 @@ export type ActivityActionType =
   | 'SUPPLIER_CREATED'
   | 'SUPPLIER_UPDATED'
   | 'SUPPLIER_DELETED'
-  | 'SUPPLIER_RESTORED';
+  | 'SUPPLIER_RESTORED'
+  | 'SALE_CREATED'
+  | 'SALE_UPDATED'
+  | 'SALE_DELETED'
+  | 'STORAGE_UPDATED'
+  | 'SPECIES_CREATED'
+  | 'SPECIES_UPDATED';
 
 /**
  * Operational audit log entry item

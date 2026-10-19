@@ -25,15 +25,30 @@ export function useSettings() {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
           setSettings({ ...DEFAULT_SETTINGS, ...parsed });
-          setIsHydrated(true);
-          return;
         }
       }
     } catch (e) {
       console.warn('Failed to parse settings:', e);
     }
-    setSettings(DEFAULT_SETTINGS);
     setIsHydrated(true);
+
+    let isMounted = true;
+    fetch('/api/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted || !json?.success || !json.data) return;
+        setSettings(json.data);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+        } catch {}
+      })
+      .catch((err) => {
+        console.warn('[useSettings] Background sync failed, using local cache:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const saveSettings = useCallback((newSettings: Partial<AppSettings>) => {
@@ -44,6 +59,15 @@ export function useSettings() {
       } catch (e) {
         console.error('Failed to save settings:', e);
       }
+
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      }).catch((err) => {
+        console.warn('[useSettings] Failed to sync settings update to server:', err);
+      });
+
       return updated;
     });
   }, []);
@@ -53,6 +77,14 @@ export function useSettings() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
     } catch {}
+
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DEFAULT_SETTINGS),
+    }).catch((err) => {
+      console.warn('[useSettings] Failed to sync reset settings to server:', err);
+    });
   }, []);
 
   return {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server.js';
 import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
-import { verifySessionToken, COOKIE_NAME } from '../../../src/auth/session.ts';
+import { getAuthenticatedUser } from '../../../src/auth/session.ts';
 import type {
   AuthUser,
   WoodReceivingRecord,
@@ -9,32 +9,9 @@ import type {
   PaymentStatus,
 } from '../../../src/types/index.ts';
 
+import { parseRecordQueryParams } from '../../../src/utils/record-query-params.ts';
+
 export const dynamic = 'force-dynamic';
-
-const PAGINATION_PARAM_KEYS = [
-  'page', 'pageSize', 'searchQuery', 'query', 'species',
-  'kavling', 'yard', 'startDate', 'endDate', 'paymentStatus', 'sortBy', 'sortOrder',
-] as const;
-
-const VALID_SORT_COLUMNS = new Set<string>([
-  'receiptDate', 'truckPlateNumber', 'supplierName',
-  'tallyVolumeM3', 'grandNetPayable', 'createdAt',
-]);
-
-async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
-  const rawHeader = request.headers.get('cookie') || '';
-  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
-  let token = match ? match[1] : undefined;
-  if (!token) {
-    try {
-      const { cookies } = await import('next/headers');
-      token = (await cookies()).get(COOKIE_NAME)?.value;
-    } catch {
-      token = undefined;
-    }
-  }
-  return verifySessionToken(token);
-}
 
 export async function GET(): Promise<NextResponse>;
 export async function GET(request: Request): Promise<NextResponse>;
@@ -42,27 +19,8 @@ export async function GET(request?: Request): Promise<NextResponse> {
   try {
     if (request?.url) {
       const { searchParams } = new URL(request.url, 'http://localhost');
-      const hasPaginationParams = PAGINATION_PARAM_KEYS.some((key) => searchParams.has(key));
-
-      if (hasPaginationParams) {
-        const rawPayment = searchParams.get('paymentStatus')?.trim().toUpperCase();
-        const rawSortBy = searchParams.get('sortBy')?.trim();
-        const rawSortOrder = searchParams.get('sortOrder')?.trim().toUpperCase();
-
-        const params: RecordQueryParams = {
-          page: Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1),
-          pageSize: searchParams.get('pageSize') !== null ? (parseInt(searchParams.get('pageSize')!, 10) || 50) : 50,
-          searchQuery: (searchParams.get('searchQuery') || searchParams.get('query') || '').trim() || undefined,
-          species: searchParams.get('species')?.trim() || undefined,
-          kavling: searchParams.get('kavling')?.trim() || undefined,
-          yard: searchParams.get('yard')?.trim() || undefined,
-          startDate: searchParams.get('startDate')?.trim() || undefined,
-          endDate: searchParams.get('endDate')?.trim() || undefined,
-          paymentStatus: (rawPayment === 'UNPAID' || rawPayment === 'PARTIAL' || rawPayment === 'PAID' || rawPayment === 'ALL') ? (rawPayment as PaymentStatus | 'ALL') : undefined,
-          sortBy: rawSortBy && VALID_SORT_COLUMNS.has(rawSortBy) ? (rawSortBy as RecordQueryParams['sortBy']) : undefined,
-          sortOrder: rawSortOrder === 'ASC' ? 'ASC' : (rawSortOrder === 'DESC' ? 'DESC' : undefined),
-        };
-
+      const params = parseRecordQueryParams(searchParams);
+      if (params) {
         const result = await serverRecordStore.getPaginated(params);
         return NextResponse.json({
           success: true,
@@ -124,6 +82,21 @@ export async function POST(request: Request) {
     }
 
     const raw = body as Record<string, any>;
+
+    if (raw.action === 'reset') {
+      const resetRecords = await serverRecordStore.reset();
+      await serverRecordStore.appendActivityLog({
+        action: 'DEMO_RESET',
+        entitySummary: 'Reset database penerimaan kayu ke data demo awal',
+        operatorName: user.name,
+        operatorRole: user.title || `Level ${user.roleLevel}`,
+      });
+      return NextResponse.json({
+        success: true,
+        data: resetRecords,
+      });
+    }
+
     const manifestInput: ManifestFormInput | null = (raw.manifest && Array.isArray(raw.manifest.items))
       ? (raw.manifest as ManifestFormInput)
       : (Array.isArray(raw.items)
@@ -138,6 +111,13 @@ export async function POST(request: Request) {
         );
       }
       const saved = await serverRecordStore.saveManifest(manifestInput);
+      await serverRecordStore.appendActivityLog({
+        action: 'RECORD_CREATED',
+        entityId: manifestInput.manifestNumber,
+        entitySummary: `Manifest ${manifestInput.manifestNumber} • Plat ${manifestInput.truckPlateNumber}`,
+        operatorName: user.name,
+        operatorRole: user.title || `Level ${user.roleLevel}`,
+      });
       return NextResponse.json({
         success: true,
         data: saved,
@@ -160,6 +140,13 @@ export async function POST(request: Request) {
     }
 
     const saved = await serverRecordStore.save(candidate as WoodReceivingRecord);
+    await serverRecordStore.appendActivityLog({
+      action: 'RECORD_CREATED',
+      entityId: saved.id,
+      entitySummary: `Truk ${saved.truckPlateNumber} • ${saved.woodSpecies} (${saved.tallyVolumeM3} m³)`,
+      operatorName: user.name,
+      operatorRole: user.title || `Level ${user.roleLevel}`,
+    });
 
     return NextResponse.json({
       success: true,
@@ -204,6 +191,13 @@ export async function DELETE(request: Request) {
           { status: 404 }
         );
       }
+      await serverRecordStore.appendActivityLog({
+        action: 'RECORD_DELETED',
+        entityId: manifestId,
+        entitySummary: `Manifest ${manifestId} deleted`,
+        operatorName: user.name,
+        operatorRole: user.title || `Level ${user.roleLevel}`,
+      });
       return NextResponse.json({
         success: true,
         message: 'Manifest deleted successfully',
@@ -224,6 +218,13 @@ export async function DELETE(request: Request) {
         { status: 404 }
       );
     }
+    await serverRecordStore.appendActivityLog({
+      action: 'RECORD_DELETED',
+      entityId: id,
+      entitySummary: `Record ${id} deleted`,
+      operatorName: user.name,
+      operatorRole: user.title || `Level ${user.roleLevel}`,
+    });
 
     return NextResponse.json({
       success: true,

@@ -75,3 +75,19 @@ export function verifySessionToken(token: string | undefined | null): AuthUser |
     return null;
   }
 }
+
+export async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
+  const rawHeader = request.headers.get('cookie') || '';
+  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
+  let token = match ? match[1] : undefined;
+  if (!token) {
+    try {
+      const { cookies } = await import('next/headers');
+      token = (await cookies()).get(COOKIE_NAME)?.value;
+    } catch {
+      token = undefined;
+    }
+  }
+  return verifySessionToken(token);
+}
+

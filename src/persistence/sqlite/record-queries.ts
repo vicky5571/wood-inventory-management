@@ -127,3 +127,47 @@ export function queryPaginatedRecords(
     pagination,
   };
 }
+
+export function deleteRecordFromSqlite(db: DatabaseSync, id: string): boolean {
+  const flatRow = db
+    .prepare('SELECT manifest_id, item_id FROM v_buku_besar_flat WHERE id = ?;')
+    .get(id) as { manifest_id: string; item_id: string } | undefined;
+
+  if (flatRow && id !== flatRow.manifest_id) {
+    db.prepare('DELETE FROM receiving_items WHERE id = ?;').run(flatRow.item_id);
+    const remaining = db
+      .prepare('SELECT COUNT(*) AS c FROM receiving_items WHERE manifest_id = ?;')
+      .get(flatRow.manifest_id) as { c: number } | undefined;
+    if (!remaining || remaining.c === 0) {
+      db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(flatRow.manifest_id);
+    }
+    return true;
+  }
+
+  const result = db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(id);
+  if (Number(result.changes) > 0) {
+    return true;
+  }
+
+  if (id.includes('_')) {
+    const idx = id.lastIndexOf('_');
+    const manifestId = id.slice(0, idx);
+    const itemId = id.slice(idx + 1);
+    const itemRow = db
+      .prepare('SELECT id, manifest_id FROM receiving_items WHERE id = ? AND manifest_id = ?;')
+      .get(itemId, manifestId) as { id: string; manifest_id: string } | undefined;
+    if (itemRow) {
+      db.prepare('DELETE FROM receiving_items WHERE id = ?;').run(itemRow.id);
+      const remaining = db
+        .prepare('SELECT COUNT(*) AS c FROM receiving_items WHERE manifest_id = ?;')
+        .get(itemRow.manifest_id) as { c: number } | undefined;
+      if (!remaining || remaining.c === 0) {
+        db.prepare('DELETE FROM receiving_manifests WHERE id = ?;').run(itemRow.manifest_id);
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+

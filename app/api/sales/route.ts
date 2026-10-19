@@ -7,30 +7,12 @@
 
 import { NextResponse } from 'next/server.js';
 import { salesStore } from '../../../src/persistence/sales-store.ts';
-import { verifySessionToken, COOKIE_NAME } from '../../../src/auth/session.ts';
+import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
+import { getAuthenticatedUser } from '../../../src/auth/session.ts';
 import type { AuthUser, SalesFormInput } from '../../../src/types/index.ts';
 
 export const dynamic = 'force-dynamic';
 
-async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
-  let token: string | undefined;
-
-  const rawHeader = request.headers.get('cookie') || '';
-  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
-  if (match) {
-    token = match[1];
-  } else {
-    try {
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      token = cookieStore.get(COOKIE_NAME)?.value;
-    } catch {
-      token = undefined;
-    }
-  }
-
-  return verifySessionToken(token);
-}
 
 export async function GET() {
   try {
@@ -90,6 +72,15 @@ export async function POST(request: Request) {
     }
 
     const saved = await salesStore.save(payload);
+
+    await serverRecordStore.appendActivityLog({
+      action: 'SALE_CREATED',
+      entityId: saved.id,
+      entitySummary: `${saved.deliveryOrderNumber} • ${saved.customerName} (${saved.volumeM3} m³)`,
+      operatorName: user.name,
+      operatorRole: user.title || `Level ${user.roleLevel}`,
+    });
+
     return NextResponse.json({
       success: true,
       data: saved,
@@ -126,6 +117,15 @@ export async function DELETE(request: Request) {
     }
 
     await salesStore.delete(id);
+
+    await serverRecordStore.appendActivityLog({
+      action: 'SALE_DELETED',
+      entityId: id,
+      entitySummary: `Penjualan ${id} berhasil dihapus`,
+      operatorName: user.name,
+      operatorRole: user.title || `Level ${user.roleLevel}`,
+    });
+
     return NextResponse.json({
       success: true,
       id,

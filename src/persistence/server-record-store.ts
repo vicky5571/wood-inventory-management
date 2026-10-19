@@ -1,17 +1,18 @@
 /**
  * src/persistence/server-record-store.ts
  *
- * Server persistence bridge for wood receiving records.
- * Primary backing engine: native relational SQLite (SqliteRecordStore).
- * Backward-compatible fallback: file-based JSON store (FileRecordStore)
- * when explicit filePath or WOOD_RECORDS_PATH is configured.
+ * Server persistence bridge for wood receiving records, master data, settings, and audit logs.
+ * Primary backing engine: native relational SQLite (SqliteRecordStore) or Supabase (when configured).
+ * Backward-compatible fallback: file-based JSON store (FileRecordStore).
  */
 
 import path from 'node:path';
 import { SqliteRecordStore, sqliteRecordStore } from './sqlite-record-store.ts';
 import { FileRecordStore } from './file-record-store.ts';
-import { isSupabaseConfigured, supabaseFetch } from './supabase/supabase-client.ts';
+import { isSupabaseConfigured } from './supabase/supabase-client.ts';
 import { SupabaseRecordStore } from './supabase/supabase-record-store.ts';
+import { paginateInMemoryRecords } from './in-memory-pagination.ts';
+import { ServerMasterDataBridge } from './server-master-data-bridge.ts';
 import type {
   WoodReceivingRecord,
   RecordQueryParams,
@@ -21,106 +22,56 @@ import type {
   StorageLot,
   StorageLotStatus,
   StorageLotWithYard,
+  Supplier,
+  WoodSpecies,
+  AppSettings,
+  ActivityLogEntry,
 } from '../types/index.ts';
-import { loadStorageLocations, addYard, addLot } from '../utils/storage-locations.ts';
-
-const ALLOWED_SORT_COLUMNS = new Set<string>([
-  'receiptDate',
-  'truckPlateNumber',
-  'supplierName',
-  'tallyVolumeM3',
-  'grandNetPayable',
-  'createdAt',
-]);
-
-function paginateInMemoryRecords(
-  records: WoodReceivingRecord[],
-  params: RecordQueryParams = {}
-): PaginatedResult<WoodReceivingRecord> {
-  const page = Math.max(1, Number(params.page) || 1);
-  const rawPageSize = params.pageSize !== undefined ? Number(params.pageSize) : 50;
-  const pageSize = rawPageSize === -1 ? -1 : Math.max(1, rawPageSize || 50);
-
-  const filtered = records.filter((r) => {
-    if (params.species && r.woodSpecies !== params.species) return false;
-    if (params.kavling && r.kavlingNumber !== params.kavling) return false;
-    if (params.yard && r.storageYard !== params.yard) return false;
-    if (params.startDate && r.receiptDate < params.startDate) return false;
-    if (params.endDate && r.receiptDate > params.endDate) return false;
-    if (params.paymentStatus && params.paymentStatus !== 'ALL') {
-      const status = r.paymentStatus || 'UNPAID';
-      if (params.paymentStatus !== status) return false;
-    }
-    if (params.searchQuery && params.searchQuery.trim().length > 0) {
-      const q = params.searchQuery.trim().toLowerCase();
-      const match =
-        Boolean(r.truckPlateNumber?.toLowerCase().includes(q)) ||
-        Boolean(r.forestryDocNumber?.toLowerCase().includes(q)) ||
-        Boolean(r.receiptNumber?.toLowerCase().includes(q)) ||
-        Boolean(r.contractNumber?.toLowerCase().includes(q)) ||
-        Boolean(r.supplierName?.toLowerCase().includes(q)) ||
-        Boolean(r.invoiceNumber?.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-    return true;
-  });
-
-  const validSortBy = params.sortBy && ALLOWED_SORT_COLUMNS.has(params.sortBy)
-    ? params.sortBy
-    : 'receiptDate';
-  const sortMultiplier = params.sortOrder === 'ASC' ? 1 : -1;
-
-  filtered.sort((a, b) => {
-    const valA = (a as unknown as Record<string, unknown>)[validSortBy] ?? '';
-    const valB = (b as unknown as Record<string, unknown>)[validSortBy] ?? '';
-    if (valA < valB) return -1 * sortMultiplier;
-    if (valA > valB) return 1 * sortMultiplier;
-    return a.id < b.id ? -1 : 1;
-  });
-
-  const totalRecords = filtered.length;
-  const totalPages = totalRecords === 0
-    ? 0
-    : pageSize > 0
-    ? Math.ceil(totalRecords / pageSize)
-    : 1;
-  const hasNextPage = page < totalPages;
-  const hasPreviousPage = page > 1 && totalPages > 0;
-
-  const data = pageSize > 0
-    ? filtered.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)
-    : filtered;
-
-  return {
-    data,
-    pagination: {
-      page,
-      pageSize,
-      totalRecords,
-      totalPages,
-      hasNextPage,
-      hasPreviousPage,
-    },
-  };
-}
 
 export class ServerRecordStore {
-  private explicitFilePath: string | null = null;
-  private explicitSqliteStore: SqliteRecordStore | null = null;
   private fileStore: FileRecordStore | null = null;
+  private sqliteStore: SqliteRecordStore | null = null;
   private supabaseStore: SupabaseRecordStore | null = null;
+  private explicitFilePath?: string;
+  private masterDataBridge: ServerMasterDataBridge;
 
   constructor(filePathOrStore?: string | SqliteRecordStore) {
-    if (filePathOrStore instanceof SqliteRecordStore) {
-      this.explicitSqliteStore = filePathOrStore;
-    } else if (typeof filePathOrStore === 'string') {
-      this.explicitFilePath = path.resolve(process.cwd(), filePathOrStore);
+    if (typeof filePathOrStore === 'string') {
+      this.explicitFilePath = filePathOrStore;
+    } else if (filePathOrStore instanceof SqliteRecordStore) {
+      this.sqliteStore = filePathOrStore;
     }
+    this.masterDataBridge = new ServerMasterDataBridge(
+      () => this.isSupabaseMode(),
+      () => this.isFileMode(),
+      () => this.getSqliteStore()
+    );
   }
 
   private isSupabaseMode(): boolean {
-    if (this.explicitFilePath || this.explicitSqliteStore) return false;
-    return isSupabaseConfigured();
+    return !this.isFileMode() && isSupabaseConfigured();
+  }
+
+  private isFileMode(): boolean {
+    if (this.sqliteStore) return false;
+    if (this.explicitFilePath) return true;
+    const envPath = process.env.WOOD_RECORDS_PATH;
+    return Boolean(envPath && envPath.trim() !== '');
+  }
+
+  private getFileStore(): FileRecordStore {
+    if (!this.fileStore) {
+      const targetPath = this.explicitFilePath || process.env.WOOD_RECORDS_PATH || path.resolve(process.cwd(), 'data/wood-records.json');
+      this.fileStore = new FileRecordStore(targetPath);
+    }
+    return this.fileStore;
+  }
+
+  private getSqliteStore(): SqliteRecordStore {
+    if (!this.sqliteStore) {
+      this.sqliteStore = this.explicitFilePath ? new SqliteRecordStore(this.explicitFilePath) : sqliteRecordStore;
+    }
+    return this.sqliteStore;
   }
 
   private getSupabaseStore(): SupabaseRecordStore {
@@ -128,29 +79,6 @@ export class ServerRecordStore {
       this.supabaseStore = new SupabaseRecordStore();
     }
     return this.supabaseStore;
-  }
-
-  private isFileMode(): boolean {
-    if (this.explicitFilePath) return true;
-    if (this.explicitSqliteStore) return false;
-    return Boolean(process.env.WOOD_RECORDS_PATH);
-  }
-
-  private getEffectiveFilePath(): string {
-    if (this.explicitFilePath) return this.explicitFilePath;
-    if (process.env.WOOD_RECORDS_PATH) return path.resolve(process.env.WOOD_RECORDS_PATH);
-    return path.resolve(path.join(process.cwd(), 'data', 'wood_records.json'));
-  }
-
-  private getFileStore(): FileRecordStore {
-    if (!this.fileStore) {
-      this.fileStore = new FileRecordStore(this.getEffectiveFilePath());
-    }
-    return this.fileStore;
-  }
-
-  private getSqliteStore(): SqliteRecordStore {
-    return this.explicitSqliteStore || sqliteRecordStore;
   }
 
   async getAll(): Promise<WoodReceivingRecord[]> {
@@ -172,11 +100,11 @@ export class ServerRecordStore {
         console.warn('[ServerRecordStore] Supabase getPaginated failed, falling back to SQLite:', err);
       }
     }
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().getPaginated(params);
+    if (this.isFileMode()) {
+      const records = await this.getFileStore().getAll();
+      return paginateInMemoryRecords(records, params);
     }
-    const records = await this.getFileStore().getAll();
-    return paginateInMemoryRecords(records, params);
+    return this.getSqliteStore().getPaginated(params);
   }
 
   async getById(id: string): Promise<WoodReceivingRecord | null> {
@@ -238,77 +166,56 @@ export class ServerRecordStore {
     return this.isFileMode() ? this.getFileStore().reset() : this.getSqliteStore().reset();
   }
 
-  /**
-   * Retrieves storage locations (yards and joined lots).
-   */
-  async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
-    if (this.isSupabaseMode()) {
-      try {
-        const yardsData = await supabaseFetch<any[]>('/storage_yards?select=*&order=name.asc');
-        const yards: StorageYard[] = yardsData.map((y) => ({
-          id: y.id,
-          tenantId: y.tenant_id || 'default-tenant',
-          yardCode: y.yard_code,
-          name: y.name,
-          description: y.description || undefined,
-          createdAt: y.created_at || new Date().toISOString(),
-          updatedAt: y.updated_at || new Date().toISOString(),
-        }));
-        const lotsData = await supabaseFetch<any[]>('/storage_lots?select=*,storage_yards(name,location_code)&order=lot_code.asc');
-        const lots: StorageLotWithYard[] = lotsData.map((l) => ({
-          id: l.id,
-          tenantId: l.tenant_id || 'default-tenant',
-          yardId: l.yard_id,
-          lotCode: l.lot_code,
-          status: l.status,
-          createdAt: l.created_at || new Date().toISOString(),
-          updatedAt: l.updated_at || new Date().toISOString(),
-          yardCode: l.storage_yards?.location_code || '',
-          yardName: l.storage_yards?.name || '',
-        }));
-        return { yards, lots };
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getStorageLocations failed, falling back to SQLite:', err);
-      }
-    }
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().getStorageLocations();
-    }
-    const data = loadStorageLocations();
-    const lots: StorageLotWithYard[] = data.lots.map((lot) => {
-      const yard = data.yards.find((y) => y.id === lot.yardId);
-      return {
-        ...lot,
-        yardCode: yard?.yardCode || '',
-        yardName: yard?.name || '',
-      };
-    });
-    return { yards: data.yards, lots };
+  getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
+    return this.masterDataBridge.getStorageLocations();
   }
 
-  /**
-   * Saves or updates a storage yard.
-   */
-  async saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }): Promise<StorageYard> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().saveStorageYard(yard);
-    }
-    return addYard(yard.name, yard.description);
+  saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }): Promise<StorageYard> {
+    return this.masterDataBridge.saveStorageYard(yard);
   }
 
-  /**
-   * Saves or updates a storage lot.
-   */
-  async saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
-    if (!this.isFileMode()) {
-      return this.getSqliteStore().saveStorageLot(lot);
-    }
-    return addLot(lot.yardId, lot.lotCode, lot.status);
+  saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
+    return this.masterDataBridge.saveStorageLot(lot);
   }
 
-  /**
-   * Closes SQLite database connection if active.
-   */
+  getSuppliers(): Promise<Supplier[]> {
+    return this.masterDataBridge.getSuppliers();
+  }
+
+  saveSupplier(data: Partial<Supplier> & { name: string }): Promise<Supplier> {
+    return this.masterDataBridge.saveSupplier(data);
+  }
+
+  deleteSupplier(id: string): Promise<boolean> {
+    return this.masterDataBridge.deleteSupplier(id);
+  }
+
+  getSpecies(): Promise<WoodSpecies[]> {
+    return this.masterDataBridge.getSpecies();
+  }
+
+  saveSpecies(species: Partial<WoodSpecies> & { code: string; commonName: string }): Promise<WoodSpecies> {
+    return this.masterDataBridge.saveSpecies(species);
+  }
+
+  getSettings(): Promise<AppSettings> {
+    return this.masterDataBridge.getSettings();
+  }
+
+  saveSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
+    return this.masterDataBridge.saveSettings(patch);
+  }
+
+  getActivityLogs(actionFilter?: string, limit?: number): Promise<ActivityLogEntry[]> {
+    return this.masterDataBridge.getActivityLogs(actionFilter, limit);
+  }
+
+  appendActivityLog(
+    entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
+  ): Promise<ActivityLogEntry> {
+    return this.masterDataBridge.appendActivityLog(entry);
+  }
+
   close(): void {
     if (!this.isFileMode()) {
       this.getSqliteStore().close();

@@ -7,31 +7,11 @@
 
 import { NextResponse } from 'next/server.js';
 import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
-import { verifySessionToken, COOKIE_NAME } from '../../../src/auth/session.ts';
+import { getAuthenticatedUser } from '../../../src/auth/session.ts';
 import type { AuthUser, StorageLotStatus } from '../../../src/types/index.ts';
 
 export const dynamic = 'force-dynamic';
 
-async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> {
-  let token: string | undefined;
-
-  // Extract from Request headers first (compatible with unit tests and edge/node runtime)
-  const rawHeader = request.headers.get('cookie') || '';
-  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
-  if (match) {
-    token = match[1];
-  } else {
-    try {
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      token = cookieStore.get(COOKIE_NAME)?.value;
-    } catch {
-      token = undefined;
-    }
-  }
-
-  return verifySessionToken(token);
-}
 
 export async function GET() {
   try {
@@ -96,6 +76,15 @@ export async function POST(request: Request) {
         yardCode: payload.yardCode ? String(payload.yardCode).trim() : undefined,
         description: payload.description !== undefined ? String(payload.description).trim() : undefined,
       });
+
+      await serverRecordStore.appendActivityLog({
+        action: 'STORAGE_UPDATED',
+        entityId: savedYard.id,
+        entitySummary: `TPK: ${savedYard.name} (${savedYard.yardCode})`,
+        operatorName: user.name,
+        operatorRole: user.title || `Level ${user.roleLevel}`,
+      });
+
       return NextResponse.json({
         success: true,
         data: savedYard,
@@ -132,6 +121,15 @@ export async function POST(request: Request) {
         lotCode: payload.lotCode.trim(),
         status: payload.status as StorageLotStatus,
       });
+
+      await serverRecordStore.appendActivityLog({
+        action: 'STORAGE_UPDATED',
+        entityId: savedLot.id,
+        entitySummary: `Kavling: ${savedLot.lotCode} (${savedLot.status})`,
+        operatorName: user.name,
+        operatorRole: user.title || `Level ${user.roleLevel}`,
+      });
+
       return NextResponse.json({
         success: true,
         data: savedLot,

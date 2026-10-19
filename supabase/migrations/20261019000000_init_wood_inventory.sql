@@ -149,6 +149,33 @@ CREATE INDEX IF NOT EXISTS idx_sales_date ON sales_records(sale_date);
 CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales_records(customer_name);
 CREATE INDEX IF NOT EXISTS idx_sales_lot ON sales_records(storage_yard, kavling_number);
 
+-- 9. Tenant System Settings Table
+CREATE TABLE IF NOT EXISTS app_settings (
+  tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+  default_timber_pph_rate NUMERIC NOT NULL DEFAULT 0.5 CHECK (default_timber_pph_rate >= 0),
+  default_freight_pph_rate NUMERIC NOT NULL DEFAULT 2.0 CHECK (default_freight_pph_rate >= 0),
+  default_broker_fee NUMERIC NOT NULL DEFAULT 250000 CHECK (default_broker_fee >= 0),
+  acceptable_discrepancy_threshold_pct NUMERIC NOT NULL DEFAULT 2.0 CHECK (acceptable_discrepancy_threshold_pct >= 0),
+  yard_name TEXT NOT NULL DEFAULT 'TPK-01 Utama (Central Yard)',
+  yard_code TEXT NOT NULL DEFAULT 'TPK-01',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 10. Immutable Activity Audit Logs Table (Append-Only)
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT NOT NULL DEFAULT 'default-tenant',
+  action TEXT NOT NULL,
+  entity_id TEXT,
+  entity_summary TEXT NOT NULL,
+  operator_name TEXT NOT NULL,
+  operator_role TEXT NOT NULL,
+  metadata_json TEXT,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON activity_logs(tenant_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(tenant_id, action);
+
 -- ============================================================================
 -- Analytical and Reporting Views
 -- ============================================================================
@@ -293,6 +320,8 @@ ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE receiving_manifests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE receiving_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sales_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- Permissive development policies for authenticated and anon roles
 CREATE POLICY "Allow public read and write access on tenants"
@@ -318,3 +347,10 @@ CREATE POLICY "Allow public read and write access on receiving_items"
 
 CREATE POLICY "Allow public read and write access on sales_records"
   ON sales_records FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public read and write access on app_settings"
+  ON app_settings FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public read and write access on activity_logs"
+  ON activity_logs FOR ALL USING (true) WITH CHECK (true);
+

@@ -1,23 +1,42 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TIMBER_SPECIES_CATALOGUE } from '@/src/utils/timber-species';
+import type { WoodSpecies } from '@/src/types';
 import { Trees, Search, ShieldCheck } from 'lucide-react';
 
 export function SpeciesSettings() {
+  const [speciesList, setSpeciesList] = useState<WoodSpecies[]>(TIMBER_SPECIES_CATALOGUE);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/species')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted || !json?.success || !Array.isArray(json.data) || json.data.length === 0) return;
+        setSpeciesList(json.data);
+      })
+      .catch((err) => {
+        console.warn('[SpeciesSettings] Failed to fetch species from server:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return TIMBER_SPECIES_CATALOGUE;
+    if (!searchQuery.trim()) return speciesList;
     const q = searchQuery.toLowerCase().trim();
-    return TIMBER_SPECIES_CATALOGUE.filter((s) => {
+    return speciesList.filter((s) => {
       return (
         s.commonName.toLowerCase().includes(q) ||
-        s.botanicalName.toLowerCase().includes(q) ||
+        (s.botanicalName && s.botanicalName.toLowerCase().includes(q)) ||
         s.code.toLowerCase().includes(q)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, speciesList]);
 
   return (
     <div className="flex flex-col gap-4">

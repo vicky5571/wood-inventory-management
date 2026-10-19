@@ -1,22 +1,25 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createActivityLog } from '../src/utils/activity-logger.ts';
 
-test('Activity View Filtering Suite', async (t) => {
-  await t.test('filters log entries by action category', () => {
+test('Activity View Filtering & Immutability Invariants Suite', async (t) => {
+  await t.test('filters log entries by action category including sales and settings', () => {
     const logs = [
       createActivityLog({ action: 'RECORD_CREATED', entitySummary: 'A', operatorName: 'X', operatorRole: 'M' }),
       createActivityLog({ action: 'RECORD_DELETED', entitySummary: 'B', operatorName: 'Y', operatorRole: 'A' }),
-      createActivityLog({ action: 'RECORD_UPDATED', entitySummary: 'C', operatorName: 'X', operatorRole: 'M' }),
+      createActivityLog({ action: 'SALE_CREATED', entitySummary: 'S', operatorName: 'X', operatorRole: 'M' }),
+      createActivityLog({ action: 'SETTINGS_UPDATED', entitySummary: 'Cfg', operatorName: 'X', operatorRole: 'M' }),
     ];
 
-    const deletes = logs.filter((l) => l.action === 'RECORD_DELETED');
-    assert.equal(deletes.length, 1);
-    assert.equal(deletes[0].entitySummary, 'B');
+    const sales = logs.filter((l) => l.action === 'SALE_CREATED');
+    assert.equal(sales.length, 1);
+    assert.equal(sales[0].entitySummary, 'S');
 
-    const creates = logs.filter((l) => l.action === 'RECORD_CREATED');
-    assert.equal(creates.length, 1);
-    assert.equal(creates[0].entitySummary, 'A');
+    const settings = logs.filter((l) => l.action === 'SETTINGS_UPDATED');
+    assert.equal(settings.length, 1);
+    assert.equal(settings[0].entitySummary, 'Cfg');
   });
 
   await t.test('preserves reverse chronological order of events', () => {
@@ -25,5 +28,15 @@ test('Activity View Filtering Suite', async (t) => {
     const stream = [log2, log1];
 
     assert.ok(new Date(stream[0].timestamp).getTime() >= new Date(stream[1].timestamp).getTime());
+  });
+
+  await t.test('app/activity/page.tsx enforces immutable audit trail without destructive clear/reset buttons', () => {
+    const pagePath = path.resolve(process.cwd(), 'app/activity/page.tsx');
+    const content = fs.readFileSync(pagePath, 'utf-8');
+
+    assert.ok(!content.includes('clearLogs'), 'Activity UI must not call clearLogs');
+    assert.ok(!content.includes('resetLogs'), 'Activity UI must not call resetLogs');
+    assert.ok(!content.includes('Hapus Semua Log'), 'Activity UI must not expose Hapus Semua Log button');
+    assert.ok(!content.includes('Reset Log Awal'), 'Activity UI must not expose Reset Log Awal button');
   });
 });

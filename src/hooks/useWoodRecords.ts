@@ -1,38 +1,44 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import type { WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics, ManifestFormInput } from '../types/index.ts';
+import type {
+  WoodReceivingRecord,
+  RecordFilterCriteria,
+  DashboardMetrics,
+  ManifestFormInput,
+  PaginationMeta,
+} from '../types/index.ts';
 import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
 import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
-import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
-import { toast } from '../utils/toast-store.ts';
 import { exportRecordsToCsv } from '../utils/records-csv.ts';
 import { filterWoodRecords } from '../utils/record-search.ts';
-
-const STORAGE_KEY = 'wood_receiving_records_next_v1';
+import { buildRecordsApiUrl } from '../utils/record-query-url.ts';
+import {
+  WOOD_RECORDS_STORAGE_KEY,
+  getMemoryRecordsCache,
+  setMemoryRecordsCache,
+  DEFAULT_PAGINATION_META,
+  areRecordsEqual,
+  persistRecords,
+  createSeedRecords,
+  loadInitialRecords,
+  notifySyncFailure,
+  showDeleteRecordToast,
+  computeEffectivePagination,
+} from '../utils/record-storage-cache.ts';
 
 let memoryRecordsCache: WoodReceivingRecord[] | null = null;
 
-export function areRecordsEqual(prev: WoodReceivingRecord[], next: WoodReceivingRecord[]): boolean {
-  if (prev.length !== next.length) return false;
-  if (prev.length === 0) return true;
-  return prev[0]?.id === next[0]?.id && prev[0]?.updatedAt === next[0]?.updatedAt && prev[prev.length - 1]?.id === next[next.length - 1]?.id;
-}
-
-function persistRecords(records: WoodReceivingRecord[]): void {
-  memoryRecordsCache = records;
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  } catch (e) {
-    console.error('Failed to persist to localStorage:', e);
-  }
-}
+export { areRecordsEqual, memoryRecordsCache };
 
 export function useWoodRecords() {
-  const [allRecords, setAllRecords] = useState<WoodReceivingRecord[]>(() => memoryRecordsCache || []);
+  const [allRecords, setAllRecords] = useState<WoodReceivingRecord[]>(() => getMemoryRecordsCache() || []);
   const [filters, setFilters] = useState<RecordFilterCriteria>({});
-  const [isHydrated, setIsHydrated] = useState(() => memoryRecordsCache !== null);
+  const [isHydrated, setIsHydrated] = useState(() => getMemoryRecordsCache() !== null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [pagination, setPagination] = useState<PaginationMeta>(DEFAULT_PAGINATION_META);
 
   const recordsRef = useRef<WoodReceivingRecord[]>(allRecords);
   recordsRef.current = allRecords;
@@ -49,61 +55,51 @@ export function useWoodRecords() {
     try {
       await action();
     } catch {
-      if (showErrorToast) {
-        toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
-      }
+      if (showErrorToast) notifySyncFailure();
     } finally {
       activeSyncsRef.current = Math.max(0, activeSyncsRef.current - 1);
       setIsSyncing(activeSyncsRef.current > 0);
     }
   }, []);
 
-  // Initialize from LocalStorage or Seed Data, then non-blocking background sync
-  useEffect(() => {
-    let localDataLoaded = memoryRecordsCache !== null;
-    if (!localDataLoaded) {
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          const raw = window.localStorage.getItem(STORAGE_KEY);
-          if (raw !== null) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              recordsRef.current = parsed;
-              memoryRecordsCache = parsed;
-              setAllRecords(parsed);
-              setIsHydrated(true);
-              localDataLoaded = true;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to parse localStorage records:', e);
-      }
+  const updateRecords = useCallback((next: WoodReceivingRecord[]) => {
+    recordsRef.current = next;
+    setAllRecords(next);
+    persistRecords(next);
+  }, []);
 
-      if (!localDataLoaded) {
-        const seed: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
-        recordsRef.current = seed;
-        memoryRecordsCache = seed;
-        setAllRecords(seed);
-        persistRecords(seed);
-        setIsHydrated(true);
-      }
+  useEffect(() => {
+    if (getMemoryRecordsCache() === null) {
+      const initial = loadInitialRecords();
+      recordsRef.current = initial;
+      setAllRecords(initial);
+      setIsHydrated(true);
     }
 
     syncWithServer(async () => {
-      const res = await fetch('/api/records');
+      const url = buildRecordsApiUrl({
+        page,
+        pageSize,
+        searchQuery: filters.query,
+        species: filters.species,
+        kavling: filters.kavling,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        paymentStatus: filters.paymentStatus,
+      });
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!hasMutatedRef.current && json?.success && Array.isArray(json.data)) {
+        if (json.pagination) {
+          setPagination(json.pagination);
+        }
         if (!areRecordsEqual(recordsRef.current, json.data)) {
-          recordsRef.current = json.data;
-          memoryRecordsCache = json.data;
-          setAllRecords(json.data);
-          persistRecords(json.data);
+          updateRecords(json.data);
         }
       }
     }, false);
-  }, [syncWithServer]);
+  }, [page, pageSize, filters, syncWithServer]);
 
   const saveRecord = useCallback((record: WoodReceivingRecord) => {
     hasMutatedRef.current = true;
@@ -119,9 +115,7 @@ export function useWoodRecords() {
       ? prev.map((r, i) => (i === index ? savedRecord : r))
       : [savedRecord, ...prev];
 
-    recordsRef.current = next;
-    setAllRecords(next);
-    persistRecords(next);
+    updateRecords(next);
 
     syncWithServer(async () => {
       const res = await fetch('/api/records', {
@@ -129,7 +123,7 @@ export function useWoodRecords() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(savedRecord),
       });
-      if (!res.ok) toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      if (!res.ok) notifySyncFailure();
     }, true);
   }, [syncWithServer]);
 
@@ -137,9 +131,7 @@ export function useWoodRecords() {
     hasMutatedRef.current = true;
     const { next, flattened } = applyManifestToRecords(recordsRef.current, manifest);
 
-    recordsRef.current = next;
-    setAllRecords(next);
-    persistRecords(next);
+    updateRecords(next);
 
     syncWithServer(async () => {
       const res = await fetch('/api/records', {
@@ -147,7 +139,7 @@ export function useWoodRecords() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manifest }),
       });
-      if (!res.ok) toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      if (!res.ok) notifySyncFailure();
     }, true);
 
     return flattened;
@@ -165,9 +157,7 @@ export function useWoodRecords() {
       next.unshift(record);
     }
 
-    recordsRef.current = next;
-    setAllRecords(next);
-    persistRecords(next);
+    updateRecords(next);
 
     syncWithServer(async () => {
       const res = await fetch('/api/records', {
@@ -175,7 +165,7 @@ export function useWoodRecords() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record),
       });
-      if (!res.ok) toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      if (!res.ok) notifySyncFailure();
     }, true);
   }, [syncWithServer]);
 
@@ -186,47 +176,55 @@ export function useWoodRecords() {
     const targetRecord = targetIndex >= 0 ? prev[targetIndex] : undefined;
 
     const next = prev.filter((r) => r.id !== id);
-    recordsRef.current = next;
-    setAllRecords(next);
-    persistRecords(next);
+    updateRecords(next);
 
     if (targetRecord && options?.showUndoToast !== false) {
-      const plate = targetRecord.truckPlateNumber ? `Truk ${targetRecord.truckPlateNumber}` : 'Penerimaan';
-      const vol = targetRecord.tallyVolumeM3 ? `${targetRecord.tallyVolumeM3} m³` : '0 m³';
-
-      toast.warning(
-        'Data Penerimaan Dihapus (入库记录已删除)',
-        `${plate} • ${vol} (${targetRecord.woodSpecies || 'Kayu'})`,
-        5000,
-        {
-          label: 'Urungkan (撤销)',
-          onClick: () => {
-            restoreRecord(targetRecord, targetIndex);
-            toast.success('Data Penerimaan Dipulihkan (已恢复)', `${plate} berhasil dikembalikan ke buku besar.`);
-          },
-        }
-      );
+      showDeleteRecordToast(targetRecord, () => {
+        restoreRecord(targetRecord, targetIndex);
+      });
     }
 
     syncWithServer(async () => {
       const res = await fetch('/api/records?id=' + encodeURIComponent(id), { method: 'DELETE' });
-      if (!res.ok && res.status !== 404) toast.warning('Sinkronisasi Server Gagal', 'Data tersimpan di perangkat lokal.');
+      if (!res.ok && res.status !== 404) notifySyncFailure();
     }, true);
   }, [restoreRecord, syncWithServer]);
 
   const resetDemo = useCallback(() => {
     hasMutatedRef.current = true;
-    const seed: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
+    const seed = createSeedRecords();
     recordsRef.current = seed;
     setAllRecords(seed);
-    persistRecords(seed);
     setFilters({});
-  }, []);
+    setPage(1);
+
+    syncWithServer(async () => {
+      const res = await fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset' }),
+      });
+      if (!res.ok) {
+        notifySyncFailure();
+      } else {
+        const json = await res.json();
+        if (json?.success && Array.isArray(json.data)) {
+          recordsRef.current = json.data;
+          setAllRecords(json.data);
+          persistRecords(json.data);
+        }
+      }
+    }, true);
+  }, [syncWithServer]);
 
   const records = useMemo(() => filterWoodRecords(allRecords, filters), [allRecords, filters]);
   const metrics: DashboardMetrics = useMemo(() => aggregateDashboardMetrics(records), [records]);
   const speciesList = useMemo(() => Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean), [allRecords]);
   const exportCsv = useCallback(() => exportRecordsToCsv(records), [records]);
+
+  const effectivePagination = useMemo(() => (
+    computeEffectivePagination(pagination, records.length, page, pageSize)
+  ), [pagination, records.length, page, pageSize]);
 
   return {
     records,
@@ -236,6 +234,11 @@ export function useWoodRecords() {
     speciesList,
     isHydrated,
     isSyncing,
+    pagination: effectivePagination,
+    page,
+    pageSize,
+    setPage,
+    setPageSize,
     setFilters,
     saveRecord,
     saveManifest,
