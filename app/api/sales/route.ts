@@ -34,7 +34,7 @@ async function getAuthenticatedUser(request: Request): Promise<AuthUser | null> 
 
 export async function GET() {
   try {
-    const data = salesStore.getAll();
+    const data = await salesStore.getAll();
     return NextResponse.json({
       success: true,
       data,
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Validation error: Volume (m³) harus lebih dari 0' }, { status: 400 });
     }
 
-    const saved = salesStore.save(payload);
+    const saved = await salesStore.save(payload);
     return NextResponse.json({
       success: true,
       data: saved,
@@ -125,7 +125,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID parameter is required' }, { status: 400 });
     }
 
-    salesStore.delete(id);
+    await salesStore.delete(id);
     return NextResponse.json({
       success: true,
       id,

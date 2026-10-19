@@ -10,6 +10,8 @@
 import path from 'node:path';
 import { SqliteRecordStore, sqliteRecordStore } from './sqlite-record-store.ts';
 import { FileRecordStore } from './file-record-store.ts';
+import { isSupabaseConfigured, supabaseFetch } from './supabase/supabase-client.ts';
+import { SupabaseRecordStore } from './supabase/supabase-record-store.ts';
 import type {
   WoodReceivingRecord,
   RecordQueryParams,
@@ -106,6 +108,7 @@ export class ServerRecordStore {
   private explicitFilePath: string | null = null;
   private explicitSqliteStore: SqliteRecordStore | null = null;
   private fileStore: FileRecordStore | null = null;
+  private supabaseStore: SupabaseRecordStore | null = null;
 
   constructor(filePathOrStore?: string | SqliteRecordStore) {
     if (filePathOrStore instanceof SqliteRecordStore) {
@@ -113,6 +116,18 @@ export class ServerRecordStore {
     } else if (typeof filePathOrStore === 'string') {
       this.explicitFilePath = path.resolve(process.cwd(), filePathOrStore);
     }
+  }
+
+  private isSupabaseMode(): boolean {
+    if (this.explicitFilePath || this.explicitSqliteStore) return false;
+    return isSupabaseConfigured();
+  }
+
+  private getSupabaseStore(): SupabaseRecordStore {
+    if (!this.supabaseStore) {
+      this.supabaseStore = new SupabaseRecordStore();
+    }
+    return this.supabaseStore;
   }
 
   private isFileMode(): boolean {
@@ -139,10 +154,24 @@ export class ServerRecordStore {
   }
 
   async getAll(): Promise<WoodReceivingRecord[]> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().getAll();
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getAll failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().getAll() : this.getSqliteStore().getAll();
   }
 
   async getPaginated(params: RecordQueryParams = {}): Promise<PaginatedResult<WoodReceivingRecord>> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().getPaginated(params);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getPaginated failed, falling back to SQLite:', err);
+      }
+    }
     if (!this.isFileMode()) {
       return this.getSqliteStore().getPaginated(params);
     }
@@ -151,22 +180,57 @@ export class ServerRecordStore {
   }
 
   async getById(id: string): Promise<WoodReceivingRecord | null> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().getById(id);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getById failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().getById(id) : this.getSqliteStore().getById(id);
   }
 
   async save(record: WoodReceivingRecord): Promise<WoodReceivingRecord> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().save(record);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase save failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().save(record) : this.getSqliteStore().save(record);
   }
 
   async saveManifest(manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().saveManifest(manifest);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase saveManifest failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().saveManifest(manifest) : this.getSqliteStore().saveManifest(manifest);
   }
 
   async delete(id: string): Promise<boolean> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().delete(id);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase delete failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().delete(id) : this.getSqliteStore().delete(id);
   }
 
   async deleteManifest(manifestId: string): Promise<boolean> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await this.getSupabaseStore().deleteManifest(manifestId);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase deleteManifest failed, falling back to SQLite:', err);
+      }
+    }
     return this.isFileMode() ? this.getFileStore().deleteManifest(manifestId) : this.getSqliteStore().deleteManifest(manifestId);
   }
 
@@ -178,6 +242,23 @@ export class ServerRecordStore {
    * Retrieves storage locations (yards and joined lots).
    */
   async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
+    if (this.isSupabaseMode()) {
+      try {
+        const yards = await supabaseFetch<StorageYard[]>('/storage_yards?select=*&order=name.asc');
+        const lotsData = await supabaseFetch<any[]>('/storage_lots?select=*,storage_yards(name,location_code)&order=lot_code.asc');
+        const lots: StorageLotWithYard[] = lotsData.map((l) => ({
+          id: l.id,
+          yardId: l.yard_id,
+          lotCode: l.lot_code,
+          status: l.status,
+          yardCode: l.storage_yards?.location_code || '',
+          yardName: l.storage_yards?.name || '',
+        }));
+        return { yards, lots };
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getStorageLocations failed, falling back to SQLite:', err);
+      }
+    }
     if (!this.isFileMode()) {
       return this.getSqliteStore().getStorageLocations();
     }
