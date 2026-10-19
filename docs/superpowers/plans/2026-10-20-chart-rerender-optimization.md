@@ -34,7 +34,7 @@
 - Consumes: `WoodReceivingRecord`, `WoodSalesRecord` from `src/types/index.ts`
 - Produces: Seamless instantaneous hook mounting with non-empty initial state when warm cache exists; skips `setState` when server sync returns identical data.
 
-- [ ] **Step 1: Write failing tests for hook cache and sync guard in `test/analytics-rerender-optimization.test.ts`**
+- [x] **Step 1: Write failing tests for hook cache and sync guard in `test/analytics-rerender-optimization.test.ts`**
 
 ```typescript
 import { test } from 'node:test';
@@ -57,12 +57,12 @@ test('Chart Rerender Optimization & In-Memory Cache Suite', async (t) => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: FAIL with "useWoodRecords must define module-scoped memoryRecordsCache"
 
-- [ ] **Step 3: Implement module cache & sync guard in `useWoodRecords.ts` and `useWoodSalesRecords.ts`**
+- [x] **Step 3: Implement module cache & sync guard in `useWoodRecords.ts` and `useWoodSalesRecords.ts`**
 
 In `src/hooks/useWoodRecords.ts`:
 ```typescript
@@ -128,17 +128,17 @@ if (isMounted && !hasMutatedRef.current && json?.success && Array.isArray(json.d
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
 
 Run: `wc -l src/hooks/useWoodRecords.ts src/hooks/useWoodSalesRecords.ts` (Both < 250 LOC)
 Run: `npx tsc --noEmit`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/hooks/useWoodRecords.ts src/hooks/useWoodSalesRecords.ts test/analytics-rerender-optimization.test.ts
@@ -158,7 +158,7 @@ git commit -m "perf(hooks): add module-level memory cache and sync equality guar
 - Consumes: `records: WoodReceivingRecord[]`
 - Produces: Zero canvas resets on data changes; in-place data refresh via `chart.update('none')`; memoized `donutData` in `SpeciesDonutChart`.
 
-- [ ] **Step 1: Write component contract tests in `test/analytics-rerender-optimization.test.ts`**
+- [x] **Step 1: Write component contract tests in `test/analytics-rerender-optimization.test.ts`**
 
 ```typescript
   await t.test('VolumeTrendChart and SpeciesDonutChart use in-place chart.update instead of teardown', () => {
@@ -173,12 +173,12 @@ git commit -m "perf(hooks): add module-level memory cache and sync equality guar
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: FAIL with assertion error
 
-- [ ] **Step 3: Update `VolumeTrendChart.tsx` and `SpeciesDonutChart.tsx`**
+- [x] **Step 3: Update `VolumeTrendChart.tsx` and `SpeciesDonutChart.tsx`**
 
 In `src/components/analytics/VolumeTrendChart.tsx`:
 ```tsx
@@ -390,17 +390,17 @@ export function SpeciesDonutChart({ records }: { records: WoodReceivingRecord[] 
   // ...
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
 
 Run: `wc -l src/components/analytics/VolumeTrendChart.tsx src/components/analytics/SpeciesDonutChart.tsx` (Both < 200 LOC)
 Run: `npx tsc --noEmit`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/analytics/VolumeTrendChart.tsx src/components/analytics/SpeciesDonutChart.tsx test/analytics-rerender-optimization.test.ts
@@ -421,7 +421,7 @@ git commit -m "fix(analytics): implement in-place chart update and memoization f
 - Consumes: `records`, `inboundRecords`, `salesRecords`
 - Produces: In-place data updates via `chart.update('none')` across remaining analytics components.
 
-- [ ] **Step 1: Write component contract tests in `test/analytics-rerender-optimization.test.ts`**
+- [x] **Step 1: Write component contract tests in `test/analytics-rerender-optimization.test.ts`**
 
 ```typescript
   await t.test('SupplierBarChart, InventoryFlowChart, and CustomerSalesBarChart use in-place chart.update', () => {
@@ -436,12 +436,12 @@ git commit -m "fix(analytics): implement in-place chart update and memoization f
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: FAIL with assertion error
 
-- [ ] **Step 3: Update `SupplierBarChart.tsx`, `InventoryFlowChart.tsx`, and `CustomerSalesBarChart.tsx`**
+- [x] **Step 3: Update `SupplierBarChart.tsx`, `InventoryFlowChart.tsx`, and `CustomerSalesBarChart.tsx`**
 
 In `src/components/analytics/SupplierBarChart.tsx`:
 - Wrap `prepareSupplierBarData(records)` in `useMemo`.
@@ -455,17 +455,17 @@ In `src/components/analytics/CustomerSalesBarChart.tsx`:
 - Wrap `prepareCustomerSalesData(salesRecords, 5)` in `useMemo`.
 - In `useEffect`: if `chartInstanceRef.current` exists, update `labels`, `datasets[0].data = volumes`, and call `chart.update('none')`. Destroy only on unmount.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Verify LOC limits and TypeScript compile**
+- [x] **Step 5: Verify LOC limits and TypeScript compile**
 
 Run: `wc -l src/components/analytics/SupplierBarChart.tsx src/components/analytics/InventoryFlowChart.tsx src/components/analytics/CustomerSalesBarChart.tsx` (All < 200 LOC)
 Run: `npx tsc --noEmit`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/analytics/SupplierBarChart.tsx src/components/analytics/InventoryFlowChart.tsx src/components/analytics/CustomerSalesBarChart.tsx test/analytics-rerender-optimization.test.ts
@@ -480,22 +480,22 @@ git commit -m "fix(analytics): implement in-place chart updates for supplier ran
 - Test: All suites in `test/`
 - Build: Next.js production build (`app/`)
 
-- [ ] **Step 1: Run complete analytics and routing test suite**
+- [x] **Step 1: Run complete analytics and routing test suite**
 
 Run: `node --test test/analytics-rerender-optimization.test.ts test/analytics-components.test.ts test/sales-analytics.test.ts test/use-wood-records.test.ts test/use-wood-sales-records.test.ts test/nav-routing.test.ts`
 Expected: All tests PASS with 0 errors.
 
-- [ ] **Step 2: Run Next.js production build check**
+- [x] **Step 2: Run Next.js production build check**
 
 Run: `npm run build:check`
 Expected: 0 errors, successful static generation and compilation across all routes.
 
-- [ ] **Step 3: Run full automated test suite**
+- [x] **Step 3: Run full automated test suite**
 
 Run: `npm test`
 Expected: 530+ tests passing.
 
-- [ ] **Step 4: Final commit**
+- [x] **Step 4: Final commit**
 
 ```bash
 git commit --allow-empty -m "chore(release): complete chart lifecycle and in-place re-render optimization on Ringkasan"
