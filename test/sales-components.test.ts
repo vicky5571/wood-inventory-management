@@ -93,5 +93,11 @@ test('Sales Subsystem UI Components Suite', async (t) => {
     assert.match(content, /#printable-do/, 'Must scope print selector to delivery order container');
     assert.match(content, /window\.print\(\)/, 'Must provide print trigger');
   });
+
+  await t.test('SalesModal incorporates dev quick fill button', () => {
+    const content = fs.readFileSync(salesModalPath, 'utf-8');
+    assert.match(content, /getQuickSalesDraft/, 'SalesModal must import getQuickSalesDraft');
+    assert.match(content, /Isi Cepat|Dev Fill/, 'SalesModal must render Dev Quick Fill button');
+  });
 });
 

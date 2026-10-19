@@ -6,7 +6,9 @@ import { calculateLotStockBalance, validateSalesStockAllowance, calculateSalesFi
 import { YardSelect } from '@/src/components/ledger/YardSelect';
 import { KavlingSelect } from '@/src/components/ledger/KavlingSelect';
 import { SpeciesCombobox } from '@/src/components/ledger/SpeciesCombobox';
-import { X, AlertTriangle, Layers, Save } from 'lucide-react';
+import { X, AlertTriangle, Layers, Save, Zap } from 'lucide-react';
+import { toast } from '@/src/utils/toast-store';
+import { getQuickSalesDraft } from '@/src/utils/dev-quick-fill.ts';
 
 const defaultInput: SalesFormInput = {
   saleDate: new Date().toISOString().split('T')[0],
@@ -73,6 +75,12 @@ export function SalesModal({
     }
   }, [formData, isSubmitting, onSave, onClose]);
 
+  const handleQuickFill = useCallback(() => {
+    const devDraft = getQuickSalesDraft(customerHistory);
+    setFormData(devDraft);
+    toast.info('Form Terisi Otomatis (开发填充)', 'Data sampel penjualan telah dimuat.');
+  }, [customerHistory]);
+
   if (!isOpen) return null;
 
   return (
@@ -83,7 +91,18 @@ export function SalesModal({
             <Layers className="w-5 h-5 text-[#ffc908]" />
             <h2 className="text-sm font-bold tracking-wide">{initialData ? 'Edit Surat Jalan Penjualan' : 'Catat Penjualan & Pengeluaran Kayu (木材出库)'}</h2>
           </div>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-white transition p-1"><X className="w-5 h-5" /></button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleQuickFill}
+              className="px-2.5 py-1 text-2xs font-semibold text-amber-300 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-500/40 rounded-lg flex items-center gap-1 transition cursor-pointer"
+              title="Isi otomatis data penjualan untuk pengujian dev"
+            >
+              <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <span>⚡ Isi Cepat (Dev)</span>
+            </button>
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-white transition p-1"><X className="w-5 h-5" /></button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[82vh] overflow-y-auto text-xs">
