@@ -94,7 +94,7 @@ export function RecordTable({
       {/* Quick Action Banner for Mobile Tally Workstation */}
       <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-transparent border-b border-amber-300/40 px-4 py-2 flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-gray-900 font-bold">
-          <span className="p-1 rounded bg-[#ffc908] text-[#101828]">📱</span>
+          <span className="p-1 rounded bg-[#ffc908] text-[#101828]"><Smartphone className="w-3.5 h-3.5" /></span>
           <span>Mode Tally Lapangan (现场检尺): Catat ukuran kayu langsung di bak truk.</span>
         </div>
         <Link

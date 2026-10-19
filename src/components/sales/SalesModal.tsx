@@ -99,7 +99,7 @@ export function SalesModal({
               title="Isi otomatis data penjualan untuk pengujian dev"
             >
               <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span>⚡ Isi Cepat (Dev)</span>
+              <span>Isi Cepat (Dev)</span>
             </button>
             <button type="button" onClick={onClose} className="text-gray-400 hover:text-white transition p-1"><X className="w-5 h-5" /></button>
           </div>

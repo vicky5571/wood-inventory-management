@@ -109,8 +109,8 @@ export function KavlingSelect({
   };
 
   const renderStatusPill = (status: StorageLotStatus) => {
-    if (status === 'FULL') return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 flex-shrink-0">⚠️ Penuh (已满)</span>;
-    if (status === 'MAINTENANCE') return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 flex-shrink-0">🛠️ Perawatan (维护)</span>;
+    if (status === 'FULL') return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 flex-shrink-0">Penuh (已满)</span>;
+    if (status === 'MAINTENANCE') return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 flex-shrink-0">Perawatan (维护)</span>;
     return <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 flex-shrink-0">Aktif (正常)</span>;
   };
 
@@ -169,7 +169,7 @@ export function KavlingSelect({
       {warning.isWarning && (
         <div className="mt-1 flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200/80 rounded-lg px-2.5 py-1 animate-in fade-in duration-150">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-          <span>⚠️ Lot <strong>{value}</strong> berstatus {currentLot?.status === 'FULL' ? 'PENUH (批号已满)' : 'PERAWATAN (维护)'} - pastikan kapasitas lapangan</span>
+          <span>Lot <strong>{value}</strong> berstatus {currentLot?.status === 'FULL' ? 'PENUH (批号已满)' : 'PERAWATAN (维护)'} - pastikan kapasitas lapangan</span>
         </div>
       )}
 

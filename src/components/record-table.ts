@@ -44,10 +44,10 @@ export function renderToolbar(
           <option value="">Semua Spesies (所有材种)</option>
           ${speciesOptions}
         </select>
-        <button id="btn-export-csv" class="btn btn-secondary">📥 Export CSV</button>
+        <button id="btn-export-csv" class="btn btn-secondary">Export CSV</button>
       </div>
       <div class="filter-group">
-        <button id="btn-reset-demo" class="btn btn-secondary" title="Muat ulang data demo">🔄 Reset Demo</button>
+        <button id="btn-reset-demo" class="btn btn-secondary" title="Muat ulang data demo">Reset Demo</button>
       </div>
     </div>
   `;

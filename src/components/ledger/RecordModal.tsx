@@ -201,7 +201,7 @@ export function RecordModal({
               title="Isi otomatis formulir penerimaan dengan data sampel dev"
             >
               <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
-              <span>⚡ Isi Cepat (Dev)</span>
+              <span>Isi Cepat (Dev)</span>
             </button>
             <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer" aria-label="Tutup">
               <X className="w-5 h-5" />

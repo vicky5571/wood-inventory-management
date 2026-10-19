@@ -147,7 +147,7 @@ export function SupplierModal({
               title="Isi otomatis data pemasok untuk pengujian dev"
             >
               <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
-              <span>⚡ Isi Cepat (Dev)</span>
+              <span>Isi Cepat (Dev)</span>
             </button>
             <button
               type="button"

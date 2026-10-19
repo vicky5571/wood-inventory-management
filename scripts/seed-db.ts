@@ -106,9 +106,9 @@ export function seedDatabase(customDbPath?: string): {
 
 // Direct CLI invocation
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  console.log('🌲 Seeding Wood Inventory Database...');
+  console.log('Seeding Wood Inventory Database...');
   const stats = seedDatabase();
-  console.log('✅ Database seeded successfully:');
+  console.log('Database seeded successfully:');
   console.log(`   - Tenants:            ${stats.tenants}`);
   console.log(`   - Storage Yards:      ${stats.yards}`);
   console.log(`   - Storage Lots:       ${stats.lots}`);
