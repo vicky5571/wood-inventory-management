@@ -38,5 +38,6 @@ test('Activity View Filtering & Immutability Invariants Suite', async (t) => {
     assert.ok(!content.includes('resetLogs'), 'Activity UI must not call resetLogs');
     assert.ok(!content.includes('Hapus Semua Log'), 'Activity UI must not expose Hapus Semua Log button');
     assert.ok(!content.includes('Reset Log Awal'), 'Activity UI must not expose Reset Log Awal button');
+    assert.doesNotMatch(content, /\bconfirm\s*\(/, 'ActivityPage must not call native browser confirm()');
   });
 });

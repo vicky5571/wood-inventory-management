@@ -32,6 +32,7 @@ export default function LedgerPage() {
   const [editingRecord, setEditingRecord] = useState<WoodReceivingRecord | null>(null);
   const [printingRecord, setPrintingRecord] = useState<WoodReceivingRecord | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const pendingRecord = pendingDeleteId ? records.find((r) => r.id === pendingDeleteId) : null;
 
@@ -134,7 +135,7 @@ export default function LedgerPage() {
             speciesList={speciesList}
             canWrite={canWrite}
             onFilterChange={setFilters}
-            onResetDemo={handleResetDemo}
+            onResetDemo={() => setIsResetConfirmOpen(true)}
             onExportCsv={exportCsv}
             onNewEntry={handleNewEntry}
           />
@@ -190,6 +191,21 @@ export default function LedgerPage() {
           setPendingDeleteId(null);
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      {/* Reset Demo Confirmation Safeguard Dialog */}
+      <ConfirmDialog
+        isOpen={isResetConfirmOpen}
+        title="Reset Data Demo? (确认重置演示数据)"
+        description="Apakah Anda yakin ingin mengatur ulang data buku besar ke 4 catatan demonstrasi standar? Semua data penerimaan kustom yang belum diekspor akan digantikan."
+        confirmLabel="Reset Data Demo"
+        cancelLabel="Batal"
+        isDestructive={true}
+        onConfirm={() => {
+          handleResetDemo();
+          setIsResetConfirmOpen(false);
+        }}
+        onCancel={() => setIsResetConfirmOpen(false)}
       />
     </div>
   );

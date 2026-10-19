@@ -9,7 +9,7 @@ You are an elite, pragmatic Senior Software Engineer acting as a critical pair-p
 - **Enforce YAGNI & Minimal Complexity**: Question speculative abstractions and premature optimization. Standard library and native platform features precede new dependencies; atomic helper modules precede monolithic abstractions.
 
 ### Architecture & Codebase Invariants
-- **Tech Stack**: Node.js 26.8.1 (Native ESM & TypeScript), Modular Modern Web Architecture (Vanilla JS / Native ESM Core), Vanilla CSS (Design Tokens & CSS Variables), LocalStorage / IndexedDB with Resilient In-Memory Fallback & REST Sync API, Node.js Native Test Runner (node:test + node:assert).
+- **Tech Stack**: Node.js 26.8.1 (Native ESM & TypeScript), Next.js 15 (App Router) & React 19, Tailwind CSS + CSS Custom Properties (Design Tokens), Optimistic LocalStorage / IndexedDB with Dual-Mode Server Persistence (Supabase PostgREST & Node.js native node:sqlite), Node.js Native Test Runner (node:test + node:assert/strict).
 - **Single Source of Truth (SSOT)**: All core domain entities, interfaces, and schemas MUST be imported from the central types directory (`src/types/index.ts`). Reject duplicate inline interfaces across components or handlers.
 - **Strangler Pattern on God Files**: NEVER dump new state, actions, or views directly into coordinator or root view files. Keep coordinator files under ~250 lines by extracting business logic into dedicated modular slices/helpers and UI into atomic subcomponents.
 - **State & Persistence Discipline**: UI mutations must update client state immediately with resilient offline/local memory fallback alongside remote database/API synchronization.

@@ -12,15 +12,16 @@
 ### 1.1 Runtime & Framework Profile
 - **Runtime Environment:** Node.js `v26.8.1` with native TypeScript execution and type stripping.
 - **Module Format:** ECMAScript Modules (`"type": "module"` in `package.json`).
-- **Framework Strategy:** Vanilla Modern Web architecture (ESM, Native Web Components / Custom Elements, standard DOM APIs). This guarantees instant hot reloads, zero Webpack/Vite bundle overhead, and maximum execution longevity.
-- **Styling Architecture:** Vanilla CSS utilizing CSS Custom Properties (Design Tokens for timber palettes, dimensional grids, spacing, typography, and dark-mode themes). No heavy utility framework dependencies unless explicitly requested.
+- **Framework Strategy:** Next.js 15 (App Router) with React 19 and Native ESM Core. Server routes execute with zero-friction native Node.js APIs (`node:sqlite`).
+- **Styling Architecture:** Tailwind CSS 3.4 combined with CSS Custom Properties (Design Tokens for timber palettes, dimensional grids, spacing, typography, and dark-mode themes defined in `app/globals.css`).
+- **Persistence & Database Strategy:** Optimistic LocalStorage / IndexedDB client state synced via Next.js API Routes to dual-mode backend storage: Supabase PostgREST for production cloud synchronization and Node.js native `node:sqlite` for serverless local persistence.
 - **Test Harness:** Node.js native test runner (`node:test` + `node:assert/strict`), executing test suites in under 15ms per run.
 
 ### 1.2 Architectural Boundaries & Structural Rules
 1. **Single Source of Truth (SSOT):**
    All domain entities, interfaces, enums, and data contracts MUST reside in and be imported from `src/types/index.ts`. No duplicate inline interfaces or ad-hoc types across application modules.
 2. **God File Prevention (<250 Lines Limit):**
-   No single module or component may exceed 250 lines of code. Coordinator files must delegate domain logic to pure calculators (`src/utils/calculator.ts`) and persistence adapters (`src/persistence/storage.ts`).
+   No single module or component may exceed 250 lines of code. Coordinator files must delegate domain logic to pure calculators (`src/utils/timber-calc.ts`) and persistence adapters (`src/persistence/storage.ts`).
 3. **Stateless Calculators & Pure Helpers:**
    Dimensional conversions (board feet, cubic meters, weight estimates) and SKU formatting are pure, stateless functions with deterministic outcomes and non-negative boundary verification.
 
@@ -51,21 +52,26 @@ To ensure data integrity, tenant isolation, and regulatory traceability in lumbe
 ┌────────────────────────────────────────────────────────┐
 │               Client In-Memory Reactive State          │
 └─────────────┬────────────────────────────┬─────────────┘
-              │ Local Write                │ Sync Queue
+              │ Local Write                │ REST API Call
               ▼                            ▼
-┌───────────────────────────┐    ┌───────────────────────┐
-│     LocalStorage /        │    │    Remote REST API    │
-│  IndexedDB Cache Storage  │    │  (Backend Sync & DB)  │
-└───────────────────────────┘    └───────────────────────┘
+┌───────────────────────────┐    ┌───────────────────────────────────┐
+│     LocalStorage /        │    │    Next.js API Route Handlers     │
+│  IndexedDB Cache Storage  │    │ (/api/records, /api/sales, etc.)  │
+└───────────────────────────┘    └─────────────────┬─────────────────┘
+                                                   │ Dual-Mode Backend
+                                                   ▼
+                                 ┌───────────────────────────────────┐
+                                 │  Supabase PostgREST / node:sqlite │
+                                 └───────────────────────────────────┘
 ```
 
 ### 3.1 Persistence Tier Responsibilities
 1. **Optimistic Local Execution:**
-   Every user action (e.g., recording inbound lumber, updating moisture levels, moving bundles) updates reactive client state immediately.
+   Every user action (e.g., recording inbound lumber, updating moisture levels, recording wood sales) updates reactive client state immediately with instant UI feedback.
 2. **Resilient Local Storage Fallback:**
    The `StorageAdapter` pattern (`src/persistence/storage.ts`) wraps `window.localStorage` / `IndexedDB` with an automatic fallback to `MemoryStorageAdapter` for server-side evaluation, automated unit tests, and restricted environments.
 3. **Remote Reconciliation & Conflict Resolution:**
-   Mutations are queued for synchronization with the backend REST API. Timestamp-based versioning (`updatedAt`) and transaction sequences prevent race conditions and duplicate volume deductions.
+   Mutations are queued for synchronization with the Next.js API route handlers. Timestamp-based versioning (`updatedAt`) and transaction sequences prevent race conditions and duplicate volume deductions. Dual-mode server persistence bridges between Supabase cloud PostgreSQL and native `node:sqlite` embedded tables.
 
 ---
 

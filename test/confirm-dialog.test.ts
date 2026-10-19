@@ -106,4 +106,10 @@ test('ConfirmDialog Component & Safeguard Contract Suite', async (t) => {
       'Must describe supplier deletion impact'
     );
   });
+
+  await t.test('LedgerPage gates Reset Demo behind ConfirmDialog', () => {
+    const ledgerPage = fs.readFileSync(path.resolve(process.cwd(), 'app/ledger/page.tsx'), 'utf-8');
+    assert.match(ledgerPage, /isResetConfirmOpen/, 'LedgerPage must track isResetConfirmOpen state');
+    assert.match(ledgerPage, /Reset Data Demo\?/, 'LedgerPage must render ConfirmDialog for Reset Demo');
+  });
 });
