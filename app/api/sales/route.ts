@@ -41,6 +41,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {
+    console.error('[API /api/sales GET Error]:', err);
     const message = err instanceof Error ? err.message : 'Failed to retrieve sales records';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {
+    console.error('[API /api/sales POST Error]:', err);
     const message = err instanceof Error ? err.message : 'Failed to save sales record';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
@@ -131,6 +133,7 @@ export async function DELETE(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {
+    console.error('[API /api/sales DELETE Error]:', err);
     const message = err instanceof Error ? err.message : 'Failed to delete sales record';
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }

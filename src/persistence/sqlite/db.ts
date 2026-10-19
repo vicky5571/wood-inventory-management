@@ -5,7 +5,14 @@ import { DatabaseSync } from 'node:sqlite';
 let globalDbInstance: DatabaseSync | null = null;
 
 export function createSqliteDatabase(dbPath?: string): DatabaseSync {
-  const resolvedPath = dbPath || process.env.WOOD_DB_PATH || path.join(process.cwd(), 'data', 'wood_inventory.db');
+  let resolvedPath: string;
+  if (dbPath) {
+    resolvedPath = dbPath === ':memory:' ? ':memory:' : path.resolve(process.cwd(), dbPath);
+  } else if (process.env.WOOD_DB_PATH) {
+    resolvedPath = process.env.WOOD_DB_PATH === ':memory:' ? ':memory:' : path.resolve(process.cwd(), process.env.WOOD_DB_PATH);
+  } else {
+    resolvedPath = path.resolve(process.cwd(), 'data', 'wood_inventory.db');
+  }
 
   if (resolvedPath !== ':memory:') {
     const dir = path.dirname(resolvedPath);

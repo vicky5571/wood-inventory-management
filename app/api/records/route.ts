@@ -79,9 +79,11 @@ export async function GET(request?: Request): Promise<NextResponse> {
       data: records,
       timestamp: new Date().toISOString(),
     });
-  } catch {
+  } catch (err: unknown) {
+    console.error('[API /api/records GET Error]:', err);
+    const message = err instanceof Error ? err.message : 'Failed to retrieve records';
     return NextResponse.json(
-      { success: false, error: 'Failed to retrieve records' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -163,9 +165,11 @@ export async function POST(request: Request) {
       success: true,
       data: saved,
     });
-  } catch {
+  } catch (err: unknown) {
+    console.error('[API /api/records POST Error]:', err);
+    const message = err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -225,9 +229,11 @@ export async function DELETE(request: Request) {
       success: true,
       message: 'Record deleted successfully',
     });
-  } catch {
+  } catch (err: unknown) {
+    console.error('[API /api/records DELETE Error]:', err);
+    const message = err instanceof Error ? err.message : 'Internal server error';
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: message },
       { status: 500 }
     );
   }
