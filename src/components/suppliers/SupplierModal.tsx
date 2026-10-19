@@ -12,7 +12,10 @@ import {
   FileText,
   CreditCard,
   CheckCircle,
+  Zap,
 } from 'lucide-react';
+import { toast } from '@/src/utils/toast-store';
+import { getQuickSupplierDraft } from '@/src/utils/dev-quick-fill.ts';
 
 interface SupplierModalProps {
   isOpen: boolean;
@@ -82,6 +85,13 @@ export function SupplierModal({
 
   if (!isOpen) return null;
 
+  const handleQuickFill = () => {
+    const devSupplier = getQuickSupplierDraft();
+    setForm((prev) => ({ ...prev, ...devSupplier }));
+    setError(null);
+    toast.info('Form Terisi Otomatis (开发填充)', 'Data rekanan pemasok dev telah dimuat.');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || form.name.trim().length < 3) {
@@ -129,14 +139,25 @@ export function SupplierModal({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 transition cursor-pointer"
-            aria-label="Tutup Modal"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleQuickFill}
+              className="px-2.5 py-1 text-2xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg flex items-center gap-1 transition cursor-pointer"
+              title="Isi otomatis data pemasok untuk pengujian dev"
+            >
+              <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
+              <span>⚡ Isi Cepat (Dev)</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 transition cursor-pointer"
+              aria-label="Tutup Modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Form */}

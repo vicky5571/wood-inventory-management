@@ -26,4 +26,11 @@ test('SupplierModal Validation & Component Suite', async (t) => {
     assert.equal(isValidName('PT'), false);
     assert.equal(isValidName('PT Rimba Indah'), true);
   });
+
+  await t.test('SupplierModal incorporates dev quick fill button', () => {
+    const modalPath = path.resolve(process.cwd(), 'src/components/suppliers/SupplierModal.tsx');
+    const content = fs.readFileSync(modalPath, 'utf-8');
+    assert.match(content, /getQuickSupplierDraft/, 'SupplierModal must import getQuickSupplierDraft');
+    assert.match(content, /Isi Cepat|Dev Fill/, 'SupplierModal must render Dev Quick Fill button');
+  });
 });
