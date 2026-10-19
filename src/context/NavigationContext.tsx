@@ -3,6 +3,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
+import {
+  resolveNavigationIntent,
+  resolvePathnameChange,
+} from './navigation-state';
+
 export interface NavigationContextValue {
   targetHref: string | null;
   isNavigating: boolean;
@@ -21,48 +26,71 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
   const [targetHref, setTargetHref] = useState<string | null>(null);
+  const targetHrefRef = useRef<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear pending target when destination pathname is reached
-  useEffect(() => {
-    setTargetHref(null);
+  const clearSafetyTimeout = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  }, [pathname]);
+  }, []);
+
+  const armSafetyTimeout = useCallback(() => {
+    clearSafetyTimeout();
+    timeoutRef.current = setTimeout(() => {
+      targetHrefRef.current = null;
+      setTargetHref(null);
+      timeoutRef.current = null;
+    }, SAFETY_TIMEOUT_MS);
+  }, [clearSafetyTimeout]);
+
+  // Handle route changes when Next.js commits a page navigation
+  useEffect(() => {
+    if (!targetHrefRef.current) {
+      return;
+    }
+
+    const { isTargetReached } = resolvePathnameChange(pathname, targetHrefRef.current);
+
+    if (isTargetReached) {
+      targetHrefRef.current = null;
+      setTargetHref(null);
+      clearSafetyTimeout();
+    } else {
+      // Intermediate route arrived; re-assert navigation to the desired target
+      router.push(targetHrefRef.current);
+    }
+  }, [pathname, router, clearSafetyTimeout]);
 
   // Clean up timer on unmount
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    return () => clearSafetyTimeout();
+  }, [clearSafetyTimeout]);
 
   const navigateTo = useCallback(
     (href: string) => {
-      // Ignore navigation if already on the requested page or already transitioning to it
-      if (href === pathname || href === targetHref) {
+      const intent = resolveNavigationIntent(pathname, targetHrefRef.current, href);
+
+      if (intent.type === 'NOOP') {
         return;
       }
 
-      setTargetHref(href);
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (intent.type === 'CANCEL') {
+        targetHrefRef.current = null;
+        setTargetHref(null);
+        clearSafetyTimeout();
+        router.push(pathname);
+        return;
       }
 
-      // Safety timeout: reset targetHref if transition takes longer than 6 seconds
-      timeoutRef.current = setTimeout(() => {
-        setTargetHref(null);
-      }, SAFETY_TIMEOUT_MS);
-
-      // Trigger Next.js router transition in parallel
-      router.push(href);
+      // Preempt in-flight navigation and transition to new target
+      targetHrefRef.current = intent.targetHref;
+      setTargetHref(intent.targetHref);
+      armSafetyTimeout();
+      router.push(intent.targetHref);
     },
-    [pathname, targetHref, router]
+    [pathname, router, armSafetyTimeout, clearSafetyTimeout]
   );
 
   const value: NavigationContextValue = {

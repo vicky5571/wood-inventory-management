@@ -28,4 +28,12 @@ test('NavigationContext Architecture & Contract Suite', async (t) => {
     assert.match(content, /router\.push/);
     assert.match(content, /6000|SAFETY_TIMEOUT_MS/);
   });
+
+  await t.test('delegates to navigation-state and tracks targetHrefRef for preemptive navigation and cancellation', () => {
+    const content = fs.readFileSync(contextFilePath, 'utf-8');
+    assert.match(content, /targetHrefRef/);
+    assert.match(content, /resolveNavigationIntent/);
+    assert.match(content, /resolvePathnameChange/);
+    assert.match(content, /intent\.type\s*===\s*['"]CANCEL['"]/);
+  });
 });
