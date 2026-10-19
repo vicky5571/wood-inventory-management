@@ -64,4 +64,21 @@ test('Chart Rerender Optimization & In-Memory Cache Suite', async (t) => {
     assert.match(donutFile, /chartInstanceRef\.current\.update/, 'SpeciesDonutChart must call chart.update');
     assert.doesNotMatch(donutFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'SpeciesDonutChart must not destroy chart on every render effect');
   });
+
+  await t.test('SupplierBarChart, InventoryFlowChart, and CustomerSalesBarChart use in-place chart.update', () => {
+    const supFile = readFileSync(resolve('src/components/analytics/SupplierBarChart.tsx'), 'utf-8');
+    assert.match(supFile, /useMemo\(/, 'SupplierBarChart must memoize supplierData');
+    assert.match(supFile, /chartInstanceRef\.current\.update/, 'SupplierBarChart must call chart.update');
+    assert.doesNotMatch(supFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'SupplierBarChart must not destroy chart on every render effect');
+
+    const flowFile = readFileSync(resolve('src/components/analytics/InventoryFlowChart.tsx'), 'utf-8');
+    assert.match(flowFile, /useMemo\(/, 'InventoryFlowChart must memoize flowData');
+    assert.match(flowFile, /chartInstanceRef\.current\.update/, 'InventoryFlowChart must call chart.update');
+    assert.doesNotMatch(flowFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'InventoryFlowChart must not destroy chart on every render effect');
+
+    const custFile = readFileSync(resolve('src/components/analytics/CustomerSalesBarChart.tsx'), 'utf-8');
+    assert.match(custFile, /useMemo\(/, 'CustomerSalesBarChart must memoize customerData');
+    assert.match(custFile, /chartInstanceRef\.current\.update/, 'CustomerSalesBarChart must call chart.update');
+    assert.doesNotMatch(custFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'CustomerSalesBarChart must not destroy chart on every render effect');
+  });
 });

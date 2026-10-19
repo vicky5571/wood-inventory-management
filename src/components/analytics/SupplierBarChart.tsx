@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import type { WoodReceivingRecord } from '@/src/types';
 import { prepareSupplierBarData } from './chart-helpers';
@@ -10,17 +10,20 @@ export function SupplierBarChart({ records }: { records: WoodReceivingRecord[] }
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
+  const supplierData = useMemo(() => prepareSupplierBarData(records), [records]);
+
   useEffect(() => {
     if (!canvasRef.current) return;
+    const { labels, delivered, tally } = supplierData;
+    if (labels.length === 0) return;
 
     if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-      chartInstanceRef.current = null;
+      chartInstanceRef.current.data.labels = labels;
+      chartInstanceRef.current.data.datasets[0].data = tally;
+      chartInstanceRef.current.data.datasets[1].data = delivered;
+      chartInstanceRef.current.update('none');
+      return;
     }
-
-    const { labels, delivered, tally } = prepareSupplierBarData(records);
-
-    if (labels.length === 0) return;
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -92,12 +95,10 @@ export function SupplierBarChart({ records }: { records: WoodReceivingRecord[] }
     });
 
     return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-        chartInstanceRef.current = null;
-      }
+      chartInstanceRef.current?.destroy();
+      chartInstanceRef.current = null;
     };
-  }, [records]);
+  }, [supplierData]);
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">

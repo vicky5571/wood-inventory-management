@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import type { WoodReceivingRecord, WoodSalesRecord } from '@/src/types/index';
 import { prepareInventoryFlowData } from './sales-chart-helpers';
@@ -15,20 +15,24 @@ export function InventoryFlowChart({ inboundRecords, salesRecords }: InventoryFl
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
+  const flowData = useMemo(
+    () => prepareInventoryFlowData(inboundRecords, salesRecords),
+    [inboundRecords, salesRecords]
+  );
+
   useEffect(() => {
     if (!canvasRef.current) return;
+    const { labels, inboundVolumes, outboundVolumes, netVolumes } = flowData;
+    if (labels.length === 0) return;
 
     if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-      chartInstanceRef.current = null;
+      chartInstanceRef.current.data.labels = labels;
+      chartInstanceRef.current.data.datasets[0].data = inboundVolumes;
+      chartInstanceRef.current.data.datasets[1].data = outboundVolumes;
+      chartInstanceRef.current.data.datasets[2].data = netVolumes;
+      chartInstanceRef.current.update('none');
+      return;
     }
-
-    const { labels, inboundVolumes, outboundVolumes, netVolumes } = prepareInventoryFlowData(
-      inboundRecords,
-      salesRecords
-    );
-
-    if (labels.length === 0) return;
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -99,12 +103,10 @@ export function InventoryFlowChart({ inboundRecords, salesRecords }: InventoryFl
     });
 
     return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-        chartInstanceRef.current = null;
-      }
+      chartInstanceRef.current?.destroy();
+      chartInstanceRef.current = null;
     };
-  }, [inboundRecords, salesRecords]);
+  }, [flowData]);
 
   const isEmpty = (inboundRecords?.length || 0) === 0 && (salesRecords?.length || 0) === 0;
 
