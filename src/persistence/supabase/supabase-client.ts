@@ -46,10 +46,15 @@ export async function supabaseFetch<T>(
     throw new Error(`Supabase PostgREST error (${response.status} ${response.statusText}): ${errorBody}`);
   }
 
-  // Handle 204 No Content
-  if (response.status === 204) {
+  // Handle empty bodies (204 No Content, or 201/200 with empty body)
+  const text = await response.text();
+  if (!text || text.trim() === '') {
     return null as T;
   }
 
-  return response.json() as Promise<T>;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return text as unknown as T;
+  }
 }

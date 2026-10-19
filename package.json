@@ -10,7 +10,8 @@
     "start": "next start",
     "test": "node --test",
     "test:smoke": "node --test test/smoke.test.ts",
-    "db:seed": "node scripts/seed-db.ts"
+    "db:seed": "node scripts/seed-db.ts",
+    "db:seed:supabase": "node scripts/seed-supabase.ts"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
