@@ -22,7 +22,7 @@ export interface WoodSpecies {
   id: string;
   code: string;               // e.g. "TEAK", "OAK-W", "MAHOG"
   commonName: string;         // e.g. "Teak", "White Oak", "Mahogany"
-  botanicalName: string;      // e.g. "Tectona grandis"
+  botanicalName?: string;     // e.g. "Tectona grandis"
   densityKgM3: number;        // Nominal dry density in kg/m³
   jankaHardnessN?: number;    // Hardness rating in Newtons
   isHardwood: boolean;

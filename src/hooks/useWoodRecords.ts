@@ -80,7 +80,7 @@ export function useWoodRecords() {
       const url = buildRecordsApiUrl({
         page,
         pageSize,
-        searchQuery: filters.query,
+        searchQuery: filters.searchQuery,
         species: filters.species,
         kavling: filters.kavling,
         startDate: filters.startDate,

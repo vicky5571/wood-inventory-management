@@ -27,7 +27,7 @@ export default function MobileTallyPage() {
   const [supplierName, setSupplierName] = useState('');
   const [woodSpecies, setWoodSpecies] = useState('Meranti');
   const [forestryDocNumber, setForestryDocNumber] = useState('');
-  const [storageYard, setStorageYard] = useState(settings.defaultStorageYard || 'TPK-Timur');
+  const [storageYard, setStorageYard] = useState(settings.yardName || 'TPK-Timur');
   const [kavlingNumber, setKavlingNumber] = useState('KAV-01');
   const [deliveredVolumeM3, setDeliveredVolumeM3] = useState(0); const [deliveredPieces, setDeliveredPieces] = useState(0);
   const [tallyVolumeM3, setTallyVolumeM3] = useState(0); const [tallyPieces, setTallyPieces] = useState(1);
@@ -40,12 +40,12 @@ export default function MobileTallyPage() {
     const draft = loadManifestDraft();
     if (draft && hasMeaningfulManifestDraft(draft)) {
       if (draft.truckPlateNumber) setTruckPlateNumber(draft.truckPlateNumber); if (draft.supplierName) setSupplierName(draft.supplierName);
-      if (draft.forestryDocNumber) setForestryDocNumber(draft.forestryDocNumber); if (draft.storageYard) setStorageYard(draft.storageYard);
+      if (draft.forestryDocNumber) setForestryDocNumber(draft.forestryDocNumber);
       const it = draft.items?.[0];
       if (it) {
-        if (it.woodSpecies) setWoodSpecies(it.woodSpecies); if (it.kavlingNumber) setKavlingNumber(it.kavlingNumber);
-        if (it.deliveredPieces) setDeliveredPieces(it.deliveredPieces); if (it.deliveredVolumeM3) setDeliveredVolumeM3(it.deliveredVolumeM3);
-        if (it.tallyPieces) setTallyPieces(it.tallyPieces); if (it.tallyVolumeM3) setTallyVolumeM3(it.tallyVolumeM3);
+        if (it.woodSpecies) setWoodSpecies(it.woodSpecies); if (it.storageYard) setStorageYard(it.storageYard);
+        if (it.kavlingNumber) setKavlingNumber(it.kavlingNumber); if (it.deliveredPieces) setDeliveredPieces(it.deliveredPieces);
+        if (it.deliveredVolumeM3) setDeliveredVolumeM3(it.deliveredVolumeM3); if (it.tallyPieces) setTallyPieces(it.tallyPieces); if (it.tallyVolumeM3) setTallyVolumeM3(it.tallyVolumeM3);
       }
     }
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
@@ -53,8 +53,8 @@ export default function MobileTallyPage() {
 
   useEffect(() => {
     const payload: Partial<ManifestFormInput> = {
-      truckPlateNumber, supplierName, forestryDocNumber, storageYard,
-      items: [{ id: 'tally-draft', woodSpecies, woodLengthM: 4, storageYard, kavlingNumber, deliveredPieces, deliveredVolumeM3, tallyPieces, tallyVolumeM3 }],
+      truckPlateNumber, supplierName, forestryDocNumber,
+      items: [{ id: 'tally-draft', woodSpecies, woodLengthM: 4, storageYard, kavlingNumber, deliveredPieces, deliveredVolumeM3, tallyPieces, tallyVolumeM3, timberPricePerM3: 1500000, timberPphRate: settings.defaultTimberPphRate ?? 0.015 }],
     };
     if (!hasMeaningfulManifestDraft(payload)) return;
     const t = setTimeout(() => saveManifestDraft(payload), 500);
@@ -88,7 +88,7 @@ export default function MobileTallyPage() {
       addLog({
         action: 'RECORD_CREATED', entityId: payload.id,
         entitySummary: `Tally Lapangan: ${payload.truckPlateNumber} • ${payload.supplierName} (${tallyVolumeM3.toFixed(2)} m³ / ${tallyPieces} btg)`,
-        operatorName: user?.username || 'Field Tallier', operatorRole: user?.role || 'Operator',
+        operatorName: user?.name || 'Field Tallier', operatorRole: user?.title || 'Operator',
       });
       clearManifestDraft();
       toast.success('Manifest Tersimpan', `${payload.truckPlateNumber} berhasil direkam ke buku besar.`);

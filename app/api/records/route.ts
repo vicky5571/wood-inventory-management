@@ -113,8 +113,8 @@ export async function POST(request: Request) {
       const saved = await serverRecordStore.saveManifest(manifestInput);
       await serverRecordStore.appendActivityLog({
         action: 'RECORD_CREATED',
-        entityId: manifestInput.manifestNumber,
-        entitySummary: `Manifest ${manifestInput.manifestNumber} • Plat ${manifestInput.truckPlateNumber}`,
+        entityId: manifestInput.id,
+        entitySummary: `Manifest ${manifestInput.receiptNumber || manifestInput.id} • Plat ${manifestInput.truckPlateNumber}`,
         operatorName: user.name,
         operatorRole: user.title || `Level ${user.roleLevel}`,
       });

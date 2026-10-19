@@ -17,6 +17,7 @@ import { DraftRecoveryBanner } from './DraftRecoveryBanner';
 import { RecordDocumentSection } from './RecordDocumentSection';
 import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
+import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { useSettings } from '@/src/hooks/useSettings';
 import { X, Scale, CheckCircle2, Zap } from 'lucide-react';
 import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
