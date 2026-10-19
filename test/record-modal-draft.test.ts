@@ -200,4 +200,13 @@ test('Auto-Draft Persistence Test Suite for RecordModal', async (t) => {
     assert.match(content, /DraftRecoveryBanner/);
     assert.match(content, /localStorage\.removeItem\(DRAFT_KEY\)|clearRecordDraft/);
   });
+
+  await t.test('RecordModal.tsx incorporates dev quick fill button', () => {
+    const modalFile = path.resolve(process.cwd(), 'src/components/ledger/RecordModal.tsx');
+    assert.ok(fs.existsSync(modalFile), 'RecordModal.tsx must exist');
+
+    const content = fs.readFileSync(modalFile, 'utf-8');
+    assert.match(content, /getQuickReceivingDraft/, 'RecordModal must import getQuickReceivingDraft');
+    assert.match(content, /Isi Cepat|Dev Fill/, 'RecordModal must render Dev Quick Fill button');
+  });
 });

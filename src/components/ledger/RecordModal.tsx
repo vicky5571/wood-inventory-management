@@ -18,7 +18,8 @@ import { RecordDocumentSection } from './RecordDocumentSection';
 import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
 import { RecordReconciliationCard } from './RecordReconciliationCard';
-import { X, Scale, CheckCircle2 } from 'lucide-react';
+import { X, Scale, CheckCircle2, Zap } from 'lucide-react';
+import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
 
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
 export const MANIFEST_DRAFT_KEY = 'wood_manifest_form_draft_v1';
@@ -127,6 +128,13 @@ export function RecordModal({
     toast.info('Draf Dihapus (草稿已丢弃)', 'Draf belum tersimpan dibersihkan.');
   };
 
+  const handleQuickFill = useCallback(() => {
+    const { form: devForm, items: devItems } = getQuickReceivingDraft(availableSpecies);
+    setForm((prev) => ({ ...prev, ...devForm }));
+    setItems(devItems);
+    toast.info('Form Terisi Otomatis (开发填充)', 'Data sampel penerimaan multi-item telah dimuat.');
+  }, [availableSpecies]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submitPreview = computeManifestCalculations(manifestPayload);
@@ -180,9 +188,20 @@ export function RecordModal({
               <p className="text-xs text-gray-500 mt-0.5">Verifikasi surat jalan, muatan kayu multi-item, dan rekonsiliasi neto.</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer" aria-label="Tutup">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleQuickFill}
+              className="px-2.5 py-1 text-2xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg flex items-center gap-1 transition cursor-pointer"
+              title="Isi otomatis formulir penerimaan dengan data sampel dev"
+            >
+              <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
+              <span>⚡ Isi Cepat (Dev)</span>
+            </button>
+            <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer" aria-label="Tutup">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {pendingDraft && <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />}
