@@ -1,0 +1,56 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+test('Chart Rerender Optimization & In-Memory Cache Suite', async (t) => {
+  await t.test('useWoodRecords maintains in-memory cache and sync equality guard', () => {
+    const file = readFileSync(resolve('src/hooks/useWoodRecords.ts'), 'utf-8');
+    assert.match(file, /memoryRecordsCache/, 'useWoodRecords must define module-scoped memoryRecordsCache');
+    assert.match(file, /areRecordsEqual/, 'useWoodRecords must implement payload equality guard for server sync');
+  });
+
+  await t.test('useWoodSalesRecords maintains in-memory cache and sync equality guard', () => {
+    const file = readFileSync(resolve('src/hooks/useWoodSalesRecords.ts'), 'utf-8');
+    assert.match(file, /memorySalesCache/, 'useWoodSalesRecords must define module-scoped memorySalesCache');
+    assert.match(file, /areSalesEqual/, 'useWoodSalesRecords must implement payload equality guard for server sync');
+  });
+
+  await t.test('areRecordsEqual correctly compares records arrays', async () => {
+    const { areRecordsEqual } = await import('../src/hooks/useWoodRecords.ts');
+    const r1 = [
+      { id: '1', updatedAt: '2026-10-20T00:00:00Z', woodSpecies: 'Teak' } as any,
+      { id: '2', updatedAt: '2026-10-20T00:00:00Z', woodSpecies: 'Pine' } as any,
+    ];
+    const r2 = [
+      { id: '1', updatedAt: '2026-10-20T00:00:00Z', woodSpecies: 'Teak' } as any,
+      { id: '2', updatedAt: '2026-10-20T00:00:00Z', woodSpecies: 'Pine' } as any,
+    ];
+    const r3 = [
+      { id: '1', updatedAt: '2026-10-20T00:01:00Z', woodSpecies: 'Teak' } as any,
+      { id: '2', updatedAt: '2026-10-20T00:00:00Z', woodSpecies: 'Pine' } as any,
+    ];
+
+    assert.equal(areRecordsEqual([], []), true);
+    assert.equal(areRecordsEqual(r1, r2), true);
+    assert.equal(areRecordsEqual(r1, r3), false);
+    assert.equal(areRecordsEqual(r1, [r1[0]]), false);
+  });
+
+  await t.test('areSalesEqual correctly compares sales arrays', async () => {
+    const { areSalesEqual } = await import('../src/hooks/useWoodSalesRecords.ts');
+    const s1 = [
+      { id: 'S1', updatedAt: '2026-10-20T00:00:00Z', customerName: 'Client A' } as any,
+    ];
+    const s2 = [
+      { id: 'S1', updatedAt: '2026-10-20T00:00:00Z', customerName: 'Client A' } as any,
+    ];
+    const s3 = [
+      { id: 'S1', updatedAt: '2026-10-20T01:00:00Z', customerName: 'Client A' } as any,
+    ];
+
+    assert.equal(areSalesEqual([], []), true);
+    assert.equal(areSalesEqual(s1, s2), true);
+    assert.equal(areSalesEqual(s1, s3), false);
+  });
+});

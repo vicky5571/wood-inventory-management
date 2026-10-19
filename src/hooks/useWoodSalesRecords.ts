@@ -8,7 +8,20 @@ import { toast } from '../utils/toast-store.ts';
 
 const STORAGE_KEY = 'wood_sales_records';
 
+let memorySalesCache: WoodSalesRecord[] | null = null;
+
+export function areSalesEqual(prev: WoodSalesRecord[], next: WoodSalesRecord[]): boolean {
+  if (prev.length !== next.length) return false;
+  if (prev.length === 0) return true;
+  return (
+    prev[0]?.id === next[0]?.id &&
+    prev[0]?.updatedAt === next[0]?.updatedAt &&
+    prev[prev.length - 1]?.id === next[next.length - 1]?.id
+  );
+}
+
 async function persistSales(sales: WoodSalesRecord[]): Promise<void> {
+  memorySalesCache = sales;
   try {
     await defaultStorage.setItem(STORAGE_KEY, sales);
   } catch (e) {
@@ -17,8 +30,8 @@ async function persistSales(sales: WoodSalesRecord[]): Promise<void> {
 }
 
 export function useWoodSalesRecords(inboundRecords: WoodReceivingRecord[] = []) {
-  const [sales, setSales] = useState<WoodSalesRecord[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [sales, setSales] = useState<WoodSalesRecord[]>(() => memorySalesCache || []);
+  const [isHydrated, setIsHydrated] = useState(() => memorySalesCache !== null);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const salesRef = useRef<WoodSalesRecord[]>(sales);
@@ -48,17 +61,20 @@ export function useWoodSalesRecords(inboundRecords: WoodReceivingRecord[] = []) 
   useEffect(() => {
     let isMounted = true;
     (async () => {
-      try {
-        const stored = await defaultStorage.getItem<WoodSalesRecord[]>(STORAGE_KEY);
-        if (isMounted && Array.isArray(stored)) {
-          salesRef.current = stored;
-          setSales(stored);
-          setIsHydrated(true);
+      if (memorySalesCache === null) {
+        try {
+          const stored = await defaultStorage.getItem<WoodSalesRecord[]>(STORAGE_KEY);
+          if (isMounted && Array.isArray(stored)) {
+            salesRef.current = stored;
+            memorySalesCache = stored;
+            setSales(stored);
+            setIsHydrated(true);
+          }
+        } catch (e) {
+          console.warn('Failed to load local sales:', e);
+        } finally {
+          if (isMounted) setIsHydrated(true);
         }
-      } catch (e) {
-        console.warn('Failed to load local sales:', e);
-      } finally {
-        if (isMounted) setIsHydrated(true);
       }
 
       syncWithServer(async () => {
@@ -66,9 +82,12 @@ export function useWoodSalesRecords(inboundRecords: WoodReceivingRecord[] = []) 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         if (isMounted && !hasMutatedRef.current && json?.success && Array.isArray(json.data)) {
-          salesRef.current = json.data;
-          setSales(json.data);
-          await persistSales(json.data);
+          if (!areSalesEqual(salesRef.current, json.data)) {
+            salesRef.current = json.data;
+            memorySalesCache = json.data;
+            setSales(json.data);
+            await persistSales(json.data);
+          }
         }
       }, false);
     })();
