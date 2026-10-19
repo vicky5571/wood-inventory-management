@@ -8,6 +8,9 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: path.resolve(__dirname),
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./data/**/*'],
+  },
   distDir: process.env.NEXT_DIST_DIR || '.next',
 };
 
