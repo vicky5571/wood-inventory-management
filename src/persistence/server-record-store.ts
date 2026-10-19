@@ -244,13 +244,25 @@ export class ServerRecordStore {
   async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
     if (this.isSupabaseMode()) {
       try {
-        const yards = await supabaseFetch<StorageYard[]>('/storage_yards?select=*&order=name.asc');
+        const yardsData = await supabaseFetch<any[]>('/storage_yards?select=*&order=name.asc');
+        const yards: StorageYard[] = yardsData.map((y) => ({
+          id: y.id,
+          tenantId: y.tenant_id || 'default-tenant',
+          yardCode: y.yard_code,
+          name: y.name,
+          description: y.description || undefined,
+          createdAt: y.created_at || new Date().toISOString(),
+          updatedAt: y.updated_at || new Date().toISOString(),
+        }));
         const lotsData = await supabaseFetch<any[]>('/storage_lots?select=*,storage_yards(name,location_code)&order=lot_code.asc');
         const lots: StorageLotWithYard[] = lotsData.map((l) => ({
           id: l.id,
+          tenantId: l.tenant_id || 'default-tenant',
           yardId: l.yard_id,
           lotCode: l.lot_code,
           status: l.status,
+          createdAt: l.created_at || new Date().toISOString(),
+          updatedAt: l.updated_at || new Date().toISOString(),
           yardCode: l.storage_yards?.location_code || '',
           yardName: l.storage_yards?.name || '',
         }));
