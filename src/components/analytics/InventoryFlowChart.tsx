@@ -103,8 +103,10 @@ export function InventoryFlowChart({ inboundRecords, salesRecords }: InventoryFl
     });
 
     return () => {
-      chartInstanceRef.current?.destroy();
-      chartInstanceRef.current = null;
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
+      }
     };
   }, [flowData]);
 
