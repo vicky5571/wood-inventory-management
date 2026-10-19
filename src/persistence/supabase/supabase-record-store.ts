@@ -216,8 +216,9 @@ export class SupabaseRecordStore {
       filtered = filtered.filter((r) => r.storageYard === params.yard!.trim());
     }
 
-    if (params.status && params.status.trim().length > 0) {
-      filtered = filtered.filter((r) => r.paymentStatus === params.status!.trim());
+    const statusFilter = params.status || (params.paymentStatus && params.paymentStatus !== 'ALL' ? params.paymentStatus : undefined);
+    if (statusFilter && statusFilter.trim().length > 0) {
+      filtered = filtered.filter((r) => r.paymentStatus === statusFilter.trim());
     }
 
     if (params.startDate && params.startDate.trim().length > 0) {
@@ -229,7 +230,7 @@ export class SupabaseRecordStore {
     }
 
     const sortBy = params.sortBy && ALLOWED_SORT_COLUMNS.has(params.sortBy) ? params.sortBy : 'receiptDate';
-    const sortOrder = params.sortOrder === 'asc' ? 1 : -1;
+    const sortOrder = String(params.sortOrder || '').toLowerCase() === 'asc' ? 1 : -1;
 
     filtered.sort((a: any, b: any) => {
       const aVal = a[sortBy] ?? '';
@@ -256,16 +257,21 @@ export class SupabaseRecordStore {
       data = filtered.slice(offset, offset + pageSize);
     }
 
+    const pagination = {
+      totalRecords: totalCount,
+      totalCount,
+      page,
+      pageSize,
+      totalPages,
+      hasNextPage: pageSize !== -1 && page < totalPages,
+      hasPreviousPage: page > 1,
+      hasPrevPage: page > 1,
+    };
+
     return {
       data,
-      meta: {
-        totalCount,
-        page,
-        pageSize,
-        totalPages,
-        hasNextPage: pageSize !== -1 && page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      pagination,
+      meta: pagination,
     };
   }
 

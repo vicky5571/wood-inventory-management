@@ -408,9 +408,11 @@ export interface PaginationMeta {
   page: number;
   pageSize: number;
   totalRecords: number;
+  totalCount?: number;
   totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+  hasPrevPage?: boolean;
 }
 
 /**
@@ -419,6 +421,7 @@ export interface PaginationMeta {
 export interface PaginatedResult<T> {
   data: T[];
   pagination: PaginationMeta;
+  meta?: PaginationMeta;
 }
 
 /**
@@ -433,9 +436,10 @@ export interface RecordQueryParams {
   yard?: string;
   startDate?: string;
   endDate?: string;
+  status?: string;
   paymentStatus?: PaymentStatus | 'ALL';
   sortBy?: 'receiptDate' | 'truckPlateNumber' | 'supplierName' | 'tallyVolumeM3' | 'grandNetPayable' | 'createdAt';
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: 'ASC' | 'DESC' | 'asc' | 'desc';
 }
 
 /**
