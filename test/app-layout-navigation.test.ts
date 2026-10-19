@@ -17,6 +17,8 @@ test('AppLayout Optimistic Navigation Suite', async (t) => {
     const content = fs.readFileSync(layoutFilePath, 'utf-8');
     assert.match(content, /targetHref/);
     assert.match(content, /<Loading\s*\/>/);
+    assert.ok(!content.includes('{isTransitionPending ? <Loading /> : children}'), 'children must not be unmounted during navigation');
+    assert.match(content, /children/, 'children must remain mounted during optimistic navigation');
   });
 
   await t.test('AppLayout conforms to coordinator complexity budget (< 250 LOC)', () => {

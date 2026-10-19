@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/hooks/useAuth';
 
 type PresetKey = 'manager' | 'auditor' | 'director' | 'level1' | 'level2' | 'level3' | null;
@@ -34,7 +33,6 @@ const PRESETS = [
 ] as const;
 
 export default function LoginPage() {
-  const router = useRouter();
   const { user, login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,9 +44,9 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && user) {
-      router.push('/');
+      window.location.href = '/';
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +59,7 @@ export default function LoginPage() {
     setErrorMsg('');
     const res = await login({ email: email.trim(), password });
     if (res.success) {
-      router.push('/');
-      router.refresh();
+      window.location.href = '/';
     } else {
       setErrorMsg(res.error || 'Email atau kata sandi salah.');
       setLoading(false);
