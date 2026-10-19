@@ -104,8 +104,8 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
       storageYard: 'TPK-Timur',
       kavlingNumber: 'KAV-01',
       woodSpecies: 'Meranti',
-      pieces: 20,
-      volumeM3: 8.5,
+      pieces: 10,
+      volumeM3: 3.5,
       pricePerM3: 2500000,
     };
 
@@ -158,6 +158,26 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
     const json = await managerRes.json();
     assert.equal(json.success, true);
     assert.equal(json.data.customerName, 'PT Kayu Nusantara');
+
+    // 3b. Overdraw rejection -> 400 Bad Request
+    const overdrawReq = new Request('http://localhost:3000/api/sales', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({
+        ...salePayload,
+        deliveryOrderNumber: `DO-OVERDRAW-${Date.now()}`,
+        pieces: 500,
+        volumeM3: 250.0,
+      }),
+    });
+    const overdrawRes = await POST(overdrawReq);
+    assert.equal(overdrawRes.status, 400);
+    const overdrawBody = await overdrawRes.json();
+    assert.equal(overdrawBody.success, false);
+    assert.match(overdrawBody.error, /melebihi sisa stok kavling|tidak mencukupi/i);
 
     // 4. DELETE /api/sales?id=XXX with Level 2 -> 403
     const deleteLvl2Req = new Request(`http://localhost:3000/api/sales?id=${json.data.id}`, {

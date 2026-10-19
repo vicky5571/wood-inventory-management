@@ -40,5 +40,11 @@ test('Mobile Tally Workstation Subcomponents Suite', async (t) => {
     assert.match(content, /Penyusutan\s*\(亏损\)|Penyusutan/, 'Must display Penyusutan status');
     assert.match(content, /Surplus\s*\(超出\)|Surplus/, 'Must display Surplus status');
   });
+
+  await t.test('TallyDiscrepancyCard supports acceptableThresholdPct prop from settings', () => {
+    const cardPath = path.resolve(process.cwd(), 'src/components/tally/TallyDiscrepancyCard.tsx');
+    const content = fs.readFileSync(cardPath, 'utf-8');
+    assert.match(content, /acceptableThresholdPct\?:\s*number/, 'Must accept optional acceptableThresholdPct prop');
+  });
 });
 

@@ -143,4 +143,14 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
     // Verify disabled visual cues (opacity-40 and cursor-not-allowed)
     assert.match(content, /opacity-40\s+cursor-not-allowed/, 'Must apply disabled visual styles when canWrite is false');
   });
+
+  await t.test('Toolbar renders PARTIAL payment status quick-filter pill', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const toolbarPath = path.resolve(process.cwd(), 'src/components/ledger/Toolbar.tsx');
+    const content = fs.readFileSync(toolbarPath, 'utf-8');
+
+    assert.match(content, /filters\.paymentStatus\s*===\s*'PARTIAL'/, 'Toolbar must support PARTIAL paymentStatus toggle');
+    assert.match(content, /Sebagian\s*\/\s*DP\s*\(部分付款\)/, 'Toolbar must render bilingual PARTIAL payment status label');
+  });
 });

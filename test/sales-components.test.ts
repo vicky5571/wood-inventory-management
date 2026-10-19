@@ -99,5 +99,11 @@ test('Sales Subsystem UI Components Suite', async (t) => {
     assert.match(content, /getQuickSalesDraft/, 'SalesModal must import getQuickSalesDraft');
     assert.match(content, /Isi Cepat|Dev Fill/, 'SalesModal must render Dev Quick Fill button');
   });
+
+  await t.test('SalesModal disables submit button and blocks submission when stockCheck.isAllowed is false', () => {
+    const content = fs.readFileSync(salesModalPath, 'utf-8');
+    assert.match(content, /disabled=\{isSubmitting\s*\|\|\s*!stockCheck\.isAllowed\}/, 'Submit button must be disabled when !stockCheck.isAllowed');
+    assert.match(content, /if\s*\(\s*isSubmitting\s*\|\|\s*!stockCheck\.isAllowed\s*\)\s*return/, 'handleSubmit must guard against !stockCheck.isAllowed');
+  });
 });
 

@@ -171,6 +171,17 @@ export function Toolbar({
         </button>
         <button
           type="button"
+          onClick={() => onFilterChange({ ...filters, paymentStatus: filters.paymentStatus === 'PARTIAL' ? undefined : 'PARTIAL' })}
+          className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium ${
+            filters.paymentStatus === 'PARTIAL'
+              ? 'bg-amber-500 text-white border-amber-500 font-bold shadow-2xs'
+              : 'bg-gray-50 text-gray-600 border-gray-200/80 hover:bg-gray-100 hover:text-gray-900'
+          }`}
+        >
+          Sebagian / DP (部分付款)
+        </button>
+        <button
+          type="button"
           onClick={() => onFilterChange({ ...filters, paymentStatus: filters.paymentStatus === 'PAID' ? undefined : 'PAID' })}
           className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer font-medium ${
             filters.paymentStatus === 'PAID'

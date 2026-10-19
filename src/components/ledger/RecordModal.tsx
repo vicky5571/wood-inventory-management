@@ -17,27 +17,27 @@ import { DraftRecoveryBanner } from './DraftRecoveryBanner';
 import { RecordDocumentSection } from './RecordDocumentSection';
 import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
-import { RecordReconciliationCard } from './RecordReconciliationCard';
+import { useSettings } from '@/src/hooks/useSettings';
 import { X, Scale, CheckCircle2, Zap } from 'lucide-react';
 import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
 
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
 export const MANIFEST_DRAFT_KEY = 'wood_manifest_form_draft_v1';
 
-const defaultRecord = (): Partial<WoodReceivingRecord> => ({
+const defaultRecord = (defaultBrokerFee: number = 0): Partial<WoodReceivingRecord> => ({
   id: `rec-${Date.now()}`, receiptDate: new Date().toISOString().slice(0, 10),
   truckPlateNumber: '', forestryDocNumber: '', receiptNumber: `KW-${Date.now().toString().slice(-4)}`,
   contractNumber: '', supplierName: '', woodSpecies: '', woodLengthM: 4.0,
-  kavlingNumber: 'KAV-01', storageYard: 'TPK-Timur', freightRatePerM3: 0, freightPphAmount: 0, brokerFee: 0,
+  kavlingNumber: 'KAV-01', storageYard: 'TPK-Timur', freightRatePerM3: 0, freightPphAmount: 0, brokerFee: defaultBrokerFee,
 });
 
-const createItem = (r?: Partial<WoodReceivingRecord>): ManifestItemInput => ({
+const createItem = (r?: Partial<WoodReceivingRecord>, defaultTimberPphRate: number = 0.5): ManifestItemInput => ({
   id: r?.item_id || `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
   woodSpecies: r?.woodSpecies || '', woodLengthM: r?.woodLengthM ?? 4.0,
   kavlingNumber: r?.kavlingNumber || 'KAV-01', storageYard: r?.storageYard || 'TPK-Timur',
   deliveredPieces: r?.deliveredPieces ?? 0, deliveredVolumeM3: r?.deliveredVolumeM3 ?? 0,
   tallyPieces: r?.tallyPieces ?? 0, tallyVolumeM3: r?.tallyVolumeM3 ?? 0,
-  timberPricePerM3: r?.timberPricePerM3 ?? 0, timberPphRate: r?.timberPphRate ?? 0.5,
+  timberPricePerM3: r?.timberPricePerM3 ?? 0, timberPphRate: r?.timberPphRate ?? defaultTimberPphRate,
 });
 
 export function RecordModal({
@@ -50,6 +50,7 @@ export function RecordModal({
   onClose: () => void;
   onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
 }) {
+  const { settings } = useSettings();
   const [form, setForm] = useState<Partial<WoodReceivingRecord>>({});
   const [items, setItems] = useState<ManifestItemInput[]>([]);
   const [pendingDraft, setPendingDraft] = useState<Partial<ManifestFormInput> | null>(null);
@@ -61,7 +62,9 @@ export function RecordModal({
       const siblings = allRecords
         ? allRecords.filter((r) => (r.manifest_id && r.manifest_id === manifestId) || r.id === manifestId)
         : [];
-      const editItems = siblings.length > 0 ? siblings.map((r) => createItem(r)) : [createItem(initialRecord)];
+      const editItems = siblings.length > 0
+        ? siblings.map((r) => createItem(r, settings.defaultTimberPphRate))
+        : [createItem(initialRecord, settings.defaultTimberPphRate)];
       const totalBrokerFee = siblings.length > 1
         ? siblings.reduce((sum, s) => sum + (s.brokerFee || 0), 0)
         : (initialRecord.brokerFee || 0);
@@ -70,16 +73,17 @@ export function RecordModal({
       setItems(editItems);
       setPendingDraft(null);
     } else {
-      setForm(defaultRecord()); setItems([createItem()]);
+      setForm(defaultRecord(settings.defaultBrokerFee));
+      setItems([createItem(undefined, settings.defaultTimberPphRate)]);
       const mDraft = loadManifestDraft();
       if (mDraft && hasMeaningfulManifestDraft(mDraft)) {
         setPendingDraft(mDraft);
       } else {
         const rDraft = loadRecordDraft();
-        setPendingDraft(rDraft && hasMeaningfulDraftData(rDraft) ? { ...rDraft, items: [createItem(rDraft)] } : null);
+        setPendingDraft(rDraft && hasMeaningfulDraftData(rDraft) ? { ...rDraft, items: [createItem(rDraft, settings.defaultTimberPphRate)] } : null);
       }
     }
-  }, [initialRecord, allRecords, isOpen]);
+  }, [initialRecord, allRecords, isOpen, settings.defaultBrokerFee, settings.defaultTimberPphRate]);
 
   useEffect(() => {
     if (!isOpen || initialRecord) return;
@@ -119,7 +123,7 @@ export function RecordModal({
 
   const handleRestoreDraft = () => {
     if (pendingDraft) {
-      setForm((prev) => ({ ...defaultRecord(), ...prev, ...pendingDraft }));
+      setForm((prev) => ({ ...defaultRecord(settings.defaultBrokerFee), ...prev, ...pendingDraft }));
       if (Array.isArray(pendingDraft.items) && pendingDraft.items.length > 0) setItems(pendingDraft.items);
       setPendingDraft(null);
       toast.info('Draf Berhasil Dipulihkan (草稿已恢复)', 'Data formulir telah dimuat ulang.');
@@ -138,7 +142,7 @@ export function RecordModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submitPreview = computeManifestCalculations(manifestPayload);
-    const primary = items[0] || createItem(form);
+    const primary = items[0] || createItem(form, settings.defaultTimberPphRate);
     const savedRecord: WoodReceivingRecord = {
       ...(form as WoodReceivingRecord),
       manifest_id: manifestPayload.id, item_id: primary.id,

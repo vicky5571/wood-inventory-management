@@ -8,6 +8,7 @@ export interface TallyDiscrepancyCardProps {
   deliveredPieces: number;
   tallyVolumeM3: number;
   tallyPieces: number;
+  acceptableThresholdPct?: number;
 }
 
 export function TallyDiscrepancyCard({
@@ -15,21 +16,28 @@ export function TallyDiscrepancyCard({
   deliveredPieces,
   tallyVolumeM3,
   tallyPieces,
+  acceptableThresholdPct = 2.0,
 }: TallyDiscrepancyCardProps) {
   const { volumeDiff, pieceDiff, status, percentMatch } = useMemo(() => {
     const vDiff = Number((tallyVolumeM3 - deliveredVolumeM3).toFixed(4));
     const pDiff = tallyPieces - deliveredPieces;
+    const diffPct = deliveredVolumeM3 > 0 ? (Math.abs(vDiff) / deliveredVolumeM3) * 100 : 0;
 
     let stat: 'match' | 'surplus' | 'shortage' = 'match';
-    if (vDiff > 0.05) stat = 'surplus';
-    else if (vDiff < -0.05) stat = 'shortage';
+    if (deliveredVolumeM3 > 0) {
+      if (vDiff > 0 && diffPct > acceptableThresholdPct) stat = 'surplus';
+      else if (vDiff < 0 && diffPct > acceptableThresholdPct) stat = 'shortage';
+    } else {
+      if (vDiff > 0.05) stat = 'surplus';
+      else if (vDiff < -0.05) stat = 'shortage';
+    }
 
     const pct = deliveredVolumeM3 > 0
       ? Math.min(100, Math.max(0, Math.round((tallyVolumeM3 / deliveredVolumeM3) * 100)))
       : 100;
 
     return { volumeDiff: vDiff, pieceDiff: pDiff, status: stat, percentMatch: pct };
-  }, [deliveredVolumeM3, deliveredPieces, tallyVolumeM3, tallyPieces]);
+  }, [deliveredVolumeM3, deliveredPieces, tallyVolumeM3, tallyPieces, acceptableThresholdPct]);
 
   const config = {
     match: {

@@ -65,7 +65,7 @@ export function SalesModal({
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || !stockCheck.isAllowed) return;
     setIsSubmitting(true);
     try {
       await onSave(formData);
@@ -73,7 +73,7 @@ export function SalesModal({
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, isSubmitting, onSave, onClose]);
+  }, [formData, isSubmitting, stockCheck.isAllowed, onSave, onClose]);
 
   const handleQuickFill = useCallback(() => {
     const devDraft = getQuickSalesDraft(customerHistory);
@@ -201,7 +201,7 @@ export function SalesModal({
 
           <div className="flex justify-end gap-2 pt-3 border-t">
             <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100 font-medium">Batal (取消)</button>
-            <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm">
+            <button type="submit" disabled={isSubmitting || !stockCheck.isAllowed} className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-sm">
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? 'Menyimpan...' : 'Simpan Surat Jalan (保存)'}</span>
             </button>

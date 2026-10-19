@@ -16,10 +16,16 @@ test('Mobile Tally Dedicated Route Integration Suite', async (t) => {
     const content = fs.readFileSync(pagePath, 'utf-8');
     assert.match(content, /useAuth/, 'Must import and use useAuth hook');
     assert.match(content, /useWoodRecords/, 'Must import and use useWoodRecords hook');
+    assert.match(content, /useSettings/, 'Must import and use useSettings hook');
+    assert.match(content, /useActivityLog/, 'Must import and use useActivityLog hook');
+    assert.match(content, /SupplierCombobox/, 'Must import and use SupplierCombobox');
+    assert.match(content, /SpeciesCombobox/, 'Must import and use SpeciesCombobox');
     assert.match(content, /YardSelect/, 'Must import and use YardSelect');
     assert.match(content, /KavlingSelect/, 'Must import and use KavlingSelect');
     assert.match(content, /TallyMeasurementPad/, 'Must import and use TallyMeasurementPad');
     assert.match(content, /TallyDiscrepancyCard/, 'Must import and use TallyDiscrepancyCard');
+    assert.match(content, /acceptableThresholdPct/, 'Must pass acceptableThresholdPct from settings');
+    assert.match(content, /loadManifestDraft|saveManifestDraft/, 'Must implement draft persistence');
   });
 
   await t.test('app/tally/page.tsx enforces Level 1 RBAC write guard and bilingual submit action', () => {
@@ -28,6 +34,7 @@ test('Mobile Tally Dedicated Route Integration Suite', async (t) => {
     assert.match(content, /Simpan & Sinkron Manifest|Simpan Manifest/, 'Must contain manifest save button');
     assert.match(content, /truckPlateNumber/, 'Must capture truckPlateNumber');
     assert.match(content, /supplierName/, 'Must capture supplierName');
+    assert.match(content, /RECORD_CREATED/, 'Must record activity log on manifest save');
   });
 });
 

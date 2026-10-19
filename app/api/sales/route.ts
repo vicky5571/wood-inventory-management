@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server.js';
 import { salesStore } from '../../../src/persistence/sales-store.ts';
 import { serverRecordStore } from '../../../src/persistence/server-record-store.ts';
 import { getAuthenticatedUser } from '../../../src/auth/session.ts';
+import { calculateLotStockBalance, validateSalesStockAllowance } from '../../../src/utils/stock-balance.ts';
 import type { AuthUser, SalesFormInput } from '../../../src/types/index.ts';
 
 export const dynamic = 'force-dynamic';
@@ -69,6 +70,15 @@ export async function POST(request: Request) {
     }
     if (!payload.volumeM3 || payload.volumeM3 <= 0) {
       return NextResponse.json({ success: false, error: 'Validation error: Volume (m³) harus lebih dari 0' }, { status: 400 });
+    }
+
+    const inboundRecords = await serverRecordStore.getAll();
+    const existingSales = await salesStore.getAll();
+    const netSales = payload.id ? existingSales.filter((s) => s.id !== payload.id) : existingSales;
+    const balance = calculateLotStockBalance(inboundRecords, netSales, payload.storageYard, payload.kavlingNumber);
+    const allowance = validateSalesStockAllowance(balance, Number(payload.volumeM3), Number(payload.pieces));
+    if (!allowance.isAllowed) {
+      return NextResponse.json({ success: false, error: allowance.warning || 'Stok kavling tidak mencukupi' }, { status: 400 });
     }
 
     const saved = await salesStore.save(payload);

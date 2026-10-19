@@ -12,6 +12,7 @@ import {
   Building2,
   History,
   Settings,
+  ClipboardCheck,
   Menu,
   X,
   Warehouse,
@@ -20,7 +21,7 @@ import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  analytics: LayoutDashboard, ledger: TableProperties, sales: Truck,
+  analytics: LayoutDashboard, ledger: TableProperties, tally: ClipboardCheck, sales: Truck,
   suppliers: Building2, activity: History, settings: Settings,
 };
 

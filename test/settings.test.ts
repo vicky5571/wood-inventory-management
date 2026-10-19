@@ -20,4 +20,14 @@ test('App Settings & Master Data Suite', async (t) => {
     assert.equal(teak.isHardwood, true);
     assert.ok(teak.densityKgM3 > 0);
   });
+
+  await t.test('RecordModal wires useSettings for defaultBrokerFee and defaultTimberPphRate', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const modalPath = path.resolve(process.cwd(), 'src/components/ledger/RecordModal.tsx');
+    const content = fs.readFileSync(modalPath, 'utf-8');
+    assert.match(content, /useSettings/, 'RecordModal must import and invoke useSettings');
+    assert.match(content, /defaultBrokerFee/, 'RecordModal must apply defaultBrokerFee from settings');
+    assert.match(content, /defaultTimberPphRate/, 'RecordModal must apply defaultTimberPphRate from settings');
+  });
 });
