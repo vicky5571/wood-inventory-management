@@ -89,8 +89,6 @@ export function Sidebar() {
                 </span>
               </div>
             </div>
-
-            {isActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-600 flex-shrink-0" />}
           </Link>
         );
       })}
