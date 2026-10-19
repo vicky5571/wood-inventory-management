@@ -93,6 +93,13 @@ export function RecordModal({
     setItems(nextItems);
   }, []);
 
+  const handleQuickFill = useCallback(() => {
+    const { form: devForm, items: devItems } = getQuickReceivingDraft(availableSpecies);
+    setForm((prev) => ({ ...prev, ...devForm }));
+    setItems(devItems);
+    toast.info('Form Terisi Otomatis (开发填充)', 'Data sampel penerimaan multi-item telah dimuat.');
+  }, [availableSpecies]);
+
   const manifestPayload: ManifestFormInput = useMemo(() => ({
     id: form.manifest_id || (initialRecord?.manifest_id ?? `man-${Date.now()}`),
     receiptDate: form.receiptDate || new Date().toISOString().slice(0, 10),
@@ -127,13 +134,6 @@ export function RecordModal({
     setPendingDraft(null);
     toast.info('Draf Dihapus (草稿已丢弃)', 'Draf belum tersimpan dibersihkan.');
   };
-
-  const handleQuickFill = useCallback(() => {
-    const { form: devForm, items: devItems } = getQuickReceivingDraft(availableSpecies);
-    setForm((prev) => ({ ...prev, ...devForm }));
-    setItems(devItems);
-    toast.info('Form Terisi Otomatis (开发填充)', 'Data sampel penerimaan multi-item telah dimuat.');
-  }, [availableSpecies]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -209,4 +209,14 @@ test('Auto-Draft Persistence Test Suite for RecordModal', async (t) => {
     assert.match(content, /getQuickReceivingDraft/, 'RecordModal must import getQuickReceivingDraft');
     assert.match(content, /Isi Cepat|Dev Fill/, 'RecordModal must render Dev Quick Fill button');
   });
+
+  await t.test('RecordModal.tsx satisfies Rules of Hooks (no hooks called after early return)', () => {
+    const modalFile = path.resolve(process.cwd(), 'src/components/ledger/RecordModal.tsx');
+    const content = fs.readFileSync(modalFile, 'utf-8');
+    const earlyReturnIdx = content.indexOf('if (!isOpen) return null;');
+    assert.ok(earlyReturnIdx !== -1, 'Early return guard must exist');
+
+    const afterEarlyReturn = content.slice(earlyReturnIdx);
+    assert.doesNotMatch(afterEarlyReturn, /\buse(Callback|Memo|State|Effect|DeferredValue)\s*\(/, 'No React hooks must be invoked after if (!isOpen) return null');
+  });
 });
