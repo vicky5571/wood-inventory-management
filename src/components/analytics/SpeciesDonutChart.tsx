@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import type { WoodReceivingRecord } from '@/src/types';
 import { prepareSpeciesDonutData } from './chart-helpers';
@@ -10,18 +10,21 @@ export function SpeciesDonutChart({ records }: { records: WoodReceivingRecord[] 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
-  const { labels, values, colors } = prepareSpeciesDonutData(records);
-  const totalVolume = values.reduce((a, b) => a + b, 0);
+  const donutData = useMemo(() => prepareSpeciesDonutData(records), [records]);
+  const totalVolume = useMemo(() => donutData.values.reduce((a, b) => a + b, 0), [donutData]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    const { labels, values, colors } = donutData;
+    if (labels.length === 0) return;
 
     if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-      chartInstanceRef.current = null;
+      chartInstanceRef.current.data.labels = labels;
+      chartInstanceRef.current.data.datasets[0].data = values;
+      chartInstanceRef.current.data.datasets[0].backgroundColor = colors;
+      chartInstanceRef.current.update('none');
+      return;
     }
-
-    if (labels.length === 0) return;
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -92,12 +95,10 @@ export function SpeciesDonutChart({ records }: { records: WoodReceivingRecord[] 
     });
 
     return () => {
-      if (chartInstanceRef.current) {
-        chartInstanceRef.current.destroy();
-        chartInstanceRef.current = null;
-      }
+      chartInstanceRef.current?.destroy();
+      chartInstanceRef.current = null;
     };
-  }, [labels, values, colors, totalVolume]);
+  }, [donutData, totalVolume]);
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">

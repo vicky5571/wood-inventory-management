@@ -53,4 +53,15 @@ test('Chart Rerender Optimization & In-Memory Cache Suite', async (t) => {
     assert.equal(areSalesEqual(s1, s2), true);
     assert.equal(areSalesEqual(s1, s3), false);
   });
+
+  await t.test('VolumeTrendChart and SpeciesDonutChart use in-place chart.update instead of teardown', () => {
+    const volFile = readFileSync(resolve('src/components/analytics/VolumeTrendChart.tsx'), 'utf-8');
+    assert.match(volFile, /chartInstanceRef\.current\.update/, 'VolumeTrendChart must call chart.update');
+    assert.doesNotMatch(volFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'VolumeTrendChart must not destroy chart on every render effect');
+
+    const donutFile = readFileSync(resolve('src/components/analytics/SpeciesDonutChart.tsx'), 'utf-8');
+    assert.match(donutFile, /useMemo\(/, 'SpeciesDonutChart must memoize donutData');
+    assert.match(donutFile, /chartInstanceRef\.current\.update/, 'SpeciesDonutChart must call chart.update');
+    assert.doesNotMatch(donutFile, /if\s*\(chartInstanceRef\.current\)\s*\{\s*chartInstanceRef\.current\.destroy\(\);/m, 'SpeciesDonutChart must not destroy chart on every render effect');
+  });
 });
