@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { NAV_ITEMS, resolveActiveNavSection, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Navbar Navigation & Layout Config Suite', async (t) => {
-  await t.test('NAV_ITEMS contains bilingual configuration for all 7 required operational routes', () => {
-    assert.equal(NAV_ITEMS.length, 7);
+  await t.test('NAV_ITEMS contains bilingual configuration for all 8 required operational routes', () => {
+    assert.equal(NAV_ITEMS.length, 8);
 
     const ids = NAV_ITEMS.map((item) => item.id);
-    assert.deepEqual(ids, ['analytics', 'ledger', 'tally', 'sales', 'suppliers', 'activity', 'settings']);
+    assert.deepEqual(ids, ['analytics', 'ledger', 'inventory', 'tally', 'sales', 'suppliers', 'activity', 'settings']);
 
     const analytics = NAV_ITEMS.find((item) => item.id === 'analytics')!;
     assert.equal(analytics.href, '/');
@@ -18,6 +18,11 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
     assert.equal(ledger.href, '/ledger');
     assert.equal(ledger.labelId, 'Buku Besar');
     assert.equal(ledger.labelZh, '入库总账');
+
+    const inventory = NAV_ITEMS.find((item) => item.id === 'inventory')!;
+    assert.equal(inventory.href, '/inventory');
+    assert.equal(inventory.labelId, 'Inventaris');
+    assert.equal(inventory.labelZh, '库存');
 
     const tally = NAV_ITEMS.find((item) => item.id === 'tally')!;
     assert.equal(tally.href, '/tally');

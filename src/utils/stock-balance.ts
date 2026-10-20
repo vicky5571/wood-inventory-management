@@ -104,3 +104,50 @@ export function calculateSalesFinancials(
   };
 }
 
+/**
+ * Aggregates net stock balances for all distinct storage yard and kavling combinations
+ * present in inbound receiving records and outbound sales records.
+ * Returns an array sorted by remaining volume in cubic meters descending.
+ */
+export function aggregateAllLotBalances(
+  inboundRecords: WoodReceivingRecord[],
+  salesRecords: WoodSalesRecord[]
+): LotStockBalance[] {
+  const safeInbounds = inboundRecords || [];
+  const safeSales = salesRecords || [];
+
+  const lotMap = new Map<string, { yard: string; kavling: string }>();
+
+  for (const rec of safeInbounds) {
+    const rawYard = (rec?.storageYard || '').trim();
+    const rawKavling = (rec?.kavlingNumber || '').trim();
+    if (!rawYard && !rawKavling) continue;
+    const key = `${rawYard.toLowerCase()}:::${rawKavling.toLowerCase()}`;
+    if (!lotMap.has(key)) {
+      lotMap.set(key, { yard: rawYard, kavling: rawKavling });
+    }
+  }
+
+  for (const sale of safeSales) {
+    const rawYard = (sale?.storageYard || '').trim();
+    const rawKavling = (sale?.kavlingNumber || '').trim();
+    if (!rawYard && !rawKavling) continue;
+    const key = `${rawYard.toLowerCase()}:::${rawKavling.toLowerCase()}`;
+    if (!lotMap.has(key)) {
+      lotMap.set(key, { yard: rawYard, kavling: rawKavling });
+    }
+  }
+
+  const results: LotStockBalance[] = [];
+  for (const { yard, kavling } of lotMap.values()) {
+    results.push(calculateLotStockBalance(safeInbounds, safeSales, yard, kavling));
+  }
+
+  return results.sort((a, b) => {
+    if (b.remainingVolumeM3 !== a.remainingVolumeM3) {
+      return b.remainingVolumeM3 - a.remainingVolumeM3;
+    }
+    return a.kavlingNumber.localeCompare(b.kavlingNumber);
+  });
+}
+

@@ -19,6 +19,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/ledger',
   },
   {
+    id: 'inventory',
+    labelId: 'Inventaris',
+    labelZh: '库存',
+    href: '/inventory',
+  },
+  {
     id: 'tally',
     labelId: 'Tally Lapangan',
     labelZh: '检尺录入',
