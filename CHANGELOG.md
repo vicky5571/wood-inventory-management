@@ -46,6 +46,7 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
   - ADRs: ADR-0006, ADR-0007
 - **ADR-0006** added — Pre-printed form number manual input.
 - **ADR-0007** added — Terbilang zero-dependency implementation.
+- **ADR-0008** added (retrospective) — Expand SSOT exemption suffixes to 17 total (adds Input, Row, Adapter, ChartData, Shape, Value, Action, Option, Field, Direction). Documents design decision realized in commit `5292aed` for future audit traceability.
 
 ---
 

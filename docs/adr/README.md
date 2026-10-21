@@ -48,3 +48,4 @@ Use `template.md` as the starting point for every new ADR.
 | 0005 | Free-Text Autocomplete Over Master Catalog for Production Products | Accepted |
 | 0006 | Pre-printed Form Number — Manual User Input (Not Auto-Generated) | Accepted |
 | 0007 | Terbilang (Amount-in-Words) — Zero-Dependency Internal Implementation | Accepted |
+| 0008 | Expand SSOT Exemption Suffixes (10 new suffixes: Input/Row/Adapter/ChartData/Shape/Value/Action/Option/Field/Direction) | Accepted (Retrospective) |
