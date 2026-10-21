@@ -106,22 +106,20 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
 
 ## 📋 Pre-existing Drift Violations (Grandfathered)
 
-68 violations exist in `scripts/drift-baseline.json` (down from initial 84), broken down:
+25 violations exist in `scripts/drift-baseline.json` (down from initial 84), broken down:
 
 | Rule | Count | Status / Plan |
 |---|---|---|
 | MISSING_DOC | 0 | ✅ Resolved |
 | MISSING_SPEC | 0 | ✅ Resolved via 15 retrospective specs |
-| GOD_FILE | 1 | 📋 Plan ready: `plans/2026-10-21-refactor-login-page-god-file.md` |
-| SSOT_VIOLATION | 21 | 📋 Plan ready: `plans/2026-10-21-cleanup-ssot-violations-rename.md` |
-| UNJUSTIFIED_ANY | 46 | 📋 Spec + Plan ready: `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` |
+| GOD_FILE | 0 | ✅ Resolved via `plans/2026-10-21-refactor-login-page-god-file.md` |
+| SSOT_VIOLATION | 0 | ✅ Resolved via `plans/2026-10-21-cleanup-ssot-violations-rename.md` |
+| UNJUSTIFIED_ANY | 25 | 📋 Spec + Plan ready: `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` |
 
 **Strategy:** Grandfathered. New code must not add violations. Baseline regenerated only when intentionally accepting new ones via `node scripts/drift-check.ts --write-baseline`.
 
 **Technical debt backlog (optional cleanup):**
-- Refactor `app/login/page.tsx` → extract subcomponents to resolve GOD_FILE
-- Move chart data types (`VolumeTrendData`, `SpeciesDonutData`, etc.) to `src/types/index.ts`
-- Backfill 15 historical specs OR add exemption pattern in drift-check for legacy plans
+- Execute `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` to eliminate remaining 25 `any` occurrences.
 
 ---
 
@@ -166,9 +164,7 @@ git status && git log --oneline -5
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
    ```
 3. **If no new client input** → consider technical debt cleanup:
-   - Refactor `app/login/page.tsx` (GOD_FILE violation)
-   - Move chart data types to SSOT
-   - Backfill historical specs (optional, low priority)
+   - Execute unjustified `any` cleanup (`specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md`)
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
