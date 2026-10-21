@@ -5,7 +5,7 @@
  * Provides resilient CRUD, filtering, and seed resetting over a StorageAdapter.
  */
 
-import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import { SEED_WOOD_RECORDS } from './seed/fixtures.ts';
 import type { StorageAdapter } from './storage.ts';
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
 import { recordMatchesSearchQuery } from '../utils/record-search.ts';

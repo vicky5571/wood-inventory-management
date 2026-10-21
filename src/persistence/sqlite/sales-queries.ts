@@ -7,7 +7,7 @@
 
 import type { DatabaseSync } from 'node:sqlite';
 import type { WoodSalesRecord, PaymentStatus } from '../../types/index.ts';
-import { SEED_WOOD_SALES } from '../seed-sales-data.ts';
+import { SEED_WOOD_SALES } from '../seed/fixtures.ts';
 
 export function ensureSalesTable(db: DatabaseSync): void {
   db.exec(`
@@ -182,7 +182,7 @@ export class SalesQueries {
   }
 }
 
-export function seedSalesIfEmpty(db: DatabaseSync, seedData: WoodSalesRecord[] = SEED_WOOD_SALES): void {
+export function seedSalesIfEmpty(db: DatabaseSync, seedData: readonly WoodSalesRecord[] = SEED_WOOD_SALES): void {
   ensureSalesTable(db);
   const row = db.prepare('SELECT COUNT(*) AS c FROM sales_records;').get() as { c: number } | undefined;
   if (row && row.c > 0) return;

@@ -1,5 +1,5 @@
 import type { WoodReceivingRecord, PaginationMeta } from '../types/index.ts';
-import { SEED_WOOD_RECORDS } from '../persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../persistence/seed/fixtures.ts';
 import { toast } from './toast-store.ts';
 
 export const WOOD_RECORDS_STORAGE_KEY = 'wood_receiving_records_next_v1';

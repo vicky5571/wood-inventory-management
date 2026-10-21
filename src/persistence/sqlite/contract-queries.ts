@@ -16,7 +16,7 @@ import {
   SEED_PERHUTANI_CONTRACTS,
   SEED_CONTRACT_ITEMS,
   SEED_CONTRACT_RECEIPTS,
-} from '../seed-contracts-data.ts';
+} from '../seed/fixtures.ts';
 
 export function ensureContractTables(db: DatabaseSync): void {
   db.exec(`

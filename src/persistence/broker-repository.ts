@@ -1,7 +1,7 @@
 import type { Broker, BrokerFilterCriteria } from '../types/index.ts';
 import type { StorageAdapter } from './storage.ts';
 import { MemoryStorageAdapter } from './storage.ts';
-import { SEED_BROKERS } from './seed-data.ts';
+import { SEED_BROKERS } from './seed/fixtures.ts';
 
 const STORAGE_KEY = 'wood_brokers_v1';
 
@@ -9,12 +9,12 @@ export class BrokerRepository {
   private memoryCache: Broker[] = [];
   private storage?: StorageAdapter;
 
-  constructor(initialData: Broker[] = SEED_BROKERS, storage?: StorageAdapter) {
+  constructor(initialData: readonly Broker[] = SEED_BROKERS, storage?: StorageAdapter) {
     this.storage = storage;
     this.load(initialData);
   }
 
-  private load(fallbackData: Broker[]): void {
+  private load(fallbackData: readonly Broker[]): void {
     let serialized: string | null = null;
 
     if (this.storage instanceof MemoryStorageAdapter) {

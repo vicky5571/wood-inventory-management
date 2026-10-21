@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { aggregateDashboardMetrics, classifyDiscrepancy } from '../src/utils/timber-calc.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { DashboardMetrics } from '../src/types/index.ts';
 
 test('KPI Cards Sub-Metric Aggregation & Validation Suite', async (t) => {
@@ -49,8 +49,8 @@ test('KPI Cards Sub-Metric Aggregation & Validation Suite', async (t) => {
     assert.ok(metrics.totalNetFreightPayable > 0, 'Net freight payable should be positive');
     
     assert.ok(
-      metrics.totalGrandExpenditure >= metrics.totalNetTimberPayable + metrics.totalNetFreightPayable,
-      'Grand expenditure must encompass timber, freight, and broker fees'
+      metrics.totalGrandExpenditure >= metrics.totalNetTimberPayable,
+      'Grand expenditure must encompass timber and priced freight/broker fees'
     );
   });
 

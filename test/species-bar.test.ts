@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { aggregateDashboardMetrics } from '../src/utils/timber-calc.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 
 test('Species Distribution & Volumetric Breakdown Suite', async (t) => {
   const metrics = aggregateDashboardMetrics(SEED_WOOD_RECORDS);

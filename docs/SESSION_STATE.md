@@ -35,21 +35,33 @@ All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor ha
 | 6b | Lembar Tagihan Refactor | `2026-10-21-weekly-payment-form-design.md` (Sec 13) | `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` | ✅ Completed |
 | 7 | Production + Sorting | `2026-10-21-production-and-sorting-design.md` | `2026-10-21-production-and-sorting.md` | ✅ Merged |
 | 8 | Sidebar Grouping & Role Filter | `2026-10-22-sidebar-grouping-and-role-filter-design.md` | `2026-10-22-sidebar-grouping-and-role-filter.md` | ✅ Completed |
+| 9 | Database Seeder Rewrite | `2026-10-22-database-seeder-rewrite-design.md` | `2026-10-22-database-seeder-rewrite.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 762 passed, 0 failed
-- `npm run build:check` → 0 errors (Next.js production build clean)
+- `npm test` → 768 passed, 0 failed
+- `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms
 
 ---
 
 ## 🚧 In Progress
 
-None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` are complete and verified.
+None. All 12 phases of `2026-10-22-database-seeder-rewrite.md` are complete and verified.
 
 ### Recently Completed (This Session)
 
-- ✅ **Sidebar Navigation Grouping & Role-Based Filter**:
+- ✅ **Database Seeder Rewrite (Unified Fixtures & Loaders)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-database-seeder-rewrite-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-database-seeder-rewrite.md`
+  - ADR: `docs/adr/0011-shared-fixture-source-split-loaders.md`
+  - Modularized 130+ realistic fixtures into `src/persistence/seed/`:
+    `fixtures-master-data.ts`, `fixtures-contracts.ts`, `fixtures-receiving.ts`, `fixtures-sales.ts`, `fixtures-production.ts`, `fixtures-payment-forms.ts`, `fixtures-helpers.ts`, `fixtures.ts`.
+  - Implemented `validateFixtureConsistency()` asserting 100% relational FK integrity, valid date ranges, and positive numerical values.
+  - Rewrote `scripts/seed-db.ts` for SQLite with atomic transactions, 2-pass payment forms, and `INSERT ... ON CONFLICT DO UPDATE` upserts.
+  - Rewrote `scripts/seed-supabase.ts` for Supabase with PostgREST `Prefer: resolution=merge-duplicates`.
+  - Deleted legacy monolithic `src/persistence/seed-data.ts` and updated all callers across `src/`, `app/`, `scripts/`, `test/`, and `supabase/seed.sql`.
+  - 100% test pass: 768 tests passing, 0 failures. Clean Next.js build. Zero drift.
   - Reorganized flat 14-item navigation into 5 semantic workflow sections (`dashboard`, `operations`, `stock-billing`, `master-data`, `admin`).
   - Added `NavSectionConfig` interface and `NAV_SECTIONS` constant in `src/components/layout/nav-config.ts`.
   - Added pure `filterNavSections` helper with role-based filtering (`minRoleLevel: 1` for Settings to hide from Staff/Monitor roles).
@@ -165,12 +177,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Sidebar Navigation Grouping & Role Filter completed and verified. Zero technical debt. No active in-progress task.
+**Status:** Database Seeder Rewrite (Item #9) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#8).
-2. **If client clarifies DPB rakyat questions** → start Spec #8:
+1. **Monitor client feedback** on shipped features (Items #1-#9).
+2. **If client clarifies DPB rakyat questions** → start Spec #10:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -178,10 +190,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#8) without matching spec update first.
+- Modify shipped modules (Items #1-#9) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 762 passed, 0 failed
+- `npm test` → 768 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms

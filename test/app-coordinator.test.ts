@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { AppCoordinator } from '../src/app.ts';
 import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
 import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { MockDOMElement, MockDOMDocument, MockFormData } from './helpers/mock-dom.ts';
 
@@ -49,7 +49,7 @@ test('AppCoordinator Application Coordinator & E2E Integration Suite', async (t)
     assert.ok(toolbarSection.innerHTML.includes('Semua Spesies (所有材种)'));
     assert.ok(toolbarSection.innerHTML.includes('Export CSV'));
     assert.ok(tableSection.innerHTML.includes('SKSHHK-2026-001'));
-    assert.ok(tableSection.innerHTML.includes('Teak / Jati (柚木)'));
+    assert.ok(tableSection.innerHTML.includes('Jati / Teak (柚木)'));
   });
 
   await t.test('filter change triggers refreshTableAndMetrics without destroying toolbar DOM', async () => {

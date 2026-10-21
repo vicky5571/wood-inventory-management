@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import {
   prepareVolumeTrendData,
   prepareSpeciesDonutData,

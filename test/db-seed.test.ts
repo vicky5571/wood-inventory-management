@@ -29,12 +29,12 @@ test('Database Seeding Suite', async (t) => {
     const stats = seedDatabase(tempDbPath);
 
     assert.strictEqual(stats.tenants, 1);
-    assert.strictEqual(stats.species, 4);
-    assert.strictEqual(stats.yards, 4);
-    assert.strictEqual(stats.suppliers, 4);
-    assert.strictEqual(stats.manifests, 4);
-    assert.strictEqual(stats.items, 4);
-    assert.strictEqual(stats.sales, 5);
+    assert.strictEqual(stats.species, 8);
+    assert.strictEqual(stats.yards, 3);
+    assert.strictEqual(stats.suppliers, 7);
+    assert.strictEqual(stats.manifests, 10);
+    assert.strictEqual(stats.items, 18);
+    assert.strictEqual(stats.sales, 10);
   });
 
   await t.test('seeded database preserves stock balance invariants without negative inventory', async () => {
@@ -49,10 +49,10 @@ test('Database Seeding Suite', async (t) => {
     assert.ok(balanceKav1.inboundVolumeM3 > balanceKav1.outboundVolumeM3);
     assert.ok(balanceKav1.remainingVolumeM3 > 0);
 
-    // Verify KAV-02 stock
-    const balanceKav2 = calculateLotStockBalance(inbounds, sales, 'TPK-Utara', 'KAV-02');
-    assert.ok(balanceKav2.inboundVolumeM3 > balanceKav2.outboundVolumeM3);
-    assert.ok(balanceKav2.remainingVolumeM3 > 0);
+    // Verify KAV-06 stock
+    const balanceKav6 = calculateLotStockBalance(inbounds, sales, 'TPK-Utara', 'KAV-06');
+    assert.ok(balanceKav6.inboundVolumeM3 > balanceKav6.outboundVolumeM3);
+    assert.ok(balanceKav6.remainingVolumeM3 > 0);
 
     // Verify all remaining volumes are non-negative
     for (const s of sales) {
@@ -64,11 +64,11 @@ test('Database Seeding Suite', async (t) => {
 
   await t.test('salesStore.seed ensures records are populated in database', () => {
     const records = salesStore.getAll();
-    assert.strictEqual(records.length, 5);
+    assert.strictEqual(records.length, 10);
 
     const customers = new Set(records.map((r) => r.customerName));
-    assert.ok(customers.has('PT Mebel Nusantara Abadi'));
-    assert.ok(customers.has('CV Furnitur Sejahtera'));
+    assert.ok(customers.has('PT Mebel Antik Solo'));
+    assert.ok(customers.has('CV Jepara Indah Furniture'));
   });
 });
 

@@ -20,6 +20,7 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 - **ADR-0005** — Free-text autocomplete over master catalog. [docs/adr/0005-free-text-product-autocomplete.md]
 - **ADR-0009** — Sidebar section grouping (not flat list, not collapsible). [docs/adr/0009-sidebar-section-grouping-vs-flat-list.md]
 - **ADR-0010** — Role-based nav filter default state. [docs/adr/0010-role-based-nav-filter-default-state.md]
+- **ADR-0011** — Shared fixture source with split loaders. [docs/adr/0011-shared-fixture-source-split-loaders.md]
 - **Spec Verification Checklist** sections appended to all 7 feature specs (grep-able audit commands with EXPECT clauses).
 - **15 retrospective design specs** for historical plans (2026-10-14 through 2026-10-20) that previously lacked spec files. Resolves `MISSING_SPEC` baseline violations.
 - **Cleanup plans drafted** (ready for execution, not yet executed):
@@ -28,6 +29,15 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
   - `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` — replace 46 unjustified `any` usages with proper types or type guards
 
 ### Changed
+- **Database Seeders Rewritten** — unified modular fixture architecture replacing 3 legacy seed files. Hand-crafted 130+ realistic records across 17 entities covering all shipped feature modules (contracts, payment forms, production, sorting, pending pricing, broker master, discrepancy alarm). Deterministic FK chains, upsert idempotency, 3-month date range:
+  - Created modular fixtures in `src/persistence/seed/`: `fixtures-master-data.ts`, `fixtures-contracts.ts`, `fixtures-receiving.ts`, `fixtures-sales.ts`, `fixtures-production.ts`, `fixtures-payment-forms.ts`, `fixtures-helpers.ts`, `fixtures.ts`.
+  - Added pure `validateFixtureConsistency()` asserting 100% relational integrity, valid date ranges, and positive values.
+  - Rewrote `scripts/seed-db.ts` for SQLite with atomic transactions, 2-pass payment forms, and `INSERT ... ON CONFLICT DO UPDATE` upserts.
+  - Rewrote `scripts/seed-supabase.ts` for Supabase with PostgREST `Prefer: resolution=merge-duplicates`.
+  - Removed deprecated `src/persistence/seed-data.ts` and updated all callers across `src/`, `app/`, `scripts/`, `test/`, and `supabase/seed.sql`.
+  - Spec: `docs/superpowers/specs/2026-10-22-database-seeder-rewrite-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-database-seeder-rewrite.md`
+  - ADR: `docs/adr/0011-shared-fixture-source-split-loaders.md`
 - **Sidebar Navigation Grouping & Role-Based Filter** — reorganized 14-item flat list into 5 semantic sections (Dashboard, Operasi Harian, Stok & Tagihan, Data Master, Admin) with role-based item filtering (Settings hidden from Staff/Monitor):
   - Defined `NavSectionConfig` interface and `NAV_SECTIONS` constant in `src/components/layout/nav-config.ts`.
   - Added pure `filterNavSections` helper with role-based filtering (`minRoleLevel: 1` for Settings).

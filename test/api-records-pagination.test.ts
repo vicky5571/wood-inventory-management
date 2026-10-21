@@ -94,7 +94,7 @@ test('API Records Pagination & Backward Compatibility Suite', async (t) => {
   });
 
   await t.test('GET /api/records?species= filters records by species', async () => {
-    const species = 'Teak / Jati (柚木)';
+    const species = 'Merbau (菠萝格)';
     const req = new Request(`http://localhost:3000/api/records?species=${encodeURIComponent(species)}`);
     const res = await GET(req);
     assert.strictEqual(res.status, 200);
@@ -138,19 +138,19 @@ test('API Records Pagination & Backward Compatibility Suite', async (t) => {
   });
 
   await t.test('GET /api/records?query= and ?searchQuery= search alias', async () => {
-    const reqQuery = new Request('http://localhost:3000/api/records?query=B%209283');
+    const reqQuery = new Request('http://localhost:3000/api/records?query=K%208172');
     const resQuery = await GET(reqQuery);
     const bodyQuery = await resQuery.json();
     assert.strictEqual(bodyQuery.success, true);
     assert.strictEqual(bodyQuery.data.length, 1);
-    assert.strictEqual(bodyQuery.data[0].truckPlateNumber, 'B 9283 TDA');
+    assert.strictEqual(bodyQuery.data[0].truckPlateNumber, 'K 8172 UX');
 
-    const reqSearch = new Request('http://localhost:3000/api/records?searchQuery=B%209283');
+    const reqSearch = new Request('http://localhost:3000/api/records?searchQuery=K%208172');
     const resSearch = await GET(reqSearch);
     const bodySearch = await resSearch.json();
     assert.strictEqual(bodySearch.success, true);
     assert.strictEqual(bodySearch.data.length, 1);
-    assert.strictEqual(bodySearch.data[0].truckPlateNumber, 'B 9283 TDA');
+    assert.strictEqual(bodySearch.data[0].truckPlateNumber, 'K 8172 UX');
   });
 
   await t.test('GET /api/records?paymentStatus= filters by payment status', async () => {

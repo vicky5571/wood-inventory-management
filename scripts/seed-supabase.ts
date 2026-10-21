@@ -2,274 +2,332 @@
  * scripts/seed-supabase.ts
  *
  * Automated Database Seeding Engine for Supabase Cloud Database.
- * Populates tenant, wood species catalogue, storage yards, storage lots,
- * registered suppliers, inbound manifests & line items, and outbound wood sales.
+ * Loads canonical fixtures from src/persistence/seed/fixtures.ts and upserts all 17
+ * domain entities into PostgREST with resolution=merge-duplicates.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isSupabaseConfigured, supabaseFetch } from '../src/persistence/supabase/supabase-client.ts';
-import { SEED_SUPPLIERS, SEED_WOOD_SALES } from '../src/persistence/seed-data.ts';
+import * as fixtures from '../src/persistence/seed/fixtures.ts';
 
-export const SEED_SPECIES = [
-  { id: 'sp-teak', tenant_id: 'default-tenant', code: 'TEAK', common_name: 'Teak / Jati (柚木)', botanical_name: 'Tectona grandis', density_kg_m3: 650.0, is_hardwood: true, notes: 'Premium tropical hardwood with exceptional weather and decay resistance.' },
-  { id: 'sp-merbau', tenant_id: 'default-tenant', code: 'MRB', common_name: 'Merbau (菠萝格)', botanical_name: 'Intsia bijuga', density_kg_m3: 830.0, is_hardwood: true, notes: 'High structural durability, commonly used in flooring and heavy construction.' },
-  { id: 'sp-bengkirai', tenant_id: 'default-tenant', code: 'BGK', common_name: 'Bengkirai / Balau (黄梢木)', botanical_name: 'Shorea laevis', density_kg_m3: 910.0, is_hardwood: true, notes: 'Dense outdoor decking timber with superior hardness.' },
-  { id: 'sp-kamper', tenant_id: 'default-tenant', code: 'KMP', common_name: 'Kamper (樟木)', botanical_name: 'Dryobalanops aromatica', density_kg_m3: 750.0, is_hardwood: true, notes: 'Aromatic timber prized for window and door framing.' },
-  { id: 'sp-mahoni', tenant_id: 'default-tenant', code: 'MHN', common_name: 'Mahoni (桃花心木)', botanical_name: 'Swietenia macrophylla', density_kg_m3: 560.0, is_hardwood: true, notes: 'Fine reddish-brown grain favored in furniture manufacturing.' },
-  { id: 'sp-sengon', tenant_id: 'default-tenant', code: 'SGN', common_name: 'Sengon / Albasia (南洋楹)', botanical_name: 'Falcataria moluccana', density_kg_m3: 350.0, is_hardwood: false, notes: 'Fast-growing lightweight timber ideal for core blockboard and packing crates.' },
-  { id: 'sp-sonokeling', tenant_id: 'default-tenant', code: 'SNK', common_name: 'Sonokeling / Rosewood (紫檀)', botanical_name: 'Dalbergia latifolia', density_kg_m3: 850.0, is_hardwood: true, notes: 'Exotic dark purplish wood for high-end musical instruments and veneers.' },
-  { id: 'sp-ulin', tenant_id: 'default-tenant', code: 'ULN', common_name: 'Ulin / Ironwood (铁木)', botanical_name: 'Eusideroxylon zwageri', density_kg_m3: 1040.0, is_hardwood: true, notes: 'Extremely dense water-resistant timber used in marine piles and roof shingles.' },
-  { id: 'sp-pinus', tenant_id: 'default-tenant', code: 'PNS', common_name: 'Pinus / Pine (松木)', botanical_name: 'Pinus merkusii', density_kg_m3: 500.0, is_hardwood: false, notes: 'Softwood lumber for indoor joinery and secondary applications.' },
-  { id: 'sp-meranti', tenant_id: 'default-tenant', code: 'MRT', common_name: 'Meranti (柳安木)', botanical_name: 'Shorea leprosula', density_kg_m3: 580.0, is_hardwood: true, notes: 'Widely traded utility commercial hardwood for moulding and ply.' },
-  { id: 'sp-keruing', tenant_id: 'default-tenant', code: 'KRG', common_name: 'Keruing (克隆木)', botanical_name: 'Dipterocarpus', density_kg_m3: 720.0, is_hardwood: true, notes: 'Heavy structural framing and commercial vehicle decking.' },
-  { id: 'sp-kapur', tenant_id: 'default-tenant', code: 'KPR', common_name: 'Kapur (卡普木)', botanical_name: 'Dryobalanops beccarii', density_kg_m3: 760.0, is_hardwood: true, notes: 'Sturdy timber for structural external joinery.' },
-  { id: 'sp-karet', tenant_id: 'default-tenant', code: 'KRT', common_name: 'Kayu Karet (橡胶木)', botanical_name: 'Hevea brasiliensis', density_kg_m3: 600.0, is_hardwood: true, notes: 'Plantation timber widely converted for solid wood panels.' },
-];
-
-export const SEED_YARDS = [
-  { id: 'yard-timur', tenant_id: 'default-tenant', yard_code: 'TPK-T', name: 'TPK-Timur', description: 'Log yard facing eastern logistics dock' },
-  { id: 'yard-utara', tenant_id: 'default-tenant', yard_code: 'TPK-U', name: 'TPK-Utara', description: 'Northern kiln-dry staging yard' },
-  { id: 'yard-barat', tenant_id: 'default-tenant', yard_code: 'TPK-B', name: 'TPK-Barat', description: 'Western heavy hardwood depot' },
-  { id: 'yard-selatan', tenant_id: 'default-tenant', yard_code: 'TPK-S', name: 'TPK-Selatan', description: 'Southern incoming inspection yard' },
-];
-
-export const SEED_LOTS = [
-  { id: 'lot-kav-01', tenant_id: 'default-tenant', yard_id: 'yard-timur', lot_code: 'KAV-01', status: 'ACTIVE' },
-  { id: 'lot-kav-02', tenant_id: 'default-tenant', yard_id: 'yard-timur', lot_code: 'KAV-02', status: 'ACTIVE' },
-  { id: 'lot-kav-03', tenant_id: 'default-tenant', yard_id: 'yard-utara', lot_code: 'KAV-03', status: 'ACTIVE' },
-  { id: 'lot-kav-04', tenant_id: 'default-tenant', yard_id: 'yard-utara', lot_code: 'KAV-04', status: 'FULL' },
-  { id: 'lot-kav-05', tenant_id: 'default-tenant', yard_id: 'yard-barat', lot_code: 'KAV-05', status: 'ACTIVE' },
-  { id: 'lot-kav-06', tenant_id: 'default-tenant', yard_id: 'yard-barat', lot_code: 'KAV-06', status: 'MAINTENANCE' },
-  { id: 'lot-kav-07', tenant_id: 'default-tenant', yard_id: 'yard-selatan', lot_code: 'KAV-07', status: 'ACTIVE' },
-  { id: 'lot-kav-08', tenant_id: 'default-tenant', yard_id: 'yard-selatan', lot_code: 'KAV-08', status: 'ACTIVE' },
-];
-
-export const SEED_MANIFESTS = [
-  {
-    id: 'rec-2026-10-01',
-    tenant_id: 'default-tenant',
-    manifest_number: 'MAN-rec-2026-10-01',
-    receipt_date: '2026-10-01',
-    doc_date: '2026-09-29',
-    truck_plate_number: 'B 9283 TDA',
-    forestry_doc_number: 'SKSHHK-2026-001',
-    receipt_number: 'KW-2026-101',
-    contract_number: 'CTR-JATI-01',
-    supplier_id: 'spl-001',
-    freight_rate_per_m3: 250000.0,
-    freight_pph_rate: 2.0,
-    broker_fee: 500000.0,
-    payment_status: 'UNPAID',
-    invoice_number: null,
-    payment_date: null,
-    payment_notes: null,
-  },
-  {
-    id: 'rec-2026-10-02',
-    tenant_id: 'default-tenant',
-    manifest_number: 'MAN-rec-2026-10-02',
-    receipt_date: '2026-10-03',
-    doc_date: '2026-10-01',
-    truck_plate_number: 'L 8172 UX',
-    forestry_doc_number: 'SKSHHK-2026-002',
-    receipt_number: 'KW-2026-102',
-    contract_number: 'CTR-MRB-04',
-    supplier_id: 'spl-002',
-    freight_rate_per_m3: 320000.0,
-    freight_pph_rate: 2.0,
-    broker_fee: 750000.0,
-    payment_status: 'UNPAID',
-    invoice_number: null,
-    payment_date: null,
-    payment_notes: null,
-  },
-  {
-    id: 'rec-2026-10-03',
-    tenant_id: 'default-tenant',
-    manifest_number: 'MAN-rec-2026-10-03',
-    receipt_date: '2026-10-05',
-    doc_date: '2026-10-04',
-    truck_plate_number: 'AD 1459 CF',
-    forestry_doc_number: 'DKP-SLK-8821',
-    receipt_number: 'KW-2026-103',
-    contract_number: 'CTR-MHN-02',
-    supplier_id: 'spl-003',
-    freight_rate_per_m3: 180000.0,
-    freight_pph_rate: 2.0,
-    broker_fee: 300000.0,
-    payment_status: 'UNPAID',
-    invoice_number: null,
-    payment_date: null,
-    payment_notes: null,
-  },
-  {
-    id: 'rec-2026-10-04',
-    tenant_id: 'default-tenant',
-    manifest_number: 'MAN-rec-2026-10-04',
-    receipt_date: '2026-10-08',
-    doc_date: '2026-10-07',
-    truck_plate_number: 'K 9102 HC',
-    forestry_doc_number: 'DKP-SLK-9011',
-    receipt_number: 'KW-2026-104',
-    contract_number: 'CTR-SGN-09',
-    supplier_id: 'spl-004',
-    freight_rate_per_m3: 120000.0,
-    freight_pph_rate: 2.0,
-    broker_fee: 200000.0,
-    payment_status: 'UNPAID',
-    invoice_number: null,
-    payment_date: null,
-    payment_notes: null,
-  },
-];
-
-export const SEED_ITEMS = [
-  {
-    id: 'itm-001',
-    manifest_id: 'rec-2026-10-01',
-    tenant_id: 'default-tenant',
-    item_sequence: 1,
-    species_id: 'sp-teak',
-    lot_id: 'lot-kav-01',
-    wood_length_m: 4.0,
-    delivered_pieces: 88,
-    delivered_volume_m3: 15.2000,
-    tally_pieces: 85,
-    tally_volume_m3: 14.6500,
-    timber_price_per_m3: 4200000.0,
-    timber_pph_rate: 0.5,
-    notes: 'Kayu log utuh, diameter rata-rata 32cm, tanpa cacat belah.',
-  },
-  {
-    id: 'itm-002',
-    manifest_id: 'rec-2026-10-02',
-    tenant_id: 'default-tenant',
-    item_sequence: 1,
-    species_id: 'sp-merbau',
-    lot_id: 'lot-kav-03',
-    wood_length_m: 5.0,
-    delivered_pieces: 60,
-    delivered_volume_m3: 21.0000,
-    tally_pieces: 58,
-    tally_volume_m3: 20.4500,
-    timber_price_per_m3: 5800000.0,
-    timber_pph_rate: 0.5,
-    notes: 'Kualitas A-Grade, kandungan getah normal, siap masuk sawmill.',
-  },
-  {
-    id: 'itm-003',
-    manifest_id: 'rec-2026-10-03',
-    tenant_id: 'default-tenant',
-    item_sequence: 1,
-    species_id: 'sp-mahoni',
-    lot_id: 'lot-kav-05',
-    wood_length_m: 3.5,
-    delivered_pieces: 110,
-    delivered_volume_m3: 18.5000,
-    tally_pieces: 108,
-    tally_volume_m3: 18.1200,
-    timber_price_per_m3: 2900000.0,
-    timber_pph_rate: 0.5,
-    notes: 'Kayu bundar mulus, 2 batang terindikasi lubang jarum ringan.',
-  },
-  {
-    id: 'itm-004',
-    manifest_id: 'rec-2026-10-04',
-    tenant_id: 'default-tenant',
-    item_sequence: 1,
-    species_id: 'sp-sengon',
-    lot_id: 'lot-kav-07',
-    wood_length_m: 2.6,
-    delivered_pieces: 145,
-    delivered_volume_m3: 22.8000,
-    tally_pieces: 142,
-    tally_volume_m3: 22.3000,
-    timber_price_per_m3: 1350000.0,
-    timber_pph_rate: 0.5,
-    notes: 'Kayu rakyat lokal, kadar air tinggi, langsung diarahkan ke kiln-dry.',
-  },
-];
-
-export async function seedSupabaseDatabase(): Promise<{
+export interface SupabaseSeedResult {
   tenants: number;
+  settings: number;
   species: number;
   yards: number;
   lots: number;
   suppliers: number;
+  brokers: number;
+  contracts: number;
+  sortimentItems: number;
+  contractReceipts: number;
+  paymentForms: number;
   manifests: number;
-  items: number;
+  receivingItems: number;
+  paymentFormLines: number;
   sales: number;
-}> {
-  if (!isSupabaseConfigured()) {
-    throw new Error('Supabase environment variables are missing.');
+  production: number;
+  sorting: number;
+}
+
+export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
+  // 1. Fixture validation before any network request
+  const validation = fixtures.validateFixtureConsistency();
+  if (!validation.ok) {
+    throw new Error(`Fixture validation failed with ${validation.errors.length} errors:\n${validation.errors.join('\n')}`);
   }
 
-  // 1. Seed Tenant
-  await supabaseFetch('/tenants', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify({
-      id: 'default-tenant',
-      name: 'Factory Workspace Tenant',
-      slug: 'default',
-    }),
-  });
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY) are missing.');
+  }
 
-  // 2. Seed Species
-  await supabaseFetch('/wood_species', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(SEED_SPECIES),
-  });
+  const upsert = async (table: string, rows: readonly unknown[], conflictTarget = 'id') => {
+    if (rows.length === 0) return 0;
+    try {
+      await supabaseFetch(`/${table}?on_conflict=${conflictTarget}`, {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates',
+        body: JSON.stringify(rows),
+      });
+      return rows.length;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('404') || msg.includes('PGRST205')) {
+        console.warn(`   ⚠️ Table '${table}' does not exist on Supabase remote (404/PGRST205). Run migrations to create it.`);
+        return 0;
+      }
+      if (msg.includes('PGRST204') && msg.includes('broker_id')) {
+        console.warn(`   ⚠️ Column 'broker_id' not found on remote 'receiving_manifests'. Retrying without broker_id.`);
+        const stripped = (rows as Record<string, unknown>[]).map((r) => {
+          const { broker_id: _, ...rest } = r;
+          return rest;
+        });
+        await supabaseFetch(`/${table}?on_conflict=${conflictTarget}`, {
+          method: 'POST',
+          prefer: 'resolution=merge-duplicates',
+          body: JSON.stringify(stripped),
+        });
+        return stripped.length;
+      }
+      if (msg.includes('23502') && msg.includes('timber_price_per_m3')) {
+        console.warn(`   ⚠️ Column 'timber_price_per_m3' has NOT NULL constraint on remote (run 20261021000003_nullable_pricing.sql). Falling back to 0 for pending items.`);
+        const fallbackRows = (rows as Record<string, unknown>[]).map((r) => ({
+          ...r,
+          timber_price_per_m3: r.timber_price_per_m3 === null ? 0 : r.timber_price_per_m3,
+        }));
+        await supabaseFetch(`/${table}?on_conflict=${conflictTarget}`, {
+          method: 'POST',
+          prefer: 'resolution=merge-duplicates',
+          body: JSON.stringify(fallbackRows),
+        });
+        return fallbackRows.length;
+      }
+      throw new Error(`Failed upserting into Supabase table '${table}': ${msg}`);
+    }
+  };
 
-  // 3. Seed Yards
-  await supabaseFetch('/storage_yards', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(SEED_YARDS),
-  });
+  // Clean up legacy seeder demo records if present from previous architecture
+  try {
+    await supabaseFetch('/receiving_items?id=like.itm-*', { method: 'DELETE' });
+    await supabaseFetch('/receiving_manifests?id=like.rec-*', { method: 'DELETE' });
+    await supabaseFetch('/sales_records?id=like.sls-*', { method: 'DELETE' });
+    await supabaseFetch('/storage_lots?id=like.lot-*', { method: 'DELETE' });
+    await supabaseFetch('/storage_yards?id=like.yard-*', { method: 'DELETE' });
+    await supabaseFetch('/wood_species?id=like.sp-*', { method: 'DELETE' });
+    await supabaseFetch('/suppliers?id=like.spl-*', { method: 'DELETE' });
+    await supabaseFetch('/suppliers?id=like.sup-*', { method: 'DELETE' });
+  } catch {}
 
-  // 4. Seed Lots
-  await supabaseFetch('/storage_lots', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(SEED_LOTS),
-  });
+  // 1. Tenants
+  await upsert('tenants', fixtures.SEED_TENANTS.map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+  })));
 
-  // 5. Seed Suppliers
-  const suppliersPayload = SEED_SUPPLIERS.map((s) => ({
-    id: s.id,
+  // 2. App Settings
+  const s = fixtures.SEED_SETTINGS;
+  await upsert('app_settings', [{
     tenant_id: 'default-tenant',
-    code: s.code,
-    name: s.name,
-    contact_person: s.contactPerson || null,
-    phone: s.phone || null,
-    address: s.address || null,
-    tax_id_npwp: s.taxId || null,
-    is_active: true,
-    notes: s.notes || null,
-  }));
-  await supabaseFetch('/suppliers', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(suppliersPayload),
-  });
+    default_timber_pph_rate: s.defaultTimberPphRate,
+    default_freight_pph_rate: s.defaultFreightPphRate,
+    default_broker_fee: s.defaultBrokerFee,
+    discrepancy_alarm_volume_m3: s.discrepancyAlarmVolumeM3,
+    discrepancy_alarm_percent: s.discrepancyAlarmPercent,
+    yard_name: s.yardName,
+    yard_code: s.yardCode,
+    company_name: s.companyName,
+  }], 'tenant_id');
 
-  // 6. Seed Inbound Manifests
-  await supabaseFetch('/receiving_manifests', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(SEED_MANIFESTS),
-  });
+  // 3. Wood Species
+  await upsert('wood_species', fixtures.SEED_SPECIES.map((sp) => ({
+    id: sp.id,
+    tenant_id: 'default-tenant',
+    code: sp.code,
+    common_name: sp.commonName,
+    botanical_name: sp.botanicalName || null,
+    density_kg_m3: sp.densityKgM3,
+    is_hardwood: sp.isHardwood,
+  })));
 
-  // 7. Seed Inbound Items
-  await supabaseFetch('/receiving_items', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(SEED_ITEMS),
-  });
+  // 4. Storage Yards
+  await upsert('storage_yards', fixtures.SEED_YARDS.map((y) => ({
+    id: y.id,
+    tenant_id: y.tenantId,
+    yard_code: y.yardCode,
+    name: y.name,
+    description: y.description || null,
+  })));
 
-  // 8. Seed Outbound Sales Records
-  const salesPayload = SEED_WOOD_SALES.map((sale) => ({
+  // 5. Storage Lots
+  await upsert('storage_lots', fixtures.SEED_LOTS.map((l) => ({
+    id: l.id,
+    tenant_id: l.tenantId,
+    yard_id: l.yardId,
+    lot_code: l.lotCode,
+    status: l.status,
+  })));
+
+  // 6. Suppliers
+  await upsert('suppliers', fixtures.SEED_SUPPLIERS.map((sup) => ({
+    id: sup.id,
+    tenant_id: 'default-tenant',
+    code: sup.code,
+    name: sup.name,
+    contact_person: sup.contactPerson || null,
+    phone: sup.phone || null,
+    address: sup.address || null,
+    tax_id_npwp: sup.taxId || null,
+    is_active: sup.status === 'ACTIVE',
+    notes: sup.notes || null,
+  })));
+
+  // 7. Brokers
+  await upsert('brokers', fixtures.SEED_BROKERS.map((b) => ({
+    id: b.id,
+    tenant_id: 'default-tenant',
+    code: b.code,
+    name: b.name,
+    contact_person: b.contactPerson || null,
+    phone: b.phone || null,
+    address: b.address || null,
+    tax_id: b.taxId || null,
+    default_commission_per_m3: b.defaultCommissionPerM3 ?? null,
+    notes: b.notes || null,
+    status: b.status,
+  })));
+
+  // 8. Perhutani Contracts
+  await upsert('perhutani_contracts', fixtures.SEED_CONTRACTS.map((c) => ({
+    id: c.id,
+    tenant_id: c.tenantId,
+    contract_number: c.contractNumber,
+    contract_date: c.contractDate,
+    effective_start_date: c.effectiveStartDate,
+    effective_end_date: c.effectiveEndDate,
+    kph_origin: c.kphOrigin,
+    po_number: c.poNumber || null,
+    total_contract_value_idr: c.totalContractValueIDR,
+    total_purchased_volume_m3: c.totalPurchasedVolumeM3,
+    total_purchased_pieces: c.totalPurchasedPieces,
+    status: c.status,
+    notes: c.notes || null,
+  })));
+
+  // 9. Contract Sortiment Items
+  await upsert('contract_sortiment_items', fixtures.SEED_SORTIMENT_ITEMS.map((item) => ({
+    id: item.id,
+    contract_id: item.contractId,
+    tenant_id: item.tenantId,
+    item_sequence: item.itemSequence,
+    wood_species: item.woodSpecies,
+    grade: item.grade,
+    wood_length_m: item.woodLengthM ?? null,
+    volume_m3: item.volumeM3,
+    pieces: item.pieces ?? null,
+    price_per_m3: item.pricePerM3,
+    subtotal_idr: item.subtotalIDR,
+    notes: item.notes || null,
+  })));
+
+  // 10. Contract Receipts
+  await upsert('contract_receipts', fixtures.SEED_CONTRACT_RECEIPTS.map((r) => ({
+    id: r.id,
+    contract_id: r.contractId,
+    tenant_id: r.tenantId,
+    receipt_number: r.receiptNumber,
+    receipt_date: r.receiptDate,
+    amount_idr: r.amountIDR,
+    covered_volume_m3: r.coveredVolumeM3,
+    covered_pieces: r.coveredPieces ?? null,
+    notes: r.notes || null,
+  })));
+
+  // 11. Payment Forms (Pass 1: empty references)
+  await upsert('payment_forms', fixtures.SEED_PAYMENT_FORMS.map((p) => ({
+    id: p.id,
+    tenant_id: p.tenantId,
+    preprinted_number: p.preprintedNumber,
+    issue_date: p.issueDate,
+    week_start_date: p.weekStartDate,
+    week_end_date: p.weekEndDate,
+    supplier_name: p.supplierName,
+    supplier_id: p.supplierId || null,
+    wood_species: p.woodSpecies,
+    contract_number: p.contractNumber,
+    record_ids: '[]',
+    item_ids: '[]',
+    total_amount_idr: p.totalAmountIDR,
+    terbilang: p.terbilang,
+    total_tally_volume_m3: p.totalTallyVolumeM3,
+    total_tally_pieces: p.totalTallyPieces,
+    total_timber_gross_idr: p.totalTimberGrossIDR,
+    total_timber_pph_idr: p.totalTimberPphIDR,
+    total_timber_net_idr: p.totalTimberNetIDR,
+    status: p.status,
+    issued_at: p.issuedAt || null,
+    paid_at: p.paidAt || null,
+    invoice_number: p.invoiceNumber || null,
+    payment_date: p.paymentDate || null,
+    payment_method: p.paymentMethod || null,
+    notes: p.notes || null,
+  })));
+
+  // 12. Receiving Manifests
+  await upsert('receiving_manifests', fixtures.SEED_MANIFESTS.map((m) => ({
+    id: m.id,
+    tenant_id: m.tenantId,
+    manifest_number: m.manifestNumber,
+    receipt_date: m.receiptDate,
+    doc_date: m.docDate || null,
+    truck_plate_number: m.truckPlateNumber,
+    forestry_doc_number: m.forestryDocNumber,
+    receipt_number: m.receiptNumber,
+    contract_number: m.contractNumber,
+    supplier_id: m.supplierId,
+    broker_id: m.brokerId || null,
+    freight_rate_per_m3: m.freightRatePerM3,
+    freight_pph_rate: m.freightPphRate,
+    broker_fee: m.brokerFee,
+    payment_status: m.paymentStatus,
+    invoice_number: m.invoiceNumber || null,
+    payment_date: m.paymentDate || null,
+    payment_notes: m.paymentNotes || null,
+  })));
+
+  // 13. Receiving Items
+  await upsert('receiving_items', fixtures.SEED_RECEIVING_ITEMS.map((item) => ({
+    id: item.id,
+    manifest_id: item.manifestId,
+    tenant_id: item.tenantId,
+    item_sequence: item.itemSequence,
+    species_id: item.speciesId,
+    lot_id: item.lotId || null,
+    wood_length_m: item.woodLengthM,
+    delivered_pieces: item.deliveredPieces,
+    delivered_volume_m3: item.deliveredVolumeM3,
+    tally_pieces: item.tallyPieces,
+    tally_volume_m3: item.tallyVolumeM3,
+    timber_price_per_m3: item.timberPricePerM3 ?? null,
+    timber_pph_rate: item.timberPphRate,
+    notes: item.notes || null,
+  })));
+
+  // 14. Payment Forms (Pass 2: update references)
+  for (const p of fixtures.SEED_PAYMENT_FORMS) {
+    try {
+      await supabaseFetch(`/payment_forms?id=eq.${p.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          record_ids: JSON.stringify(p.recordIds),
+          item_ids: JSON.stringify(p.itemIds),
+        }),
+      });
+    } catch {}
+  }
+
+  // 15. Payment Form Lines
+  await upsert('payment_form_lines', fixtures.SEED_PAYMENT_FORM_LINES.map((line) => ({
+    id: line.id,
+    payment_form_id: line.paymentFormId,
+    tenant_id: 'default-tenant',
+    item_sequence: line.itemSequence,
+    kategori: line.kategori,
+    konten: line.konten,
+    tujuan: line.tujuan,
+    harga_satuan_idr: line.hargaSatuanIDR,
+    jumlah: line.jumlah,
+    unit: line.unit,
+    total_idr: line.totalIDR,
+    source_record_id: line.sourceRecordId || null,
+    source_item_id: line.sourceItemId || null,
+    notes: line.notes || null,
+  })));
+
+  // 16. Outbound Wood Sales
+  await upsert('sales_records', fixtures.SEED_SALES.map((sale) => ({
     id: sale.id,
     sale_date: sale.saleDate,
     delivery_order_number: sale.deliveryOrderNumber,
@@ -286,31 +344,68 @@ export async function seedSupabaseDatabase(): Promise<{
     payment_status: sale.paymentStatus || 'UNPAID',
     invoice_number: sale.invoiceNumber || null,
     notes: sale.notes || null,
-  }));
-  await supabaseFetch('/sales_records', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates',
-    body: JSON.stringify(salesPayload),
-  });
+  })));
+
+  // 17. Sawmill Production
+  await upsert('sawmill_production_records', fixtures.SEED_PRODUCTION.map((p) => ({
+    id: p.id,
+    tenant_id: p.tenantId,
+    production_date: p.productionDate,
+    shift: p.shift || null,
+    source_storage_yard: p.sourceStorageYard,
+    source_kavling_number: p.sourceKavlingNumber,
+    input_species: p.inputSpecies,
+    input_volume_m3: p.inputVolumeM3,
+    input_pieces: p.inputPieces,
+    output_product: p.outputProduct,
+    output_volume_m3: p.outputVolumeM3,
+    output_pieces: p.outputPieces,
+    operator_name: p.operatorName,
+    notes: p.notes || null,
+  })));
+
+  // 18. Stock Sorting
+  await upsert('stock_sorting_records', fixtures.SEED_SORTING.map((sort) => ({
+    id: sort.id,
+    tenant_id: sort.tenantId,
+    sorting_date: sort.sortingDate,
+    species: sort.species,
+    source_storage_yard: sort.sourceStorageYard,
+    source_kavling_number: sort.sourceKavlingNumber,
+    target_storage_yard: sort.targetStorageYard,
+    target_kavling_number: sort.targetKavlingNumber,
+    volume_m3: sort.volumeM3,
+    pieces: sort.pieces,
+    reason: sort.reason,
+    operator_name: sort.operatorName,
+    notes: sort.notes || null,
+  })));
 
   return {
-    tenants: 1,
-    species: SEED_SPECIES.length,
-    yards: SEED_YARDS.length,
-    lots: SEED_LOTS.length,
-    suppliers: suppliersPayload.length,
-    manifests: SEED_MANIFESTS.length,
-    items: SEED_ITEMS.length,
-    sales: salesPayload.length,
+    tenants: fixtures.SEED_TENANTS.length,
+    settings: 1,
+    species: fixtures.SEED_SPECIES.length,
+    yards: fixtures.SEED_YARDS.length,
+    lots: fixtures.SEED_LOTS.length,
+    suppliers: fixtures.SEED_SUPPLIERS.length,
+    brokers: fixtures.SEED_BROKERS.length,
+    contracts: fixtures.SEED_CONTRACTS.length,
+    sortimentItems: fixtures.SEED_SORTIMENT_ITEMS.length,
+    contractReceipts: fixtures.SEED_CONTRACT_RECEIPTS.length,
+    paymentForms: fixtures.SEED_PAYMENT_FORMS.length,
+    manifests: fixtures.SEED_MANIFESTS.length,
+    receivingItems: fixtures.SEED_RECEIVING_ITEMS.length,
+    paymentFormLines: fixtures.SEED_PAYMENT_FORM_LINES.length,
+    sales: fixtures.SEED_SALES.length,
+    production: fixtures.SEED_PRODUCTION.length,
+    sorting: fixtures.SEED_SORTING.length,
   };
 }
 
 // Auto-run if executed directly via node scripts/seed-supabase.ts
-if (process.argv[1]?.endsWith('seed-supabase.ts')) {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   // Load .env.local if present
   try {
-    const fs = await import('node:fs');
-    const path = await import('node:path');
     const envPath = path.resolve(process.cwd(), '.env.local');
     if (fs.existsSync(envPath)) {
       const content = fs.readFileSync(envPath, 'utf8');
@@ -324,15 +419,20 @@ if (process.argv[1]?.endsWith('seed-supabase.ts')) {
     }
   } catch {}
 
-  console.log('Seeding Supabase project at:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  console.log('🌱 Seeding Supabase Database...');
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.warn('⚠️  NEXT_PUBLIC_SUPABASE_URL not configured in environment. Skipping Supabase seed.');
+    process.exit(0);
+  }
+
   seedSupabaseDatabase()
     .then((stats) => {
-      console.log('Successfully seeded Supabase database:');
+      console.log('✅ Successfully seeded Supabase database:');
       console.table(stats);
       process.exit(0);
     })
     .catch((err) => {
-      console.error('Failed to seed Supabase database:', err);
+      console.error('❌ Failed to seed Supabase database:', err);
       process.exit(1);
     });
 }

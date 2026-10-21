@@ -36,7 +36,7 @@ import {
   listActivityLogsFromDb,
   appendActivityLogToDb,
 } from './sqlite/activity-queries.ts';
-import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import { SEED_WOOD_RECORDS } from './seed/fixtures.ts';
 import { queryPaginatedRecords, deleteRecordFromSqlite } from './sqlite/record-queries.ts';
 import { seedSalesIfEmpty } from './sqlite/sales-queries.ts';
 import type {

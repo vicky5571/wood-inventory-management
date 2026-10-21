@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 
 type SortField = 'receiptDate' | 'tallyVolumeM3' | 'grandNetPayable';
 type SortDirection = 'asc' | 'desc';

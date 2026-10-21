@@ -12,7 +12,7 @@ import path from 'node:path';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { useWoodRecords } from '../src/hooks/useWoodRecords.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import { MemoryStorageAdapter, LocalStorageAdapter } from '../src/persistence/storage.ts';
 import { toastStore } from '../src/utils/toast-store.ts';
 import { escapeCsvField, generateRecordsCsvContent, CSV_HEADERS } from '../src/utils/records-csv.ts';
@@ -206,14 +206,13 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
 
   await t.test('SEED_WOOD_RECORDS conforms to WoodReceivingRecord structure', () => {
     assert.ok(Array.isArray(SEED_WOOD_RECORDS));
-    assert.strictEqual(SEED_WOOD_RECORDS.length, 4);
+    assert.strictEqual(SEED_WOOD_RECORDS.length, 10);
     for (const record of SEED_WOOD_RECORDS) {
       assert.ok(record.id.startsWith('rec-'));
       assert.ok(typeof record.receiptDate === 'string');
       assert.ok(typeof record.truckPlateNumber === 'string');
       assert.ok(typeof record.tallyVolumeM3 === 'number');
-      assert.ok(typeof record.grandNetPayable === 'number');
-      assert.ok(record.grandNetPayable > 0);
+      assert.ok(record.grandNetPayable === null || typeof record.grandNetPayable === 'number');
     }
   });
 
@@ -260,7 +259,7 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     next[index] = updated;
 
     assert.strictEqual(next[0].truckPlateNumber, 'B 1111 UPD');
-    assert.strictEqual(initial[0].truckPlateNumber, 'B 9283 TDA', 'Initial state untouched');
+    assert.strictEqual(initial[0].truckPlateNumber, SEED_WOOD_RECORDS[0].truckPlateNumber, 'Initial state untouched');
 
     // Simulating saveRecord (insert new)
     const newRecord: WoodReceivingRecord = {
@@ -271,18 +270,18 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
       updatedAt: new Date().toISOString(),
     };
     const prepended = [newRecord, ...next];
-    assert.strictEqual(prepended.length, 5);
+    assert.strictEqual(prepended.length, SEED_WOOD_RECORDS.length + 1);
     assert.strictEqual(prepended[0].id, 'rec-new-999');
 
     // Simulating deleteRecord
     const filtered = prepended.filter((r) => r.id !== 'rec-new-999');
-    assert.strictEqual(filtered.length, 4);
+    assert.strictEqual(filtered.length, SEED_WOOD_RECORDS.length);
     assert.ok(filtered.every((r) => r.id !== 'rec-new-999'));
 
     // Simulating restoreRecord / undo operation
     const restored = [...filtered];
     restored.unshift(newRecord);
-    assert.strictEqual(restored.length, 5);
+    assert.strictEqual(restored.length, SEED_WOOD_RECORDS.length + 1);
     assert.strictEqual(restored[0].id, 'rec-new-999');
     assert.deepStrictEqual(restored[0], newRecord);
   });
@@ -291,22 +290,22 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     const records: WoodReceivingRecord[] = JSON.parse(JSON.stringify(SEED_WOOD_RECORDS));
 
     // Filter by species
-    const speciesFilter: RecordFilterCriteria = { species: 'Teak / Jati (柚木)' };
+    const speciesFilter: RecordFilterCriteria = { species: 'Jati / Teak (柚木)' };
     const jatiOnly = records.filter((r) => !speciesFilter.species || r.woodSpecies === speciesFilter.species);
-    assert.strictEqual(jatiOnly.length, 1);
-    assert.strictEqual(jatiOnly[0].woodSpecies, 'Teak / Jati (柚木)');
+    assert.strictEqual(jatiOnly.length, 5);
+    assert.strictEqual(jatiOnly[0].woodSpecies, 'Jati / Teak (柚木)');
 
     // Filter by kavling
-    const kavFilter: RecordFilterCriteria = { kavling: 'KAV-02' };
-    const kav02Only = records.filter((r) => !kavFilter.kavling || r.kavlingNumber === kavFilter.kavling);
-    assert.strictEqual(kav02Only.length, 1);
-    assert.strictEqual(kav02Only[0].kavlingNumber, 'KAV-02');
+    const kavFilter: RecordFilterCriteria = { kavling: 'KAV-01' };
+    const kav01Only = records.filter((r) => !kavFilter.kavling || r.kavlingNumber === kavFilter.kavling);
+    assert.strictEqual(kav01Only.length, 2);
+    assert.strictEqual(kav01Only[0].kavlingNumber, 'KAV-01');
 
     // Filter by search query across multiple fields
-    const queryFilter = 'papua';
+    const queryFilter = 'Hutan Lestari';
     const queryResults = records.filter((r) => recordMatchesSearchQuery(r, queryFilter));
     assert.strictEqual(queryResults.length, 1);
-    assert.strictEqual(queryResults[0].supplierName, 'CV Papua Rimba Sejahtera');
+    assert.strictEqual(queryResults[0].supplierName, 'PT Hutan Lestari Nusantara');
   });
 
   await t.test('RFC 4180 CSV escaping handles quotes, commas, and formatting', () => {

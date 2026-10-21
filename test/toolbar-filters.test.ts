@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { RecordFilterCriteria, WoodReceivingRecord } from '../src/types/index.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 
 import { recordMatchesSearchQuery } from '../src/utils/record-search.ts';
 
@@ -37,12 +37,12 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
       }
     };
 
-    // 1. Select "Teak / Jati (柚木)"
-    handleSpeciesPillClick('Teak / Jati (柚木)');
-    assert.strictEqual(currentFilters.species, 'Teak / Jati (柚木)');
+    // 1. Select "Jati / Teak (柚木)"
+    handleSpeciesPillClick('Jati / Teak (柚木)');
+    assert.strictEqual(currentFilters.species, 'Jati / Teak (柚木)');
     const jatiFiltered = applyFilters(records, currentFilters);
-    assert.strictEqual(jatiFiltered.length, 1);
-    assert.strictEqual(jatiFiltered[0].woodSpecies, 'Teak / Jati (柚木)');
+    assert.strictEqual(jatiFiltered.length, 5);
+    assert.strictEqual(jatiFiltered[0].woodSpecies, 'Jati / Teak (柚木)');
 
     // 2. Select another species "Merbau (菠萝格)"
     handleSpeciesPillClick('Merbau (菠萝格)');
@@ -58,8 +58,8 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
     assert.strictEqual(allFiltered.length, records.length);
 
     // 4. Clicking undefined ("Semua") explicitly resets to undefined
-    handleSpeciesPillClick('Teak / Jati (柚木)');
-    assert.strictEqual(currentFilters.species, 'Teak / Jati (柚木)');
+    handleSpeciesPillClick('Jati / Teak (柚木)');
+    assert.strictEqual(currentFilters.species, 'Jati / Teak (柚木)');
     handleSpeciesPillClick(undefined);
     assert.strictEqual(currentFilters.species, undefined);
   });
@@ -67,7 +67,7 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
   await t.test('clear search button resets query to empty', () => {
     let currentFilters: RecordFilterCriteria = {
       searchQuery: 'SKSHHK-2026-001',
-      species: 'Teak / Jati (柚木)',
+      species: 'Jati / Teak (柚木)',
     };
 
     const handleClearSearch = () => {
@@ -78,19 +78,19 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
 
     handleClearSearch();
     assert.strictEqual(currentFilters.searchQuery, '');
-    assert.strictEqual(currentFilters.species, 'Teak / Jati (柚木)');
-    assert.strictEqual(applyFilters(records, currentFilters).length, 1);
+    assert.strictEqual(currentFilters.species, 'Jati / Teak (柚木)');
+    assert.strictEqual(applyFilters(records, currentFilters).length, 5);
   });
 
   await t.test('combined quick-pill and text search filters with high precision', () => {
     const filters: RecordFilterCriteria = {
       species: 'Merbau (菠萝格)',
-      searchQuery: '8172', // Plate L 8172 UX
+      searchQuery: '8832', // Plate H 8832 PK
     };
 
     const results = applyFilters(records, filters);
     assert.strictEqual(results.length, 1);
-    assert.strictEqual(results[0].truckPlateNumber, 'L 8172 UX');
+    assert.strictEqual(results[0].truckPlateNumber, 'H 8832 PK');
     assert.strictEqual(results[0].woodSpecies, 'Merbau (菠萝格)');
 
     // Unmatched search query returns empty array

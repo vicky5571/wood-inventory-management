@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SEED_SUPPLIERS } from '../src/persistence/seed-data.ts';
+import { SEED_SUPPLIERS } from '../src/persistence/seed/fixtures.ts';
 import { formatActivityDescription } from '../src/utils/activity-logger.ts';
 import type { Supplier } from '../src/types/index.ts';
 
@@ -10,13 +10,13 @@ test('Supplier SSOT Domain & Seed Invariants Suite', async (t) => {
     assert.ok(SEED_SUPPLIERS.length >= 4);
 
     const names = SEED_SUPPLIERS.map((s) => s.name);
-    assert.ok(names.includes('PT Wana Lestari Abadi'));
-    assert.ok(names.includes('CV Papua Rimba Sejahtera'));
-    assert.ok(names.includes('PT Kayu Makmur Nusantara'));
-    assert.ok(names.includes('Koperasi Hutan Lestari'));
+    assert.ok(names.includes('Perum Perhutani KPH Randublatung'));
+    assert.ok(names.includes('Perum Perhutani KPH Mantingan'));
+    assert.ok(names.includes('PT Hutan Lestari Nusantara'));
+    assert.ok(names.includes('CV Rimba Kayu Jaya'));
 
     for (const s of SEED_SUPPLIERS) {
-      assert.ok(s.id.startsWith('spl-'));
+      assert.ok(s.id.toUpperCase().startsWith('SPL-'));
       assert.ok(s.code.startsWith('SPL-'));
       assert.ok(s.name.trim().length > 0);
       assert.equal(s.status, 'ACTIVE');

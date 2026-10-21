@@ -6,7 +6,7 @@
 
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { SEED_WOOD_RECORDS } from './seed-data.ts';
+import { SEED_WOOD_RECORDS } from './seed/fixtures.ts';
 import type { WoodReceivingRecord, ManifestFormInput } from '../types/index.ts';
 import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
 

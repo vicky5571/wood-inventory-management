@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mergeSuppliersWithMetrics } from '../src/utils/supplier-metrics.ts';
-import { SEED_SUPPLIERS, SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_SUPPLIERS, SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { Supplier } from '../src/types/index.ts';
 
 test('Supplier Merging & Scorecard Association Suite', async (t) => {
@@ -9,12 +9,12 @@ test('Supplier Merging & Scorecard Association Suite', async (t) => {
     const merged = mergeSuppliersWithMetrics(SEED_SUPPLIERS, SEED_WOOD_RECORDS);
 
     assert.equal(merged.length, SEED_SUPPLIERS.length);
-    const wana = merged.find((s) => s.name === 'PT Wana Lestari Abadi');
-    assert.ok(wana);
-    assert.equal(wana.code, 'SPL-001');
-    assert.ok(wana.totalDeliveries > 0);
-    assert.ok(wana.totalTallyVolumeM3 > 0);
-    assert.ok(['OPTIMAL', 'ACCEPTABLE', 'ATTENTION'].includes(wana.ratingStatus));
+    const perhutani = merged.find((s) => s.name === 'Perum Perhutani KPH Randublatung');
+    assert.ok(perhutani);
+    assert.equal(perhutani.code, 'SPL-001');
+    assert.ok(perhutani.totalDeliveries > 0);
+    assert.ok(perhutani.totalTallyVolumeM3 > 0);
+    assert.ok(['OPTIMAL', 'ACCEPTABLE', 'ATTENTION'].includes(perhutani.ratingStatus));
   });
 
   await t.test('includes newly registered suppliers with 0 deliveries gracefully', () => {

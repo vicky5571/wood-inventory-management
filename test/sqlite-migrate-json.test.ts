@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createSqliteDatabase } from '../src/persistence/sqlite/db.ts';
 import { runMigrations } from '../src/persistence/sqlite/migrations.ts';
 import { migrateJsonToSqlite, toCode } from '../src/persistence/sqlite/migrate-json.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
 test('JSON to SQLite Migration Utility Suite', async (t) => {

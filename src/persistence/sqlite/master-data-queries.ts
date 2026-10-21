@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Supplier } from '../../types/index.ts';
-import { SEED_SUPPLIERS } from '../seed-data.ts';
+import { SEED_SUPPLIERS } from '../seed/fixtures.ts';
 import {
   getSpeciesFromDb,
   saveSpeciesToDb,

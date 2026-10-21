@@ -52,8 +52,8 @@ test('Supabase Seeding Engine Suite', async (t) => {
     assert.ok(postedTables.has('sales_records'), 'sales_records must be seeded');
 
     assert.ok(stats.tenants >= 1);
-    assert.ok(stats.species >= 13);
-    assert.ok(stats.yards >= 4);
+    assert.ok(stats.species >= 8);
+    assert.ok(stats.yards >= 3);
     assert.ok(stats.lots >= 8);
     assert.ok(stats.suppliers >= 4);
     assert.ok(stats.manifests >= 4);

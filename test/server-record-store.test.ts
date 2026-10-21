@@ -4,7 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { ServerRecordStore, serverRecordStore } from '../src/persistence/server-record-store.ts';
 import { SqliteRecordStore } from '../src/persistence/sqlite-record-store.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 import { GET, POST, DELETE } from '../app/api/records/route.ts';
 import { createSessionToken, COOKIE_NAME } from '../src/auth/session.ts';
@@ -36,21 +36,21 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
 
   const store = new ServerRecordStore(TEST_FILE_PATH);
 
-  await t.test('getAll() initializes with 4 seed records when file does not exist', async () => {
+  await t.test('getAll() initializes with 10 seed records when file does not exist', async () => {
     const records = await store.getAll();
-    assert.equal(records.length, 4);
+    assert.equal(records.length, 10);
     assert.equal(records[0].id, SEED_WOOD_RECORDS[0].id);
 
     // Verify file was written to disk
     const content = await fs.readFile(TEST_FILE_PATH, 'utf-8');
     const onDisk = JSON.parse(content);
     assert.equal(Array.isArray(onDisk), true);
-    assert.equal(onDisk.length, 4);
+    assert.equal(onDisk.length, 10);
   });
 
-  await t.test('reset() re-seeds store back to 4 seed records', async () => {
+  await t.test('reset() re-seeds store back to 10 seed records', async () => {
     const resetRecords = await store.reset();
-    assert.equal(resetRecords.length, 4);
+    assert.equal(resetRecords.length, 10);
     assert.equal(resetRecords[0].woodSpecies, SEED_WOOD_RECORDS[0].woodSpecies);
   });
 
@@ -90,13 +90,13 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     assert.equal(saved.woodSpecies, 'Bangkirai / Yellow Balau (黄梢)');
 
     const all = await store.getAll();
-    assert.equal(all.length, 5);
+    assert.equal(all.length, 11);
     assert.equal(all[0].id, saved.id, 'New record should be prepended to the front');
 
     // Verify on disk
     const onDiskRaw = await fs.readFile(TEST_FILE_PATH, 'utf-8');
     const onDisk = JSON.parse(onDiskRaw);
-    assert.equal(onDisk.length, 5);
+    assert.equal(onDisk.length, 11);
     assert.equal(onDisk[0].id, saved.id);
   });
 
@@ -132,13 +132,13 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     assert.equal(result, true);
 
     const reloaded = await store.getAll();
-    assert.equal(reloaded.length, 4);
+    assert.equal(reloaded.length, 10);
     assert.ok(!reloaded.some((r) => r.id === targetId));
 
     // Verify on disk
     const onDiskRaw = await fs.readFile(TEST_FILE_PATH, 'utf-8');
     const onDisk = JSON.parse(onDiskRaw);
-    assert.equal(onDisk.length, 4);
+    assert.equal(onDisk.length, 10);
   });
 
   await t.test('delete() returns false when record does not exist', async () => {
@@ -147,7 +147,7 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
   });
 
   await t.test('handles concurrent saves and deletes without dropping records (runExclusive mutex)', async () => {
-    await store.reset(); // back to 4 seed records
+    await store.reset(); // back to 10 seed records
 
     // Concurrently save 10 new distinct records
     const concurrentRecords = Array.from({ length: 10 }, (_, i) => ({
@@ -183,7 +183,7 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     assert.equal(savedResults.length, 10);
 
     const afterConcurrentSave = await store.getAll();
-    assert.equal(afterConcurrentSave.length, 14, 'Should contain exactly 4 seed records + 10 saved records');
+    assert.equal(afterConcurrentSave.length, 20, 'Should contain exactly 10 seed records + 10 saved records');
 
     // Concurrently delete 5 records
     const toDeleteIds = ['rec-concurrent-0', 'rec-concurrent-2', 'rec-concurrent-4', 'rec-concurrent-6', 'rec-concurrent-8'];
@@ -191,7 +191,7 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     assert.ok(deleteResults.every((res) => res === true), 'All 5 concurrent delete operations must return true');
 
     const afterConcurrentDelete = await store.getAll();
-    assert.equal(afterConcurrentDelete.length, 9, 'Should contain exactly 9 records after 5 concurrent deletions');
+    assert.equal(afterConcurrentDelete.length, 15, 'Should contain exactly 15 records after 5 concurrent deletions');
     for (const deletedId of toDeleteIds) {
       assert.ok(!afterConcurrentDelete.some((r) => r.id === deletedId), `Record ${deletedId} must not exist`);
     }
@@ -203,7 +203,7 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
     try {
       const envStore = new ServerRecordStore();
       const records = await envStore.getAll();
-      assert.equal(records.length, 4);
+      assert.equal(records.length, 10);
       const exists = await fs.stat(envTestPath).then(() => true).catch(() => false);
       assert.ok(exists, 'File at process.env.WOOD_RECORDS_PATH should be created');
     } finally {
@@ -464,7 +464,7 @@ test('ServerRecordStore SQLite Delegation & Bridge Suite', async (t) => {
     const store = new ServerRecordStore(memorySqlite);
 
     const initial = await store.getAll();
-    assert.strictEqual(initial.length, 4);
+    assert.strictEqual(initial.length, 10);
 
     const saved = await store.save({
       woodSpecies: 'Sonokeling (紫檀)',
@@ -498,7 +498,7 @@ test('ServerRecordStore SQLite Delegation & Bridge Suite', async (t) => {
     assert.strictEqual(afterDelete, null);
 
     const resetRecords = await store.reset();
-    assert.strictEqual(resetRecords.length, 4);
+    assert.strictEqual(resetRecords.length, 10);
 
     store.close();
   });

@@ -1,7 +1,7 @@
 import type { Supplier, SupplierFilterCriteria } from '../types/index.ts';
 import type { StorageAdapter } from './storage.ts';
 import { MemoryStorageAdapter } from './storage.ts';
-import { SEED_SUPPLIERS } from './seed-data.ts';
+import { SEED_SUPPLIERS } from './seed/fixtures.ts';
 
 const STORAGE_KEY = 'wood_suppliers_v1';
 
@@ -9,12 +9,12 @@ export class SupplierRepository {
   private memoryCache: Supplier[] = [];
   private storage?: StorageAdapter;
 
-  constructor(initialData: Supplier[] = SEED_SUPPLIERS, storage?: StorageAdapter) {
+  constructor(initialData: readonly Supplier[] = SEED_SUPPLIERS, storage?: StorageAdapter) {
     this.storage = storage;
     this.load(initialData);
   }
 
-  private load(fallbackData: Supplier[]): void {
+  private load(fallbackData: readonly Supplier[]): void {
     let serialized: string | null = null;
 
     if (this.storage instanceof MemoryStorageAdapter) {

@@ -51,3 +51,4 @@ Use `template.md` as the starting point for every new ADR.
 | 0008 | Expand SSOT Exemption Suffixes (10 new suffixes: Input/Row/Adapter/ChartData/Shape/Value/Action/Option/Field/Direction) | Accepted (Retrospective) |
 | 0009 | Sidebar Section Grouping (Not Flat List, Not Collapsible) | Accepted |
 | 0010 | Role-Based Nav Filter Default State | Accepted |
+| 0011 | Shared Fixture Source with Backend-Specific Loaders | Accepted |

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { calculateSupplierSummaries } from '../src/utils/supplier-metrics.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 
 test('Supplier View Contracts Suite', async (t) => {
   await t.test('calculates correct ranking and status badges for top suppliers', () => {

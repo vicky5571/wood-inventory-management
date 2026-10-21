@@ -12,7 +12,7 @@ import {
   escapeCsvField,
   generateRecordsCsvContent,
 } from '../src/utils/records-csv.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 
 test('Records CSV Export Suite — All Excel Columns', async (t) => {
   await t.test('CSV_HEADERS contains all 27 comprehensive Excel columns', () => {

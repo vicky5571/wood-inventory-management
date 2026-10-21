@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { SEED_WOOD_RECORDS, SEED_SUPPLIERS, SEED_WOOD_SALES } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS, SEED_SUPPLIERS, SEED_WOOD_SALES } from '../src/persistence/seed/fixtures.ts';
 import { SEED_STORAGE_YARDS, SEED_STORAGE_LOTS } from '../src/utils/storage-locations.ts';
 
 describe('Supabase Migration & Seed SQL Invariants Suite', () => {

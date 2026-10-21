@@ -150,7 +150,22 @@ function saveManifestCore(
       wood_length_m, delivered_pieces, delivered_volume_m3, tally_pieces,
       tally_volume_m3, timber_price_per_m3, timber_pph_rate, notes,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?);
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      manifest_id = excluded.manifest_id,
+      tenant_id = excluded.tenant_id,
+      item_sequence = excluded.item_sequence,
+      species_id = excluded.species_id,
+      lot_id = excluded.lot_id,
+      wood_length_m = excluded.wood_length_m,
+      delivered_pieces = excluded.delivered_pieces,
+      delivered_volume_m3 = excluded.delivered_volume_m3,
+      tally_pieces = excluded.tally_pieces,
+      tally_volume_m3 = excluded.tally_volume_m3,
+      timber_price_per_m3 = excluded.timber_price_per_m3,
+      timber_pph_rate = excluded.timber_pph_rate,
+      notes = excluded.notes,
+      updated_at = excluded.updated_at;
   `);
 
   const items = manifest.items || [];

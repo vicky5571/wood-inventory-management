@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SupplierRepository } from '../src/persistence/supplier-repository.ts';
 import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
-import { SEED_SUPPLIERS } from '../src/persistence/seed-data.ts';
+import { SEED_SUPPLIERS } from '../src/persistence/seed/fixtures.ts';
 
 test('SupplierRepository CRUD & Persistence Suite', async (t) => {
   await t.test('initializes with seed data when storage is empty', () => {
@@ -18,12 +18,12 @@ test('SupplierRepository CRUD & Persistence Suite', async (t) => {
     const storage = new MemoryStorageAdapter();
     const repo = new SupplierRepository(SEED_SUPPLIERS, storage);
 
-    const papuaSearch = repo.getAll({ searchQuery: 'rimba sejahtera' });
-    assert.equal(papuaSearch.length, 1);
-    assert.equal(papuaSearch[0].code, 'SPL-002');
+    const rimbaSearch = repo.getAll({ searchQuery: 'rimba kayu' });
+    assert.equal(rimbaSearch.length, 1);
+    assert.equal(rimbaSearch[0].code, 'SPL-005');
 
     const activeOnly = repo.getAll({ status: 'ACTIVE' });
-    assert.equal(activeOnly.length, 4);
+    assert.equal(activeOnly.length, SEED_SUPPLIERS.length);
   });
 
   await t.test('creates new supplier and generates deterministic unique code and id', () => {
@@ -38,12 +38,12 @@ test('SupplierRepository CRUD & Persistence Suite', async (t) => {
     });
 
     assert.ok(created.id.startsWith('spl-'));
-    assert.equal(created.code, 'SPL-005');
+    assert.equal(created.code, 'SPL-008');
     assert.equal(created.name, 'PT Rimba Nusantara Mandiri');
 
     const fetched = repo.getById(created.id);
     assert.equal(fetched?.name, 'PT Rimba Nusantara Mandiri');
-    assert.equal(repo.getAll().length, 5);
+    assert.equal(repo.getAll().length, SEED_SUPPLIERS.length + 1);
   });
 
   await t.test('updates existing supplier attributes while preserving id and timestamps', () => {

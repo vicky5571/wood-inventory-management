@@ -12,7 +12,8 @@ test('SqliteRecordStore CRUD & Contract Suite', async (t) => {
   await t.test('initializes and hydrates seed data automatically on first getAll', async () => {
     const records = await store.getAll();
     assert.ok(records.length > 0, 'must have hydrated seed records');
-    assert.ok(records[0].grandNetPayable > 0, 'must have calculated grandNetPayable');
+    const priced = records.find((r) => (r.grandNetPayable ?? 0) > 0);
+    assert.ok(priced && (priced.grandNetPayable ?? 0) > 0, 'must have calculated grandNetPayable');
   });
 
   await t.test('saves new record and returns fully computed record', async () => {
@@ -122,8 +123,8 @@ test('SqliteRecordStore CRUD & Contract Suite', async (t) => {
   await t.test('reset clears and re-hydrates seed data', async () => {
     const resetRecords = await store.reset();
     assert.ok(resetRecords.length >= 4, 'must restore seed records');
-    const first = resetRecords[0];
-    assert.ok(first.grandNetPayable > 0);
+    const priced = resetRecords.find((r) => (r.grandNetPayable ?? 0) > 0);
+    assert.ok(priced && (priced.grandNetPayable ?? 0) > 0);
 
     const all = await store.getAll();
     assert.strictEqual(all.length, resetRecords.length);

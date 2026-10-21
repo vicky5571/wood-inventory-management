@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import type { Broker } from '../../types/index.ts';
-import { SEED_BROKERS } from '../seed-data.ts';
+import { SEED_BROKERS } from '../seed/fixtures.ts';
 
 interface SqliteBrokerRow {
   id: string;

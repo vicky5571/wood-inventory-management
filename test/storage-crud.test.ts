@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryStorageAdapter } from '../src/persistence/storage.ts';
 import { WoodRecordRepository } from '../src/persistence/record-repository.ts';
-import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
+import { SEED_WOOD_RECORDS } from '../src/persistence/seed/fixtures.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
 test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
@@ -16,11 +16,11 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
   });
 
   await t.test('filters records by species and query', async () => {
-    const teakOnly = await repo.getFiltered({ species: 'Teak / Jati (柚木)' });
+    const teakOnly = await repo.getFiltered({ species: SEED_WOOD_RECORDS[0].woodSpecies });
     assert.ok(teakOnly.length > 0);
-    assert.ok(teakOnly.every((r: WoodReceivingRecord) => r.woodSpecies.includes('Teak')));
+    assert.ok(teakOnly.every((r: WoodReceivingRecord) => r.woodSpecies.includes('Teak') || r.woodSpecies.includes('Jati')));
 
-    const teakFilterAlias = await repo.filter({ species: 'Teak / Jati (柚木)' });
+    const teakFilterAlias = await repo.filter({ species: SEED_WOOD_RECORDS[0].woodSpecies });
     assert.deepStrictEqual(teakFilterAlias, teakOnly);
 
     const querySearch = await repo.getFiltered({ searchQuery: 'SKSHHK-2026-001' });
@@ -29,17 +29,17 @@ test('WoodRecordRepository CRUD & Filtering Suite', async (t) => {
 
   await t.test('filters records by kavling and date range', async () => {
     const kav01 = await repo.getFiltered({ kavling: 'KAV-01' });
-    assert.strictEqual(kav01.length, 1);
+    assert.strictEqual(kav01.length, 2);
     assert.strictEqual(kav01[0].kavlingNumber, 'KAV-01');
 
     const dateFiltered = await repo.getFiltered({
-      startDate: '2026-10-02',
-      endDate: '2026-10-06',
+      startDate: '2026-08-01',
+      endDate: '2026-08-31',
     });
     assert.ok(dateFiltered.length > 0);
     assert.ok(
       dateFiltered.every(
-        (r: WoodReceivingRecord) => r.receiptDate >= '2026-10-02' && r.receiptDate <= '2026-10-06'
+        (r: WoodReceivingRecord) => r.receiptDate >= '2026-08-01' && r.receiptDate <= '2026-08-31'
       )
     );
   });
