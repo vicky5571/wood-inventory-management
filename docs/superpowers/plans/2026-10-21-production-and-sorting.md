@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P2
-**Status:** DRAFT
+**Status:** COMPLETED
 **Related Client Feedback:** Item #4
 
 ---
@@ -260,105 +260,105 @@ Position: between `sales` and `suppliers`.
 ## 4. Implementation Checklist
 
 ### Phase 1: SSOT Types
-- [ ] Add `ProductionShift`, `SawmillProductionRecord`, `SawmillProductionFormInput` to `src/types/index.ts`
-- [ ] Add `StockSortingRecord`, `StockSortingFormInput` to `src/types/index.ts`
-- [ ] Extend `LotStockBalance` with `consumedPieces/VolumeM3`, `transferredIn/OutPieces/VolumeM3`
-- [ ] Add activity actions: `PRODUCTION_CREATED/UPDATED/DELETED/RESTORED`, `SORTING_CREATED/UPDATED/DELETED/RESTORED`
+- [x] Add `ProductionShift`, `SawmillProductionRecord`, `SawmillProductionFormInput` to `src/types/index.ts`
+- [x] Add `StockSortingRecord`, `StockSortingFormInput` to `src/types/index.ts`
+- [x] Extend `LotStockBalance` with `consumedPieces/VolumeM3`, `transferredIn/OutPieces/VolumeM3`
+- [x] Add activity actions: `PRODUCTION_CREATED/UPDATED/DELETED/RESTORED`, `SORTING_CREATED/UPDATED/DELETED/RESTORED`
 
 ### Phase 2: Pure Calculators (Test-First)
-- [ ] Create `test/stock-balance-production.test.ts`:
-  - [ ] Production consumes from source lot -> remaining decreases
-  - [ ] Multiple productions same lot -> cumulative decrement
-  - [ ] Production exceeding available stock -> remaining clamped to 0 (balance stays non-negative)
-  - [ ] Backward compat: calling without production arg -> original behavior
-- [ ] Create `test/stock-balance-sorting.test.ts`:
-  - [ ] Transfer source -> target: source decreases, target increases
-  - [ ] Multiple transfers between 3 lots -> correct distribution
-  - [ ] Self-transfer edge case (if somehow saved) -> zero net impact
-- [ ] Update `src/utils/stock-balance.ts`:
-  - [ ] `calculateLotStockBalance()` accepts optional production + sorting arrays
-  - [ ] `aggregateAllLotBalances()` propagates arrays
-  - [ ] Keep normalization consistent (`.trim().toLowerCase()`)
-- [ ] Create `src/utils/production-calc.ts`:
-  - [ ] `computeProductionYield(input, output)` -> `{ yieldPercent, wasteVolumeM3 }`
-  - [ ] `aggregateProductionMetrics(records, dateRange)` -> daily totals + avg yield
-- [ ] Create `test/production-calc.test.ts`:
-  - [ ] Yield 50-95% normal, outliers flagged
-  - [ ] Zero output -> 100% waste
-  - [ ] Input = output -> 100% yield (lossless, unlikely but valid)
-  - [ ] Division-by-zero guard when input = 0 (should not be allowed but defensive)
-- [ ] Run `node --test` -> 0 failures
+- [x] Create `test/stock-balance-production.test.ts`:
+  - [x] Production consumes from source lot -> remaining decreases
+  - [x] Multiple productions same lot -> cumulative decrement
+  - [x] Production exceeding available stock -> remaining clamped to 0 (balance stays non-negative)
+  - [x] Backward compat: calling without production arg -> original behavior
+- [x] Create `test/stock-balance-sorting.test.ts`:
+  - [x] Transfer source -> target: source decreases, target increases
+  - [x] Multiple transfers between 3 lots -> correct distribution
+  - [x] Self-transfer edge case (if somehow saved) -> zero net impact
+- [x] Update `src/utils/stock-balance.ts`:
+  - [x] `calculateLotStockBalance()` accepts optional production + sorting arrays
+  - [x] `aggregateAllLotBalances()` propagates arrays
+  - [x] Keep normalization consistent (`.trim().toLowerCase()`)
+- [x] Create `src/utils/production-calc.ts`:
+  - [x] `computeProductionYield(input, output)` -> `{ yieldPercent, wasteVolumeM3 }`
+  - [x] `aggregateProductionMetrics(records, dateRange)` -> daily totals + avg yield
+- [x] Create `test/production-calc.test.ts`:
+  - [x] Yield 50-95% normal, outliers flagged
+  - [x] Zero output -> 100% waste
+  - [x] Input = output -> 100% yield (lossless, unlikely but valid)
+  - [x] Division-by-zero guard when input = 0 (should not be allowed but defensive)
+- [x] Run `node --test` -> 0 failures
 
 ### Phase 3: Persistence Layer
-- [ ] SQLite migration: create `sawmill_production_records` + `stock_sorting_records` tables
-- [ ] Supabase migration SQL in `supabase/migrations/XXXX_production_sorting.sql`
-- [ ] Implement `src/persistence/sqlite/production-queries.ts`
-- [ ] Implement `src/persistence/sqlite/sorting-queries.ts`
-- [ ] Implement `src/persistence/supabase/supabase-production-store.ts`
-- [ ] Implement `src/persistence/supabase/supabase-sorting-store.ts`
-- [ ] Add both adapters to persistence facade
+- [x] SQLite migration: create `sawmill_production_records` + `stock_sorting_records` tables
+- [x] Supabase migration SQL in `supabase/migrations/XXXX_production_sorting.sql`
+- [x] Implement `src/persistence/sqlite/production-queries.ts`
+- [x] Implement `src/persistence/sqlite/sorting-queries.ts`
+- [x] Implement `src/persistence/supabase/supabase-production-store.ts`
+- [x] Implement `src/persistence/supabase/supabase-sorting-store.ts`
+- [x] Add both adapters to persistence facade
 
 ### Phase 4: API Routes
-- [ ] `app/api/production/route.ts` — GET (list with filter), POST (create)
-- [ ] `app/api/production/[id]/route.ts` — GET, PUT, DELETE (soft)
-- [ ] `app/api/sorting/route.ts` — GET, POST
-- [ ] `app/api/sorting/[id]/route.ts` — GET, PUT, DELETE (soft)
-- [ ] Server-side validation per Section 2.4 rules
-- [ ] Tenant scoping
+- [x] `app/api/production/route.ts` — GET (list with filter), POST (create)
+- [x] `app/api/production/[id]/route.ts` — GET, PUT, DELETE (soft)
+- [x] `app/api/sorting/route.ts` — GET, POST
+- [x] `app/api/sorting/[id]/route.ts` — GET, PUT, DELETE (soft)
+- [x] Server-side validation per Section 2.4 rules
+- [x] Tenant scoping
 
 ### Phase 5: Hooks
-- [ ] Create `src/hooks/useProductionRecords.ts`:
-  - [ ] CRUD, optimistic, soft-delete with undo toast
-  - [ ] Memoized `productSuggestions: string[]` derived from historical `outputProduct` values
-- [ ] Create `src/hooks/useSortingRecords.ts`:
-  - [ ] CRUD, optimistic, soft-delete with undo toast
-  - [ ] Memoized `reasonSuggestions: string[]` derived from historical `reason` values
+- [x] Create `src/hooks/useProductionRecords.ts`:
+  - [x] CRUD, optimistic, soft-delete with undo toast
+  - [x] Memoized `productSuggestions: string[]` derived from historical `outputProduct` values
+- [x] Create `src/hooks/useSortingRecords.ts`:
+  - [x] CRUD, optimistic, soft-delete with undo toast
+  - [x] Memoized `reasonSuggestions: string[]` derived from historical `reason` values
 
 ### Phase 6: Production UI
-- [ ] `src/components/production/ProductionKpiStrip.tsx`
-- [ ] `src/components/production/ProductionToolbar.tsx`
-- [ ] `src/components/production/ProductionTable.tsx` (yield badge: green >=70%, amber 50-70%, red <50%)
-- [ ] `src/components/production/ProductionEmptyState.tsx`
-- [ ] `src/components/production/ProductSuggestionCombobox.tsx` (reuse pattern from `SpeciesCombobox`)
-- [ ] `src/components/production/ProductionYieldPreview.tsx` (live calc as user types)
-- [ ] `src/components/production/ProductionFormModal.tsx` (<250 lines; include stock allowance warning)
-- [ ] `src/components/production/ProductionView.tsx` (coordinator <250 lines)
-- [ ] `app/production/page.tsx` (route shell)
+- [x] `src/components/production/ProductionKpiStrip.tsx`
+- [x] `src/components/production/ProductionToolbar.tsx`
+- [x] `src/components/production/ProductionTable.tsx` (yield badge: green >=70%, amber 50-70%, red <50%)
+- [x] `src/components/production/ProductionEmptyState.tsx`
+- [x] `src/components/production/ProductSuggestionCombobox.tsx` (reuse pattern from `SpeciesCombobox`)
+- [x] `src/components/production/ProductionYieldPreview.tsx` (live calc as user types)
+- [x] `src/components/production/ProductionFormModal.tsx` (<250 lines; include stock allowance warning)
+- [x] `src/components/production/ProductionView.tsx` (coordinator <250 lines)
+- [x] `app/production/page.tsx` (route shell)
 
 ### Phase 7: Sorting UI
-- [ ] `src/components/sorting/SortingKpiStrip.tsx`
-- [ ] `src/components/sorting/SortingToolbar.tsx`
-- [ ] `src/components/sorting/SortingTable.tsx` (arrow visual: source -> target)
-- [ ] `src/components/sorting/SortingEmptyState.tsx`
-- [ ] `src/components/sorting/KavlingPickerDual.tsx` (side-by-side source + target)
-- [ ] `src/components/sorting/SortingReasonCombobox.tsx`
-- [ ] `src/components/sorting/SortingFormModal.tsx` (<250 lines; source != target validation)
-- [ ] `src/components/sorting/SortingView.tsx` (coordinator <250 lines)
-- [ ] `app/sorting/page.tsx` (route shell)
+- [x] `src/components/sorting/SortingKpiStrip.tsx`
+- [x] `src/components/sorting/SortingToolbar.tsx`
+- [x] `src/components/sorting/SortingTable.tsx` (arrow visual: source -> target)
+- [x] `src/components/sorting/SortingEmptyState.tsx`
+- [x] `src/components/sorting/KavlingPickerDual.tsx` (side-by-side source + target)
+- [x] `src/components/sorting/SortingReasonCombobox.tsx`
+- [x] `src/components/sorting/SortingFormModal.tsx` (<250 lines; source != target validation)
+- [x] `src/components/sorting/SortingView.tsx` (coordinator <250 lines)
+- [x] `app/sorting/page.tsx` (route shell)
 
 ### Phase 8: Inventory Page Integration (Depends Plan #1)
-- [ ] Update `InventoryTable.tsx` to display additional columns:
+- [x] Update `InventoryTable.tsx` to display additional columns:
   - "Dikonsumsi" (consumedVolumeM3)
   - "Transfer Masuk/Keluar" (transferred flows)
-- [ ] Update KPI strip to include total consumed + total transferred
-- [ ] Pass production + sorting arrays through `useWoodRecords` / separate hooks into aggregator
+- [x] Update KPI strip to include total consumed + total transferred
+- [x] Pass production + sorting arrays through `useWoodRecords` / separate hooks into aggregator
 
 ### Phase 9: Nav & Verification
-- [ ] Add `production` + `sorting` entries to `src/components/layout/nav-config.ts`
-- [ ] Run `npm run test` -> 0 failures
-- [ ] Run `npm run build:check` -> 0 TS/build errors
-- [ ] Confirm all coordinator files <250 lines
-- [ ] Manual smoke test:
-  - [ ] Create production record: input 10m³ / 20 batang from kavling A, output 7m³ / 15 batang "Papan 2x20x400cm"
-  - [ ] Yield shows 70%, waste 3m³
-  - [ ] Inventory view: kavling A remaining decreased by 10m³
-  - [ ] Create 2nd production with same product name -> autocomplete suggests "Papan 2x20x400cm"
-  - [ ] Create sorting: 5m³ from kavling A to kavling B
-  - [ ] Inventory view: kavling A -5m³ transferred out, kavling B +5m³ transferred in
-  - [ ] Try to sort A->A -> validation blocks save
-  - [ ] Try to produce 100m³ from kavling with 5m³ remaining -> soft warning shown, save allowed
-  - [ ] Delete production record -> undo toast works, inventory recomputes
-  - [ ] Production record with 30% yield -> red badge + advisory
+- [x] Add `production` + `sorting` entries to `src/components/layout/nav-config.ts`
+- [x] Run `npm run test` -> 0 failures
+- [x] Run `npm run build:check` -> 0 TS/build errors
+- [x] Confirm all coordinator files <250 lines
+- [x] Manual smoke test:
+  - [x] Create production record: input 10m³ / 20 batang from kavling A, output 7m³ / 15 batang "Papan 2x20x400cm"
+  - [x] Yield shows 70%, waste 3m³
+  - [x] Inventory view: kavling A remaining decreased by 10m³
+  - [x] Create 2nd production with same product name -> autocomplete suggests "Papan 2x20x400cm"
+  - [x] Create sorting: 5m³ from kavling A to kavling B
+  - [x] Inventory view: kavling A -5m³ transferred out, kavling B +5m³ transferred in
+  - [x] Try to sort A->A -> validation blocks save
+  - [x] Try to produce 100m³ from kavling with 5m³ remaining -> soft warning shown, save allowed
+  - [x] Delete production record -> undo toast works, inventory recomputes
+  - [x] Production record with 30% yield -> red badge + advisory
 
 ---
 

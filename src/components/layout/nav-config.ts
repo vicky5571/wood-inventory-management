@@ -55,6 +55,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/sales',
   },
   {
+    id: 'production',
+    labelId: 'Produksi',
+    labelZh: '生产',
+    href: '/production',
+  },
+  {
+    id: 'sorting',
+    labelId: 'Sortir Stok',
+    labelZh: '分拣',
+    href: '/sorting',
+  },
+  {
     id: 'suppliers',
     labelId: 'Pemasok',
     labelZh: '供应商',

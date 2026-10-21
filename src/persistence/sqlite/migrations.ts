@@ -2,6 +2,8 @@ import type { DatabaseSync } from 'node:sqlite';
 import { SQLITE_VIEWS_DDL } from './views-ddl.ts';
 import { ensureContractTables } from './contract-queries.ts';
 import { ensurePaymentFormTables } from './payment-form-queries.ts';
+import { ensureProductionTables } from './production-queries.ts';
+import { ensureSortingTables } from './sorting-queries.ts';
 
 export function runMigrations(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON;');
@@ -234,5 +236,7 @@ export function runMigrations(db: DatabaseSync): void {
   }
 
   ensurePaymentFormTables(db);
+  ensureProductionTables(db);
+  ensureSortingTables(db);
   db.exec(SQLITE_VIEWS_DDL);
 }

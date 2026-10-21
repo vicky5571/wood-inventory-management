@@ -89,6 +89,8 @@ export function InventoryTable({ lots }: InventoryTableProps) {
               </th>
               <th className="py-3 px-4 text-right">Penerimaan Masuk (入库)</th>
               <th className="py-3 px-4 text-right">Pengeluaran / DO (出库)</th>
+              <th className="py-3 px-4 text-right">Dikonsumsi (加工)</th>
+              <th className="py-3 px-4 text-right">Mutasi Sortir (分拣)</th>
               <th
                 onClick={() => handleSort('remainingVolumeM3')}
                 className="py-3 px-4 text-right cursor-pointer hover:bg-gray-100/80 select-none group"
@@ -134,6 +136,24 @@ export function InventoryTable({ lots }: InventoryTableProps) {
                     </div>
                     <div className="text-[10px] text-gray-400 font-mono">
                       {lot.outboundPieces.toLocaleString('id-ID')} btg
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="font-mono font-semibold text-gray-800">
+                      {lot.consumedVolumeM3.toFixed(4)} m³
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono">
+                      {lot.consumedPieces.toLocaleString('id-ID')} btg
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="font-mono font-semibold text-gray-800">
+                      {lot.transferredInVolumeM3 > 0 && <span className="text-emerald-700">+{lot.transferredInVolumeM3.toFixed(2)} </span>}
+                      {lot.transferredOutVolumeM3 > 0 && <span className="text-rose-600">-{lot.transferredOutVolumeM3.toFixed(2)} </span>}
+                      {lot.transferredInVolumeM3 === 0 && lot.transferredOutVolumeM3 === 0 && '0 m³'}
+                    </div>
+                    <div className="text-[10px] text-gray-400 font-mono">
+                      +{lot.transferredInPieces} / -{lot.transferredOutPieces} btg
                     </div>
                   </td>
                   <td className="py-3 px-4 text-right">

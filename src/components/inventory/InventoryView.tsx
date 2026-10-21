@@ -4,6 +4,8 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useWoodRecords } from '@/src/hooks/useWoodRecords';
 import { useWoodSalesRecords } from '@/src/hooks/useWoodSalesRecords';
+import { useProductionRecords } from '@/src/hooks/useProductionRecords';
+import { useSortingRecords } from '@/src/hooks/useSortingRecords';
 import { aggregateAllLotBalances } from '@/src/utils/stock-balance';
 import { InventoryKpiStrip } from './InventoryKpiStrip';
 import { InventoryToolbar } from './InventoryToolbar';
@@ -14,17 +16,19 @@ import { Warehouse, RefreshCw, ArrowLeft, ArrowUpRight } from 'lucide-react';
 export function InventoryView() {
   const { allRecords, isSyncing: isRecordsSyncing } = useWoodRecords();
   const { sales, isSyncing: isSalesSyncing } = useWoodSalesRecords(allRecords);
+  const { records: productionRecords, isSyncing: isProdSyncing } = useProductionRecords();
+  const { records: sortingRecords, isSyncing: isSortSyncing } = useSortingRecords();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYard, setSelectedYard] = useState('ALL');
   const [hideDepleted, setHideDepleted] = useState(true);
 
-  const isSyncing = isRecordsSyncing || isSalesSyncing;
+  const isSyncing = isRecordsSyncing || isSalesSyncing || isProdSyncing || isSortSyncing;
 
-  // Compute live lot stock balances from inbound and outbound records
+  // Compute live lot stock balances from all 4 stock flows
   const allLotBalances = useMemo(() => {
-    return aggregateAllLotBalances(allRecords, sales);
-  }, [allRecords, sales]);
+    return aggregateAllLotBalances(allRecords, sales, productionRecords, sortingRecords);
+  }, [allRecords, sales, productionRecords, sortingRecords]);
 
   // Extract distinct yards for the toolbar dropdown
   const availableYards = useMemo(() => {

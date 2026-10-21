@@ -717,7 +717,15 @@ export type ActivityActionType =
   | 'PAYMENT_FORM_UPDATED'
   | 'PAYMENT_FORM_ISSUED'
   | 'PAYMENT_FORM_PAID'
-  | 'PAYMENT_FORM_VOIDED';
+  | 'PAYMENT_FORM_VOIDED'
+  | 'PRODUCTION_CREATED'
+  | 'PRODUCTION_UPDATED'
+  | 'PRODUCTION_DELETED'
+  | 'PRODUCTION_RESTORED'
+  | 'SORTING_CREATED'
+  | 'SORTING_UPDATED'
+  | 'SORTING_DELETED'
+  | 'SORTING_RESTORED';
 
 export type PricingStatus = 'PENDING' | 'PRICED';
 
@@ -858,6 +866,12 @@ export interface LotStockBalance {
   inboundVolumeM3: number;
   outboundPieces: number;
   outboundVolumeM3: number;
+  consumedPieces: number;
+  consumedVolumeM3: number;
+  transferredInPieces: number;
+  transferredInVolumeM3: number;
+  transferredOutPieces: number;
+  transferredOutVolumeM3: number;
   remainingPieces: number;
   remainingVolumeM3: number;
 }
@@ -1100,5 +1114,96 @@ export interface PaymentFormGenerationResult {
   }>;
   formIds: string[];                  // IDs of created/updated forms
 }
+
+/**
+ * ==============================================================================
+ * Sawmill Production & Stock Sorting Domain Types
+ * ==============================================================================
+ */
+
+export type ProductionShift = 'PAGI' | 'SIANG' | 'MALAM';
+
+export interface SawmillProductionRecord {
+  id: string;
+  tenantId: string;
+  productionDate: string;              // YYYY-MM-DD
+  shift?: ProductionShift;
+
+  // Input (consumed from log stock)
+  sourceStorageYard: string;
+  sourceKavlingNumber: string;
+  inputSpecies: string;
+  inputVolumeM3: number;
+  inputPieces: number;
+
+  // Output (produced)
+  outputProduct: string;               // Free-text + autocomplete
+  outputVolumeM3: number;
+  outputPieces: number;
+
+  // Derived (computed server-side for API convenience)
+  yieldPercent: number;                // output/input * 100
+  wasteVolumeM3: number;               // input - output
+
+  operatorName: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockSortingRecord {
+  id: string;
+  tenantId: string;
+  sortingDate: string;                 // YYYY-MM-DD
+
+  species: string;
+
+  sourceStorageYard: string;
+  sourceKavlingNumber: string;
+
+  targetStorageYard: string;
+  targetKavlingNumber: string;
+
+  volumeM3: number;
+  pieces: number;
+
+  reason: string;                      // Free-text + autocomplete
+  operatorName: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SawmillProductionFormInput {
+  id?: string;
+  productionDate: string;
+  shift?: ProductionShift;
+  sourceStorageYard: string;
+  sourceKavlingNumber: string;
+  inputSpecies: string;
+  inputVolumeM3: number;
+  inputPieces: number;
+  outputProduct: string;
+  outputVolumeM3: number;
+  outputPieces: number;
+  operatorName: string;
+  notes?: string;
+}
+
+export interface StockSortingFormInput {
+  id?: string;
+  sortingDate: string;
+  species: string;
+  sourceStorageYard: string;
+  sourceKavlingNumber: string;
+  targetStorageYard: string;
+  targetKavlingNumber: string;
+  volumeM3: number;
+  pieces: number;
+  reason: string;
+  operatorName: string;
+  notes?: string;
+}
+
 
 

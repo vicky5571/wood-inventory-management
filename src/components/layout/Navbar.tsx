@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   Trees, Menu, X, LayoutDashboard, TableProperties, Truck,
   Building2, History, Settings, ChevronRight, Warehouse,
-  FileText, ClipboardCheck, Users, Tag, CreditCard,
+  FileText, ClipboardCheck, Users, Tag, CreditCard, Factory, ArrowLeftRight,
 } from 'lucide-react';
 import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
@@ -14,8 +14,8 @@ import { UserNav } from './UserNav';
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   analytics: LayoutDashboard, ledger: TableProperties, 'pending-pricing': Tag,
   inventory: Warehouse, contracts: FileText, 'payment-forms': CreditCard,
-  tally: ClipboardCheck, sales: Truck, suppliers: Building2, brokers: Users,
-  activity: History, settings: Settings,
+  tally: ClipboardCheck, sales: Truck, production: Factory, sorting: ArrowLeftRight,
+  suppliers: Building2, brokers: Users, activity: History, settings: Settings,
 };
 
 export function Navbar() {
