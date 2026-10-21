@@ -34,11 +34,12 @@ All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor ha
 | 6 | Weekly Payment Form | `2026-10-21-weekly-payment-form-design.md` | `2026-10-21-weekly-payment-form.md` | ✅ Merged |
 | 6b | Lembar Tagihan Refactor | `2026-10-21-weekly-payment-form-design.md` (Sec 13) | `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` | ✅ Completed |
 | 7 | Production + Sorting | `2026-10-21-production-and-sorting-design.md` | `2026-10-21-production-and-sorting.md` | ✅ Merged |
+| 8 | Sidebar Grouping & Role Filter | `2026-10-22-sidebar-grouping-and-role-filter-design.md` | `2026-10-22-sidebar-grouping-and-role-filter.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 748 passed, 0 failed
+- `npm test` → 762 passed, 0 failed
 - `npm run build:check` → 0 errors (Next.js production build clean)
-- `npm run drift:check` → ✅ No new drift (25 pre-existing violations grandfathered, down from 84)
+- `npm run drift:check` → ✅ No drift detected (0 violations)
 
 ---
 
@@ -48,6 +49,16 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
 
 ### Recently Completed (This Session)
 
+- ✅ **Sidebar Navigation Grouping & Role-Based Filter**:
+  - Reorganized flat 14-item navigation into 5 semantic workflow sections (`dashboard`, `operations`, `stock-billing`, `master-data`, `admin`).
+  - Added `NavSectionConfig` interface and `NAV_SECTIONS` constant in `src/components/layout/nav-config.ts`.
+  - Added pure `filterNavSections` helper with role-based filtering (`minRoleLevel: 1` for Settings to hide from Staff/Monitor roles).
+  - Maintained backward-compatibility `NAV_ITEMS` derived flatMap export.
+  - Updated `Sidebar.tsx` coordinator (233 LOC, < 250 LOC limit).
+  - Added test suite `test/nav-config.test.ts` (9 tests passing).
+  - Spec: `docs/superpowers/specs/2026-10-22-sidebar-grouping-and-role-filter-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-sidebar-grouping-and-role-filter.md`
+  - ADRs: ADR-0009, ADR-0010
 - ✅ **Lembar Tagihan Refactor**:
   - SSOT entity updates in `src/types/index.ts` (`preprintedNumber`, `issueDate`, `totalAmountIDR`, `terbilang`, `lines[]`, `companyName`, `LineItemUnit`).
   - Zero-dependency Indonesian amount-in-words helper (`src/utils/terbilang.ts` + 11 unit tests in `test/terbilang.test.ts`).
@@ -154,16 +165,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** All planned work complete. Zero technical debt. No active in-progress task.
+**Status:** Sidebar Navigation Grouping & Role Filter completed and verified. Zero technical debt. No active in-progress task.
 
 **Suggested next actions (in priority order):**
 
-1. **Implement Sidebar Navigation Grouping & Role Filter:**
-   - Spec: `docs/superpowers/specs/2026-10-22-sidebar-grouping-and-role-filter-design.md`
-   - Plan: `docs/superpowers/plans/2026-10-22-sidebar-grouping-and-role-filter.md`
-   - ADRs: `docs/adr/0009-sidebar-section-grouping-vs-flat-list.md`, `docs/adr/0010-role-based-nav-filter-default-state.md`
-2. **Monitor client feedback** on shipped features (Items #1-#7).
-3. **If client clarifies DPB rakyat questions** → start Spec #8:
+1. **Monitor client feedback** on shipped features (Items #1-#8).
+2. **If client clarifies DPB rakyat questions** → start Spec #8:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -171,10 +178,10 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#7) without matching spec update first.
+- Modify shipped modules (Items #1-#8) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 753 passed, 0 failed
+- `npm test` → 762 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)

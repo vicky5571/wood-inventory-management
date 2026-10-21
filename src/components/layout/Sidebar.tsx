@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNavigation } from '@/src/context/NavigationContext';
+import { useAuth } from '@/src/hooks/useAuth';
 import {
   Trees, LayoutDashboard, TableProperties, Truck, Building2,
   History, Settings, ClipboardCheck, Menu, X, Warehouse,
   FileText, Users, Tag, CreditCard, Factory, ArrowLeftRight,
 } from 'lucide-react';
-import { NAV_ITEMS, isNavItemActive } from './nav-config';
+import { NAV_SECTIONS, filterNavSections, isNavItemActive, type NavItemConfig } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -22,6 +23,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 export function Sidebar() {
   const pathname = usePathname();
   const { targetHref, navigateTo } = useNavigation();
+  const { user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Auto-close mobile drawer on route change
@@ -42,11 +44,13 @@ export function Sidebar() {
     };
   }, [isMobileOpen]);
 
-  const operationalItems = NAV_ITEMS.filter((item) => item.id !== 'settings');
-  const systemItems = NAV_ITEMS.filter((item) => item.id === 'settings');
+  const visibleSections = useMemo(
+    () => filterNavSections(NAV_SECTIONS, user?.roleLevel),
+    [user?.roleLevel]
+  );
   const effectivePath = targetHref || pathname;
 
-  const renderNavLinks = (items: typeof NAV_ITEMS) => (
+  const renderNavLinks = (items: readonly NavItemConfig[]) => (
     <div className="flex flex-col gap-1">
       {items.map((item) => {
         const isActive = isNavItemActive(item.href, effectivePath);
@@ -185,25 +189,16 @@ export function Sidebar() {
 
         {/* Scrollable Navigation Body */}
         <div className="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-6">
-          {/* Group 1: Operasional */}
-          <div>
-            <div className="px-3 mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                OPERASIONAL (业务)
-              </span>
+          {visibleSections.map((section) => (
+            <div key={section.id}>
+              <div className="px-3 mb-2 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                  {section.labelId} ({section.labelZh})
+                </span>
+              </div>
+              {renderNavLinks(section.items)}
             </div>
-            {renderNavLinks(operationalItems)}
-          </div>
-
-          {/* Group 2: Sistem */}
-          <div>
-            <div className="px-3 mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                SISTEM (系统)
-              </span>
-            </div>
-            {renderNavLinks(systemItems)}
-          </div>
+          ))}
 
           {/* Facility Status Card */}
           <div className="mt-auto px-3">

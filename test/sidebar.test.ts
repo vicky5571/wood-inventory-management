@@ -17,14 +17,14 @@ test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
     const expectedRoutes = [
       '/',
       '/ledger',
-      '/pending-pricing',
-      '/inventory',
-      '/contracts',
-      '/payment-forms',
       '/tally',
       '/sales',
       '/production',
       '/sorting',
+      '/inventory',
+      '/pending-pricing',
+      '/payment-forms',
+      '/contracts',
       '/suppliers',
       '/brokers',
       '/activity',
@@ -44,9 +44,10 @@ test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
     assert.match(content, /TimberGuard/);
     assert.match(content, /TPK-01/);
 
-    // Must group navigation into Operational and System sections
-    assert.match(content, /OPERASIONAL/i);
-    assert.match(content, /SISTEM/i);
+    // Must group navigation into semantic sections via NAV_SECTIONS and visibleSections
+    assert.match(content, /NAV_SECTIONS/);
+    assert.match(content, /visibleSections/);
+    assert.match(content, /section\.labelId/);
 
     // Must contain touch-ergonomic padding (at least py-2.5 for 40px height target)
     assert.match(content, /py-2\.5/);

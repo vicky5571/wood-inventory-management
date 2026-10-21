@@ -1,96 +1,105 @@
+import type { UserRoleLevel } from '../../types/index.ts';
+
 export interface NavItemConfig {
   id: string;
   labelId: string;
   labelZh: string;
   href: string;
+  minRoleLevel?: UserRoleLevel;
+  maxRoleLevel?: UserRoleLevel;
 }
 
-export const NAV_ITEMS: readonly NavItemConfig[] = [
+export interface NavSectionConfig {
+  id: string;
+  labelId: string;
+  labelZh: string;
+  items: readonly NavItemConfig[];
+}
+
+export const NAV_SECTIONS: readonly NavSectionConfig[] = [
   {
-    id: 'analytics',
-    labelId: 'Ringkasan',
-    labelZh: '运营概况',
-    href: '/',
+    id: 'dashboard',
+    labelId: 'Dashboard',
+    labelZh: '概览',
+    items: [
+      { id: 'analytics', labelId: 'Ringkasan', labelZh: '运营概况', href: '/' },
+    ],
   },
   {
-    id: 'ledger',
-    labelId: 'Buku Besar',
-    labelZh: '入库总账',
-    href: '/ledger',
+    id: 'operations',
+    labelId: 'Operasi Harian',
+    labelZh: '日常操作',
+    items: [
+      { id: 'ledger', labelId: 'Buku Besar', labelZh: '入库总账', href: '/ledger' },
+      { id: 'tally', labelId: 'Tally Lapangan', labelZh: '检尺录入', href: '/tally' },
+      { id: 'sales', labelId: 'Penjualan', labelZh: '木材销售', href: '/sales' },
+      { id: 'production', labelId: 'Produksi', labelZh: '生产', href: '/production' },
+      { id: 'sorting', labelId: 'Sortir Stok', labelZh: '分拣', href: '/sorting' },
+    ],
   },
   {
-    id: 'pending-pricing',
-    labelId: 'Pending Harga',
-    labelZh: '待定价',
-    href: '/pending-pricing',
+    id: 'stock-billing',
+    labelId: 'Stok & Tagihan',
+    labelZh: '库存与账单',
+    items: [
+      { id: 'inventory', labelId: 'Inventaris', labelZh: '库存', href: '/inventory' },
+      { id: 'pending-pricing', labelId: 'Pending Harga', labelZh: '待定价', href: '/pending-pricing' },
+      { id: 'payment-forms', labelId: 'Form Pembayaran', labelZh: '付款单', href: '/payment-forms' },
+    ],
   },
   {
-    id: 'inventory',
-    labelId: 'Inventaris',
-    labelZh: '库存',
-    href: '/inventory',
+    id: 'master-data',
+    labelId: 'Data Master',
+    labelZh: '主数据',
+    items: [
+      { id: 'contracts', labelId: 'Kontrak', labelZh: '合同', href: '/contracts' },
+      { id: 'suppliers', labelId: 'Pemasok', labelZh: '供应商', href: '/suppliers' },
+      { id: 'brokers', labelId: 'Broker', labelZh: '中间人', href: '/brokers' },
+    ],
   },
   {
-    id: 'contracts',
-    labelId: 'Kontrak',
-    labelZh: '合同',
-    href: '/contracts',
-  },
-  {
-    id: 'payment-forms',
-    labelId: 'Form Pembayaran',
-    labelZh: '付款单',
-    href: '/payment-forms',
-  },
-  {
-    id: 'tally',
-    labelId: 'Tally Lapangan',
-    labelZh: '检尺录入',
-    href: '/tally',
-  },
-  {
-    id: 'sales',
-    labelId: 'Penjualan',
-    labelZh: '木材销售',
-    href: '/sales',
-  },
-  {
-    id: 'production',
-    labelId: 'Produksi',
-    labelZh: '生产',
-    href: '/production',
-  },
-  {
-    id: 'sorting',
-    labelId: 'Sortir Stok',
-    labelZh: '分拣',
-    href: '/sorting',
-  },
-  {
-    id: 'suppliers',
-    labelId: 'Pemasok',
-    labelZh: '供应商',
-    href: '/suppliers',
-  },
-  {
-    id: 'brokers',
-    labelId: 'Broker',
-    labelZh: '中间人',
-    href: '/brokers',
-  },
-  {
-    id: 'activity',
-    labelId: 'Aktivitas',
-    labelZh: '审计日志',
-    href: '/activity',
-  },
-  {
-    id: 'settings',
-    labelId: 'Pengaturan',
-    labelZh: '系统设置',
-    href: '/settings',
+    id: 'admin',
+    labelId: 'Admin',
+    labelZh: '系统管理',
+    items: [
+      { id: 'activity', labelId: 'Aktivitas', labelZh: '审计日志', href: '/activity' },
+      { id: 'settings', labelId: 'Pengaturan', labelZh: '系统设置', href: '/settings', minRoleLevel: 1 },
+    ],
   },
 ] as const;
+
+export const NAV_ITEMS: readonly NavItemConfig[] = NAV_SECTIONS.flatMap((s) => s.items);
+
+export function filterNavSections(
+  sections: readonly NavSectionConfig[],
+  roleLevel: UserRoleLevel | null | undefined,
+): NavSectionConfig[] {
+  if (roleLevel === null || roleLevel === undefined) {
+    return sections.map((section) => ({
+      ...section,
+      items: [...section.items],
+    }));
+  }
+
+  return sections
+    .map((section) => {
+      const filteredItems = section.items.filter((item) => {
+        if (item.minRoleLevel !== undefined && roleLevel > item.minRoleLevel) {
+          return false;
+        }
+        if (item.maxRoleLevel !== undefined && roleLevel > item.maxRoleLevel) {
+          return false;
+        }
+        return true;
+      });
+
+      return {
+        ...section,
+        items: filteredItems,
+      };
+    })
+    .filter((section) => section.items.length > 0);
+}
 
 export function isNavItemActive(itemHref: string, currentPathname: string): boolean {
   if (!currentPathname) return false;

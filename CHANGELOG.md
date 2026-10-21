@@ -18,6 +18,8 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 - **ADR-0003** — Loose contract-record linkage. [docs/adr/0003-loose-contract-record-linkage.md]
 - **ADR-0004** — Broker as separate entity from Supplier. [docs/adr/0004-broker-separate-from-supplier.md]
 - **ADR-0005** — Free-text autocomplete over master catalog. [docs/adr/0005-free-text-product-autocomplete.md]
+- **ADR-0009** — Sidebar section grouping (not flat list, not collapsible). [docs/adr/0009-sidebar-section-grouping-vs-flat-list.md]
+- **ADR-0010** — Role-based nav filter default state. [docs/adr/0010-role-based-nav-filter-default-state.md]
 - **Spec Verification Checklist** sections appended to all 7 feature specs (grep-able audit commands with EXPECT clauses).
 - **15 retrospective design specs** for historical plans (2026-10-14 through 2026-10-20) that previously lacked spec files. Resolves `MISSING_SPEC` baseline violations.
 - **Cleanup plans drafted** (ready for execution, not yet executed):
@@ -26,6 +28,15 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
   - `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` — replace 46 unjustified `any` usages with proper types or type guards
 
 ### Changed
+- **Sidebar Navigation Grouping & Role-Based Filter** — reorganized 14-item flat list into 5 semantic sections (Dashboard, Operasi Harian, Stok & Tagihan, Data Master, Admin) with role-based item filtering (Settings hidden from Staff/Monitor):
+  - Defined `NavSectionConfig` interface and `NAV_SECTIONS` constant in `src/components/layout/nav-config.ts`.
+  - Added pure `filterNavSections` helper with role-based filtering (`minRoleLevel: 1` for Settings).
+  - Maintained backward-compatibility `NAV_ITEMS` derived export via `flatMap`.
+  - Updated `Sidebar.tsx` coordinator (< 250 LOC: 233 LOC) to render sections with bilingual labels.
+  - Added comprehensive test suite `test/nav-config.test.ts` (9 tests passing).
+  - Spec: `docs/superpowers/specs/2026-10-22-sidebar-grouping-and-role-filter-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-sidebar-grouping-and-role-filter.md`
+  - ADRs: ADR-0009, ADR-0010
 - **`scripts/drift-check.ts`** — added exemption for plans with prefix `refactor-`, `cleanup-`, or `chore-` (single-file hygiene work does not require spec pairing).
 - **Baseline** — reduced from 84 → 0 violations (100% debt elimination across GOD_FILE, SSOT_VIOLATION, MISSING_SPEC, MISSING_DOC, and UNJUSTIFIED_ANY).
 - **Type Safety: Replace Unjustified `any`** — replaced all unjustified `any` usages with proper row interfaces, `unknown` + type guards, or safe property checks:
