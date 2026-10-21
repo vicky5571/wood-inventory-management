@@ -49,3 +49,5 @@ Use `template.md` as the starting point for every new ADR.
 | 0006 | Pre-printed Form Number — Manual User Input (Not Auto-Generated) | Accepted |
 | 0007 | Terbilang (Amount-in-Words) — Zero-Dependency Internal Implementation | Accepted |
 | 0008 | Expand SSOT Exemption Suffixes (10 new suffixes: Input/Row/Adapter/ChartData/Shape/Value/Action/Option/Field/Direction) | Accepted (Retrospective) |
+| 0009 | Sidebar Section Grouping (Not Flat List, Not Collapsible) | Accepted |
+| 0010 | Role-Based Nav Filter Default State | Accepted |
