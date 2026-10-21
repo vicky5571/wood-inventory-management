@@ -25,6 +25,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/inventory',
   },
   {
+    id: 'contracts',
+    labelId: 'Kontrak',
+    labelZh: '合同',
+    href: '/contracts',
+  },
+  {
     id: 'tally',
     labelId: 'Tally Lapangan',
     labelZh: '检尺录入',

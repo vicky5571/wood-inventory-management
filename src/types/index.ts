@@ -638,7 +638,13 @@ export type ActivityActionType =
   | 'SALE_DELETED'
   | 'STORAGE_UPDATED'
   | 'SPECIES_CREATED'
-  | 'SPECIES_UPDATED';
+  | 'SPECIES_UPDATED'
+  | 'CONTRACT_CREATED'
+  | 'CONTRACT_UPDATED'
+  | 'CONTRACT_DELETED'
+  | 'CONTRACT_RESTORED'
+  | 'RECEIPT_CREATED'
+  | 'RECEIPT_DELETED';
 
 /**
  * Operational audit log entry item
@@ -769,6 +775,141 @@ export interface PrintDeliveryOrderModalProps {
   isOpen: boolean;
   record: WoodSalesRecord | null;
   onClose: () => void;
+}
+
+/**
+ * ==============================================================================
+ * Perhutani Contract Tracking & Follow-up Domain Types
+ * ==============================================================================
+ */
+
+export type ContractStatus = 'DRAFT' | 'ACTIVE' | 'FULFILLED' | 'EXPIRED' | 'CANCELLED';
+
+/**
+ * Perhutani Procurement Contract Header (tenant-scoped).
+ * Flow: Contract -> Receipt (Kwitansi) -> SKSHHK (recorded as WoodReceivingRecord).
+ */
+export interface PerhutaniContract {
+  id: string;
+  tenantId: string;
+  contractNumber: string;
+  contractDate: string;
+  effectiveStartDate: string;
+  effectiveEndDate: string;
+  kphOrigin: string;
+  poNumber?: string;
+  totalContractValueIDR: number;
+  totalPurchasedVolumeM3: number;
+  totalPurchasedPieces: number;
+  status: ContractStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Contract Sortimen Line Item (1 contract -> N sortimen).
+ */
+export interface ContractSortimentItem {
+  id: string;
+  contractId: string;
+  tenantId: string;
+  itemSequence: number;
+  woodSpecies: string;
+  grade: string;
+  woodLengthM?: number;
+  volumeM3: number;
+  pieces?: number;
+  pricePerM3: number;
+  subtotalIDR: number;
+  notes?: string;
+}
+
+/**
+ * Contract Receipt / Kwitansi Pembayaran (1 contract -> N receipts).
+ */
+export interface ContractReceipt {
+  id: string;
+  contractId: string;
+  tenantId: string;
+  receiptNumber: string;
+  receiptDate: string;
+  amountIDR: number;
+  coveredVolumeM3: number;
+  coveredPieces?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Live contract fulfillment metrics.
+ */
+export interface ContractFulfillmentSummary {
+  contractId: string;
+  contractNumber: string;
+  purchasedVolumeM3: number;
+  purchasedPieces: number;
+  receivedVolumeM3: number;
+  receivedPieces: number;
+  remainingVolumeM3: number;
+  remainingPieces: number;
+  totalPaidIDR: number;
+  totalContractValueIDR: number;
+  outstandingIDR: number;
+  fulfillmentPercent: number;
+  daysUntilExpiry: number;
+  isNearExpiry: boolean;
+  isOverdue: boolean;
+  status: ContractStatus;
+}
+
+export interface ContractWithDetails extends PerhutaniContract {
+  items: ContractSortimentItem[];
+  receipts: ContractReceipt[];
+  summary: ContractFulfillmentSummary;
+}
+
+export interface ContractFilterCriteria {
+  searchQuery?: string;
+  status?: ContractStatus | 'ALL';
+  nearExpiryOnly?: boolean;
+  overdueOnly?: boolean;
+}
+
+export interface ContractSortimentInput {
+  id: string;
+  woodSpecies: string;
+  grade: string;
+  woodLengthM?: number;
+  volumeM3: number;
+  pieces?: number;
+  pricePerM3: number;
+  notes?: string;
+}
+
+export interface ContractFormInput {
+  id?: string;
+  contractNumber: string;
+  contractDate: string;
+  effectiveStartDate: string;
+  effectiveEndDate: string;
+  kphOrigin: string;
+  poNumber?: string;
+  status: ContractStatus;
+  notes?: string;
+  items: ContractSortimentInput[];
+}
+
+export interface ContractReceiptFormInput {
+  id?: string;
+  contractId: string;
+  receiptNumber: string;
+  receiptDate: string;
+  amountIDR: number;
+  coveredVolumeM3: number;
+  coveredPieces?: number;
+  notes?: string;
 }
 
 

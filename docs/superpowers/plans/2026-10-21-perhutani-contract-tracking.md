@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P0 (Client urgency — "paling mendesak justru yang paling simple, data inventaris, followup kontrak")
-**Status:** DRAFT
+**Status:** COMPLETED
 **Related Client Feedback:** Items #5, #8
 
 ---
@@ -287,86 +287,86 @@ Add nav entry after `inventory` (Plan #1) in `src/components/layout/nav-config.t
 ## 4. Implementation Checklist
 
 ### Phase 1: SSOT Type Definitions
-- [ ] Add `ContractStatus`, `PerhutaniContract`, `ContractSortimentItem`, `ContractReceipt` to `src/types/index.ts`
-- [ ] Add derived types: `ContractFulfillmentSummary`, `ContractWithDetails`, `ContractFilterCriteria`
-- [ ] Add form input types: `ContractSortimentInput`, `ContractFormInput`, `ContractReceiptFormInput`
+- [x] Add `ContractStatus`, `PerhutaniContract`, `ContractSortimentItem`, `ContractReceipt` to `src/types/index.ts`
+- [x] Add derived types: `ContractFulfillmentSummary`, `ContractWithDetails`, `ContractFilterCriteria`
+- [x] Add form input types: `ContractSortimentInput`, `ContractFormInput`, `ContractReceiptFormInput`
 
 ### Phase 2: Pure Calculators (Test-First)
-- [ ] Create `test/contract-calc.test.ts` covering:
-  - [ ] `computeContractTotals` with empty items -> all zeros
-  - [ ] `computeContractTotals` with multi-item -> correct sums
-  - [ ] `computeFulfillmentSummary` with no receiving records -> fully remaining
-  - [ ] `computeFulfillmentSummary` with partial delivery -> correct remaining
-  - [ ] `computeFulfillmentSummary` where received > purchased -> remaining clamped to 0
-  - [ ] `daysUntilExpiry` correct for past/future dates
-  - [ ] `isNearExpiry` true when <=30 days AND remaining > 0
-  - [ ] `isOverdue` true when past end date AND remaining > 0
-  - [ ] `deriveContractStatus` transitions: ACTIVE -> FULFILLED when remaining == 0
-  - [ ] `deriveContractStatus` transitions: ACTIVE -> EXPIRED when past end date
-- [ ] Implement `src/utils/contract-calc.ts`
-- [ ] Run `node --test test/contract-calc.test.ts` -> 0 failures
+- [x] Create `test/contract-calc.test.ts` covering:
+  - [x] `computeContractTotals` with empty items -> all zeros
+  - [x] `computeContractTotals` with multi-item -> correct sums
+  - [x] `computeFulfillmentSummary` with no receiving records -> fully remaining
+  - [x] `computeFulfillmentSummary` with partial delivery -> correct remaining
+  - [x] `computeFulfillmentSummary` where received > purchased -> remaining clamped to 0
+  - [x] `daysUntilExpiry` correct for past/future dates
+  - [x] `isNearExpiry` true when <=30 days AND remaining > 0
+  - [x] `isOverdue` true when past end date AND remaining > 0
+  - [x] `deriveContractStatus` transitions: ACTIVE -> FULFILLED when remaining == 0
+  - [x] `deriveContractStatus` transitions: ACTIVE -> EXPIRED when past end date
+- [x] Implement `src/utils/contract-calc.ts`
+- [x] Run `node --test test/contract-calc.test.ts` -> 0 failures
 
 ### Phase 3: Persistence Layer
-- [ ] Add SQLite DDL for 3 new tables in `src/persistence/sqlite/` (follow existing migration pattern)
-- [ ] Add Supabase migration SQL in `supabase/migrations/`
-- [ ] Implement `src/persistence/sqlite/contract-queries.ts`
-- [ ] Implement `src/persistence/supabase/supabase-contract-store.ts`
-- [ ] Add contract adapter to persistence facade
+- [x] Add SQLite DDL for 3 new tables in `src/persistence/sqlite/` (follow existing migration pattern)
+- [x] Add Supabase migration SQL in `supabase/migrations/`
+- [x] Implement `src/persistence/sqlite/contract-queries.ts`
+- [x] Implement `src/persistence/supabase/supabase-contract-store.ts`
+- [x] Add contract adapter to persistence facade
 
 ### Phase 4: API Routes
-- [ ] `app/api/contracts/route.ts` — GET (list with filters), POST (create)
-- [ ] `app/api/contracts/[id]/route.ts` — GET (detail with items+receipts), PUT (update), DELETE (soft)
-- [ ] `app/api/contracts/[id]/receipts/route.ts` — GET, POST
-- [ ] `app/api/contracts/[id]/receipts/[receiptId]/route.ts` — PUT, DELETE
-- [ ] Each route: input validation, tenant scoping, error envelope consistency
+- [x] `app/api/contracts/route.ts` — GET (list with filters), POST (create)
+- [x] `app/api/contracts/[id]/route.ts` — GET (detail with items+receipts), PUT (update), DELETE (soft)
+- [x] `app/api/contracts/[id]/receipts/route.ts` — GET, POST
+- [x] `app/api/contracts/[id]/receipts/[receiptId]/route.ts` — PUT, DELETE
+- [x] Each route: input validation, tenant scoping, error envelope consistency
 
 ### Phase 5: Hook & State
-- [ ] Create `src/hooks/useContracts.ts` with optimistic local-first pattern
-- [ ] Add LocalStorage cache keys to persistence layer
-- [ ] Add activity log actions: `CONTRACT_CREATED`, `CONTRACT_UPDATED`, `CONTRACT_DELETED`, `CONTRACT_RESTORED`, `RECEIPT_CREATED`, `RECEIPT_DELETED` to `ActivityActionType` enum
+- [x] Create `src/hooks/useContracts.ts` with optimistic local-first pattern
+- [x] Add LocalStorage cache keys to persistence layer
+- [x] Add activity log actions: `CONTRACT_CREATED`, `CONTRACT_UPDATED`, `CONTRACT_DELETED`, `CONTRACT_RESTORED`, `RECEIPT_CREATED`, `RECEIPT_DELETED` to `ActivityActionType` enum
 
 ### Phase 6: List View UI
-- [ ] `src/components/contracts/ContractKpiStrip.tsx` — 5 KPIs
-- [ ] `src/components/contracts/ContractToolbar.tsx` — search, filter dropdown, toggles
-- [ ] `src/components/contracts/ContractTable.tsx` — sortable, status badges, click-through to detail
-- [ ] `src/components/contracts/ContractEmptyState.tsx`
-- [ ] `src/components/contracts/ContractListView.tsx` — coordinator
-- [ ] `app/contracts/page.tsx` — route shell
+- [x] `src/components/contracts/ContractKpiStrip.tsx` — 5 KPIs
+- [x] `src/components/contracts/ContractToolbar.tsx` — search, filter dropdown, toggles
+- [x] `src/components/contracts/ContractTable.tsx` — sortable, status badges, click-through to detail
+- [x] `src/components/contracts/ContractEmptyState.tsx`
+- [x] `src/components/contracts/ContractListView.tsx` — coordinator
+- [x] `app/contracts/page.tsx` — route shell
 
 ### Phase 7: Detail View UI
-- [ ] `src/components/contracts/ContractHeaderCard.tsx`
-- [ ] `src/components/contracts/ContractSortimentTable.tsx`
-- [ ] `src/components/contracts/ContractReceiptsPanel.tsx`
-- [ ] `src/components/contracts/ContractFulfillmentCard.tsx` — progress bar + remaining
-- [ ] `src/components/contracts/LinkedReceivingList.tsx` — list of matched WoodReceivingRecords
-- [ ] `src/components/contracts/ContractDetailView.tsx` — coordinator
-- [ ] `app/contracts/[id]/page.tsx` — route shell
+- [x] `src/components/contracts/ContractHeaderCard.tsx`
+- [x] `src/components/contracts/ContractSortimentTable.tsx`
+- [x] `src/components/contracts/ContractReceiptsPanel.tsx`
+- [x] `src/components/contracts/ContractFulfillmentCard.tsx` — progress bar + remaining
+- [x] `src/components/contracts/LinkedReceivingList.tsx` — list of matched WoodReceivingRecords
+- [x] `src/components/contracts/ContractDetailView.tsx` — coordinator
+- [x] `app/contracts/[id]/page.tsx` — route shell
 
 ### Phase 8: Forms
-- [ ] `src/components/contracts/SortimentItemRow.tsx` — single row editor
-- [ ] `src/components/contracts/ContractHeaderFields.tsx`
-- [ ] `src/components/contracts/ContractFormModal.tsx` — create/edit with multi-sortimen
-- [ ] `src/components/contracts/ReceiptFormModal.tsx`
-- [ ] Draft persistence for contract form (localStorage key `wood_contract_draft`) — mirrors receiving draft
+- [x] `src/components/contracts/SortimentItemRow.tsx` — single row editor
+- [x] `src/components/contracts/ContractHeaderFields.tsx`
+- [x] `src/components/contracts/ContractFormModal.tsx` — create/edit with multi-sortimen
+- [x] `src/components/contracts/ReceiptFormModal.tsx`
+- [x] Draft persistence for contract form (localStorage key `wood_contract_draft`) — mirrors receiving draft
 
 ### Phase 9: Receiving Form Integration
-- [ ] Create `src/components/contracts/ContractCombobox.tsx` (hybrid dropdown + free-text)
-- [ ] Replace `contractNumber` plain input in `src/components/ledger/RecordDocumentSection.tsx`
-- [ ] Verify backward compatibility: existing records with non-matching `contractNumber` still display correctly
+- [x] Create `src/components/contracts/ContractCombobox.tsx` (hybrid dropdown + free-text)
+- [x] Replace `contractNumber` plain input in `src/components/ledger/RecordDocumentSection.tsx`
+- [x] Verify backward compatibility: existing records with non-matching `contractNumber` still display correctly
 
 ### Phase 10: Nav & Verification
-- [ ] Add `contracts` entry to `src/components/layout/nav-config.ts`
-- [ ] Run `npm run test` -> 0 failures
-- [ ] Run `npm run build:check` -> 0 TS/build errors
-- [ ] Confirm all coordinator files <250 lines
-- [ ] Manual smoke test:
-  - [ ] Create contract with 3 sortimen items -> totals computed correctly
-  - [ ] Add 2 receipts -> paid total updates
-  - [ ] Add receiving record referencing contractNumber -> remaining stock decrements in detail view
-  - [ ] Edit contract -> changes persist
-  - [ ] Soft-delete contract -> undo via toast works
-  - [ ] Set end date in past -> status flips to EXPIRED, appears in overdue filter
-  - [ ] Non-Perhutani record uses free-text contractNumber -> no error, not linked
+- [x] Add `contracts` entry to `src/components/layout/nav-config.ts`
+- [x] Run `npm run test` -> 0 failures
+- [x] Run `npm run build:check` -> 0 TS/build errors
+- [x] Confirm all coordinator files <250 lines
+- [x] Manual smoke test:
+  - [x] Create contract with 3 sortimen items -> totals computed correctly
+  - [x] Add 2 receipts -> paid total updates
+  - [x] Add receiving record referencing contractNumber -> remaining stock decrements in detail view
+  - [x] Edit contract -> changes persist
+  - [x] Soft-delete contract -> undo via toast works
+  - [x] Set end date in past -> status flips to EXPIRED, appears in overdue filter
+  - [x] Non-Perhutani record uses free-text contractNumber -> no error, not linked
 
 ---
 

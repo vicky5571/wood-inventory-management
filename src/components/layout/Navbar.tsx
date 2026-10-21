@@ -15,6 +15,8 @@ import {
   Settings,
   ChevronRight,
   Warehouse,
+  FileText,
+  ClipboardCheck,
 } from 'lucide-react';
 import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
@@ -23,6 +25,8 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   analytics: LayoutDashboard,
   ledger: TableProperties,
   inventory: Warehouse,
+  contracts: FileText,
+  tally: ClipboardCheck,
   sales: Truck,
   suppliers: Building2,
   activity: History,

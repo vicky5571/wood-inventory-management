@@ -1,8 +1,10 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { SQLITE_VIEWS_DDL } from './views-ddl.ts';
+import { ensureContractTables } from './contract-queries.ts';
 
 export function runMigrations(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON;');
+  ensureContractTables(db);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS tenants (

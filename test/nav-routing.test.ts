@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { NAV_ITEMS, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Multi-Route Navigation Configuration Suite', async (t) => {
-  await t.test('NAV_ITEMS contains all operational routes including sales and tally', () => {
+  await t.test('NAV_ITEMS contains all operational routes including sales, tally, and contracts', () => {
     const routePaths = NAV_ITEMS.map((item) => item.href);
     assert.deepEqual(routePaths, [
       '/',
       '/ledger',
       '/inventory',
+      '/contracts',
       '/tally',
       '/sales',
       '/suppliers',
@@ -17,7 +18,7 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
     ]);
 
     const ids = NAV_ITEMS.map((item) => item.id);
-    assert.deepEqual(ids, ['analytics', 'ledger', 'inventory', 'tally', 'sales', 'suppliers', 'activity', 'settings']);
+    assert.deepEqual(ids, ['analytics', 'ledger', 'inventory', 'contracts', 'tally', 'sales', 'suppliers', 'activity', 'settings']);
   });
 
   await t.test('isNavItemActive accurately matches root and sub-paths', () => {
@@ -26,6 +27,8 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
     assert.equal(isNavItemActive('/ledger', '/ledger'), true);
     assert.equal(isNavItemActive('/ledger', '/ledger?page=1'), true);
     assert.equal(isNavItemActive('/inventory', '/inventory'), true);
+    assert.equal(isNavItemActive('/contracts', '/contracts'), true);
+    assert.equal(isNavItemActive('/contracts', '/contracts/contract-123'), true);
     assert.equal(isNavItemActive('/tally', '/tally'), true);
     assert.equal(isNavItemActive('/sales', '/sales'), true);
     assert.equal(isNavItemActive('/suppliers', '/suppliers'), true);

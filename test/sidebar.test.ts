@@ -13,8 +13,8 @@ import { NAV_ITEMS, isNavItemActive } from '../src/components/layout/nav-config.
 
 test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
   await t.test('NAV_ITEMS contains all operational routes with bilingual labels', () => {
-    assert.strictEqual(NAV_ITEMS.length, 8);
-    const expectedRoutes = ['/', '/ledger', '/inventory', '/tally', '/sales', '/suppliers', '/activity', '/settings'];
+    assert.strictEqual(NAV_ITEMS.length, 9);
+    const expectedRoutes = ['/', '/ledger', '/inventory', '/contracts', '/tally', '/sales', '/suppliers', '/activity', '/settings'];
     const actualRoutes = NAV_ITEMS.map((item) => item.href);
     assert.deepStrictEqual(actualRoutes, expectedRoutes);
   });
