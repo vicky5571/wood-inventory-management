@@ -27,7 +27,15 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 
 ### Changed
 - **`scripts/drift-check.ts`** — added exemption for plans with prefix `refactor-`, `cleanup-`, or `chore-` (single-file hygiene work does not require spec pairing).
-- **Baseline** — reduced from 84 → 25 violations via retrospective spec creation, SSOT cleanup, and eliminating `any` in persistence modules.
+- **Baseline** — reduced from 84 → 0 violations (100% debt elimination across GOD_FILE, SSOT_VIOLATION, MISSING_SPEC, MISSING_DOC, and UNJUSTIFIED_ANY).
+- **Type Safety: Replace Unjustified `any`** — replaced all unjustified `any` usages with proper row interfaces, `unknown` + type guards, or safe property checks:
+  - Added centralized error normalization utility `src/utils/error-message.ts` (`extractErrorMessage`) with test suite `test/error-message.test.ts`.
+  - Added persistence row interfaces `SupabaseBrokerRow`, `SqliteStorageYardRow`, `SqliteStorageLotRow`, `SupabaseYardRow`, `SupabaseLotRow`.
+  - Typed contract status selection and payment forms modal handlers (`Promise<unknown>`).
+  - Replaced dynamic `globalThis` property checks in `record-draft.ts` and `indexed-db-adapter.ts`.
+  - Zero runtime behavior change. `UNJUSTIFIED_ANY` count: 46 → 0.
+  - Spec: `docs/superpowers/specs/2026-10-21-type-safety-replace-any-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-21-type-safety-replace-any.md`
 - **Payment Form → Lembar Tagihan Refactor** — aligned PaymentForm entity, UI, and print layout to match physical form `LEMBAR TAGIHAN / 请款单` from PT. Brilliant Jaya Wood Industry:
   - Renamed `formNumber` → `preprintedNumber` (user-input manual, no auto-generation per ADR-0006).
   - Added `issueDate`, `terbilang`, `totalAmountIDR`, `lines[]`, `notes` fields.

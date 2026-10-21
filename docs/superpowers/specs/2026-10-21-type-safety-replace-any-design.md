@@ -2,7 +2,7 @@
 
 **Document:** `docs/superpowers/specs/2026-10-21-type-safety-replace-any-design.md`
 **Date:** 2026-10-21
-**Status:** Draft — Pending Approval
+**Status:** Approved & Shipped
 **Related Plan:** `docs/superpowers/plans/2026-10-21-type-safety-replace-any.md`
 **Architecture:** Eliminate 46 unjustified `any` usages from the codebase by applying one of three strategies per occurrence: (1) replace with proper domain type, (2) replace with `unknown` + type guard, (3) retain `any` with explicit `@ts-expect-error` + justification comment. Zero runtime behavior change.
 

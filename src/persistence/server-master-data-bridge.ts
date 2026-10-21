@@ -29,6 +29,30 @@ import type {
 } from '../types/index.ts';
 import { loadStorageLocations, addYard, addLot } from '../utils/storage-locations.ts';
 
+interface SupabaseYardRow {
+  id: string;
+  tenant_id?: string;
+  yard_code: string;
+  name: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface SupabaseLotRow {
+  id: string;
+  tenant_id?: string;
+  yard_id: string;
+  lot_code: string;
+  status: StorageLotStatus;
+  created_at?: string;
+  updated_at?: string;
+  storage_yards?: {
+    name?: string;
+    location_code?: string;
+  };
+}
+
 export class ServerMasterDataBridge {
   private isSupabaseMode: () => boolean;
   private isFileMode: () => boolean;
@@ -47,7 +71,7 @@ export class ServerMasterDataBridge {
   async getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
     if (this.isSupabaseMode()) {
       try {
-        const yardsData = await supabaseFetch<any[]>('/storage_yards?select=*&order=name.asc');
+        const yardsData = await supabaseFetch<SupabaseYardRow[]>('/storage_yards?select=*&order=name.asc');
         const yards: StorageYard[] = yardsData.map((y) => ({
           id: y.id,
           tenantId: y.tenant_id || 'default-tenant',
@@ -57,7 +81,7 @@ export class ServerMasterDataBridge {
           createdAt: y.created_at || new Date().toISOString(),
           updatedAt: y.updated_at || new Date().toISOString(),
         }));
-        const lotsData = await supabaseFetch<any[]>('/storage_lots?select=*,storage_yards(name,location_code)&order=lot_code.asc');
+        const lotsData = await supabaseFetch<SupabaseLotRow[]>('/storage_lots?select=*,storage_yards(name,location_code)&order=lot_code.asc');
         const lots: StorageLotWithYard[] = lotsData.map((l) => ({
           id: l.id,
           tenantId: l.tenant_id || 'default-tenant',

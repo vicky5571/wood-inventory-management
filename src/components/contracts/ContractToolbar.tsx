@@ -55,7 +55,7 @@ export function ContractToolbar({
           <span className="text-xs font-medium text-gray-500">Status:</span>
           <select
             value={statusFilter}
-            onChange={(e) => onStatusChange(e.target.value as any)}
+            onChange={(e) => onStatusChange(e.target.value as ContractStatus | 'ALL')}
             className="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="ALL">Semua Status (全部)</option>

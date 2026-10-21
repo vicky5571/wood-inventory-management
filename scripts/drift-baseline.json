@@ -1,34 +1,6 @@
 {
-  "generatedAt": "2026-10-21T12:22:50.289Z",
-  "totalCount": 25,
-  "byRule": {
-    "UNJUSTIFIED_ANY": 25
-  },
-  "fingerprints": [
-    "UNJUSTIFIED_ANY::src/components/contracts/ContractToolbar.tsx::Line 58: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/components/payment-forms/GenerateFormsModal.tsx::Line 16: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/components/payment-forms/MarkPaidModal.tsx::Line 21: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/components/payment-forms/VoidFormModal.tsx::Line 18: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/components/payment-forms/VoidFormModal.tsx::Line 39: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/indexed-db-adapter.ts::Line 162: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/indexed-db-adapter.ts::Line 163: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/server-master-data-bridge.ts::Line 50: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/server-master-data-bridge.ts::Line 60: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/migrate-json.ts::Line 118: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/migrate-json.ts::Line 140: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 170: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 176: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 41: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 57: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 86: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 92: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/sqlite/storage-locations-db.ts::Line 98: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/supabase/supabase-broker-store.ts::Line 41: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/supabase/supabase-broker-store.ts::Line 5: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/supabase/supabase-record-store.ts::Line 235: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/supabase/supabase-record-store.ts::Line 302: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/persistence/supabase/supabase-record-store.ts::Line 429: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/utils/record-draft.ts::Line 32: \"any\" type used without @ts-expect-error justification",
-    "UNJUSTIFIED_ANY::src/utils/record-draft.ts::Line 33: \"any\" type used without @ts-expect-error justification"
-  ]
+  "generatedAt": "2026-10-21T14:32:19.296Z",
+  "totalCount": 0,
+  "byRule": {},
+  "fingerprints": []
 }

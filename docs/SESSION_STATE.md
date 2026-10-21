@@ -63,7 +63,7 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
   - ✅ 15 retrospective specs for historical plans — `MISSING_SPEC` baseline count 15 → 0
   - ✅ Plan + implementation for login page God File refactor (`refactor-login-page-god-file.md`): `app/login/page.tsx` reduced from 269 LOC to 85 LOC (`GOD_FILE: 0`)
   - ✅ Plan + implementation for SSOT violations cleanup via rename (`cleanup-ssot-violations-rename.md`): all 21 SSOT violations resolved (`SSOT_VIOLATION: 0`)
-  - ✅ Spec + Plan for unjustified `any` replacement (`type-safety-replace-any-design.md` + `type-safety-replace-any.md`)
+  - ✅ Spec + Plan for unjustified `any` replacement (`type-safety-replace-any-design.md` + `type-safety-replace-any.md`): all 46 `UNJUSTIFIED_ANY` occurrences eliminated (`UNJUSTIFIED_ANY: 0`)
 - ✅ Drift-check `refactor-` / `cleanup-` / `chore-` exemption pattern added
 
 ### Baseline Trajectory (Debt Reduction)
@@ -74,8 +74,9 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
 | After anti-drift infra | 83 | 0 | 15 | 1 | 21 | 46 |
 | After 15 retro specs | 68 | 0 | 0 | 1 | 21 | 46 |
 | After Login Refactor | 67 | 0 | 0 | 0 | 21 | 46 |
-| **After SSOT Cleanup** | **46** | **0** | **0** | **0** | **0** | **46** |
-| Target (after final `any` cleanup) | 0 | 0 | 0 | 0 | 0 | 0 |
+| After SSOT Cleanup | 46 | 0 | 0 | 0 | 0 | 46 |
+| After Payment Forms Refactor | 25 | 0 | 0 | 0 | 0 | 25 |
+| **After Any Cleanup (Final)** | **0** | **0** | **0** | **0** | **0** | **0** |
 
 ---
 
@@ -106,7 +107,7 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
 
 ## 📋 Pre-existing Drift Violations (Grandfathered)
 
-25 violations exist in `scripts/drift-baseline.json` (down from initial 84), broken down:
+0 violations exist in `scripts/drift-baseline.json` (down from initial 84), broken down:
 
 | Rule | Count | Status / Plan |
 |---|---|---|
@@ -114,12 +115,12 @@ None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` a
 | MISSING_SPEC | 0 | ✅ Resolved via 15 retrospective specs |
 | GOD_FILE | 0 | ✅ Resolved via `plans/2026-10-21-refactor-login-page-god-file.md` |
 | SSOT_VIOLATION | 0 | ✅ Resolved via `plans/2026-10-21-cleanup-ssot-violations-rename.md` |
-| UNJUSTIFIED_ANY | 25 | 📋 Spec + Plan ready: `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` |
+| UNJUSTIFIED_ANY | 0 | ✅ Resolved via `plans/2026-10-21-type-safety-replace-any.md` |
 
-**Strategy:** Grandfathered. New code must not add violations. Baseline regenerated only when intentionally accepting new ones via `node scripts/drift-check.ts --write-baseline`.
+**Strategy:** All technical debt resolved. No grandfathered violations.
 
 **Technical debt backlog (optional cleanup):**
-- Execute `specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md` to eliminate remaining 25 `any` occurrences.
+- None. Codebase is 100% compliant with all architectural invariants.
 
 ---
 
@@ -153,7 +154,7 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** All planned work complete. No active in-progress task.
+**Status:** All planned work complete. Zero technical debt. No active in-progress task.
 
 **Suggested next actions (in priority order):**
 
@@ -163,8 +164,6 @@ git status && git log --oneline -5
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
    ```
-3. **If no new client input** → consider technical debt cleanup:
-   - Execute unjustified `any` cleanup (`specs/2026-10-21-type-safety-replace-any-design.md` + `plans/2026-10-21-type-safety-replace-any.md`)
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
@@ -172,6 +171,6 @@ git status && git log --oneline -5
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 748 passed, 0 failed
+- `npm test` → 753 passed, 0 failed
 - `npm run build:check` → 0 errors
-- `npm run drift:check` → ✅ No new drift (25 pre-existing violations grandfathered, down from 84)
+- `npm run drift:check` → ✅ No drift detected (0 violations)

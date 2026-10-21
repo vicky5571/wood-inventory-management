@@ -232,9 +232,9 @@ export class SupabaseRecordStore {
     const sortBy = params.sortBy && ALLOWED_SORT_COLUMNS.has(params.sortBy) ? params.sortBy : 'receiptDate';
     const sortOrder = String(params.sortOrder || '').toLowerCase() === 'asc' ? 1 : -1;
 
-    filtered.sort((a: any, b: any) => {
-      const aVal = a[sortBy] ?? '';
-      const bVal = b[sortBy] ?? '';
+    filtered.sort((a, b) => {
+      const aVal = String(a[sortBy as keyof WoodReceivingRecord] ?? '');
+      const bVal = String(b[sortBy as keyof WoodReceivingRecord] ?? '');
       if (aVal < bVal) return -1 * sortOrder;
       if (aVal > bVal) return 1 * sortOrder;
       return 0;
@@ -299,7 +299,7 @@ export class SupabaseRecordStore {
     const manifestId = manifest.id || `rec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const manifestNumber = `MAN-${manifestId}`;
     const now = new Date().toISOString();
-    const freightPphRate = Number((manifest as any).freightPphRate ?? 2.0);
+    const freightPphRate = Number((manifest as { freightPphRate?: number | string }).freightPphRate ?? 2.0);
 
     const manifestPayload = {
       id: manifestId,
@@ -426,7 +426,7 @@ export class SupabaseRecordStore {
     return true;
   }
 
-  private normalizeRecord(r: any): WoodReceivingRecord {
+  private normalizeRecord(r: WoodReceivingRecord): WoodReceivingRecord {
     return {
       ...r,
       woodLengthM: Number(r.woodLengthM ?? 4.0),
@@ -445,7 +445,7 @@ export class SupabaseRecordStore {
       freightNetPayable: Number(r.freightNetPayable ?? 0),
       brokerFee: Number(r.brokerFee ?? 0),
       grandNetPayable: r.grandNetPayable == null ? null : Number(r.grandNetPayable),
-      paymentFormId: r.paymentFormId || r.payment_form_id || undefined,
+      paymentFormId: r.paymentFormId || (r as { payment_form_id?: string }).payment_form_id || undefined,
       paymentStatus: (r.paymentStatus as PaymentStatus) || 'UNPAID',
     };
   }

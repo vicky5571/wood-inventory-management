@@ -156,11 +156,11 @@ export class IndexedDbAdapter implements StorageAdapter {
   }
 
   async migrateFromLocalStorage(keys?: string[]): Promise<number> {
-    const storage =
+    const storage: Storage | null =
       typeof window !== 'undefined' && window.localStorage
         ? window.localStorage
-        : typeof globalThis !== 'undefined' && (globalThis as any).localStorage
-        ? (globalThis as any).localStorage
+        : typeof globalThis !== 'undefined' && 'localStorage' in globalThis
+        ? ((globalThis as unknown as { localStorage?: Storage }).localStorage ?? null)
         : null;
 
     if (!storage) return 0;

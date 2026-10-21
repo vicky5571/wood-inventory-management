@@ -1,8 +1,24 @@
 import { supabaseFetch } from './supabase-client.ts';
 import type { Broker } from '../../types/index.ts';
 
+interface SupabaseBrokerRow {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  contact_person?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  tax_id?: string | null;
+  default_commission_per_m3?: number | string | null;
+  status?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 export async function fetchSupabaseBrokers(): Promise<Broker[]> {
-  const rows = await supabaseFetch<any[]>('/brokers?select=*&order=name.asc');
+  const rows = await supabaseFetch<SupabaseBrokerRow[]>('/brokers?select=*&order=name.asc');
   return rows.map((r) => ({
     id: r.id,
     tenantId: r.tenant_id,
@@ -38,7 +54,7 @@ export async function saveSupabaseBroker(data: Partial<Broker> & { name: string 
     updated_at: now,
   };
 
-  const res = await supabaseFetch<any[]>('/brokers', {
+  const res = await supabaseFetch<SupabaseBrokerRow[]>('/brokers', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=representation',
     body: JSON.stringify(payload),

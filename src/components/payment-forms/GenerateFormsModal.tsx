@@ -13,7 +13,7 @@ import { listRecentWeeks, getWeekWindow } from '../../utils/week-window.ts';
 interface GenerateFormsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerate: (weekStartDate: string) => Promise<any>;
+  onGenerate: (weekStartDate: string) => Promise<unknown>;
   defaultWeek?: string;
 }
 

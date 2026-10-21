@@ -18,7 +18,7 @@ interface MarkPaidModalProps {
   onConfirm: (
     formId: string,
     data: { invoiceNumber: string; paymentDate: string; paymentMethod: string; notes?: string }
-  ) => Promise<any>;
+  ) => Promise<unknown>;
 }
 
 export function MarkPaidModal({ isOpen, form, onClose, onConfirm }: MarkPaidModalProps) {

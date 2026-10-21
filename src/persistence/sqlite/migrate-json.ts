@@ -115,7 +115,7 @@ function saveManifestCore(
   const now = new Date().toISOString();
   const cAt = createdAt || now;
   const uAt = updatedAt || now;
-  const freightPphRate = (manifest as any).freightPphRate ?? 2.0;
+  const freightPphRate = (manifest as { freightPphRate?: number }).freightPphRate ?? 2.0;
 
   db.prepare(`
     INSERT INTO receiving_manifests (
@@ -137,7 +137,7 @@ function saveManifestCore(
   `).run(
     manifestId, tenantId, manifestNumber, manifest.receiptDate || now.split('T')[0], manifest.docDate || null,
     manifest.truckPlateNumber || '-', manifest.forestryDocNumber || '-', manifest.receiptNumber || manifestNumber,
-    manifest.contractNumber || '-', supplierId, (manifest as any).brokerId || null, manifest.freightRatePerM3 || 0,
+    manifest.contractNumber || '-', supplierId, manifest.brokerId || null, manifest.freightRatePerM3 || 0,
     freightPphRate, manifest.brokerFee || 0, manifest.paymentStatus || 'UNPAID', manifest.invoiceNumber || null,
     manifest.paymentDate || null, manifest.paymentNotes || null, cAt, uAt
   );

@@ -10,12 +10,13 @@
 import React, { useState } from 'react';
 import { X, AlertOctagon, AlertTriangle } from 'lucide-react';
 import type { PaymentFormWithLines } from '../../types/index.ts';
+import { extractErrorMessage } from '../../utils/error-message.ts';
 
 interface VoidFormModalProps {
   isOpen: boolean;
   form: PaymentFormWithLines;
   onClose: () => void;
-  onConfirm: (formId: string, reason: string) => Promise<any>;
+  onConfirm: (formId: string, reason: string) => Promise<unknown>;
 }
 
 export function VoidFormModal({ isOpen, form, onClose, onConfirm }: VoidFormModalProps) {
@@ -36,8 +37,8 @@ export function VoidFormModal({ isOpen, form, onClose, onConfirm }: VoidFormModa
     try {
       await onConfirm(form.id, reason.trim());
       onClose();
-    } catch (err: any) {
-      setError(err?.message || 'Gagal membatalkan form pembayaran.');
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, 'Gagal membatalkan form pembayaran.'));
     } finally {
       setIsSubmitting(false);
     }

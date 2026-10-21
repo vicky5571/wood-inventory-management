@@ -29,8 +29,8 @@ function getStorage(storage?: Storage): Storage | undefined {
   if (storage) return storage;
   if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
   try {
-    if (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) {
-      return (globalThis as any).localStorage;
+    if (typeof globalThis !== 'undefined' && 'localStorage' in globalThis) {
+      return (globalThis as unknown as { localStorage?: Storage }).localStorage;
     }
   } catch {
     return undefined;

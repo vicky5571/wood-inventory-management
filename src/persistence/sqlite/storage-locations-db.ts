@@ -37,8 +37,30 @@ export function seedStorageLocationsIfEmpty(db: DatabaseSync): void {
   }
 }
 
+interface SqliteStorageYardRow {
+  id: string;
+  tenant_id: string;
+  yard_code: string;
+  name: string;
+  description?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SqliteStorageLotRow {
+  id: string;
+  tenant_id: string;
+  yard_id: string;
+  lot_code: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  yardCode?: string;
+  yardName?: string;
+}
+
 export function getStorageLocationsFromDb(db: DatabaseSync): { yards: StorageYard[]; lots: StorageLotWithYard[] } {
-  const yardRows = db.prepare('SELECT * FROM storage_yards ORDER BY name ASC;').all() as any[];
+  const yardRows = db.prepare('SELECT * FROM storage_yards ORDER BY name ASC;').all() as unknown as SqliteStorageYardRow[];
   const yards: StorageYard[] = yardRows.map((r) => ({
     id: r.id,
     tenantId: r.tenant_id,
@@ -54,7 +76,7 @@ export function getStorageLocationsFromDb(db: DatabaseSync): { yards: StorageYar
     FROM storage_lots l
     JOIN storage_yards y ON l.yard_id = y.id
     ORDER BY l.lot_code ASC;
-  `).all() as any[];
+  `).all() as unknown as SqliteStorageLotRow[];
 
   const lots: StorageLotWithYard[] = lotRows.map((r) => ({
     id: r.id,
@@ -64,8 +86,8 @@ export function getStorageLocationsFromDb(db: DatabaseSync): { yards: StorageYar
     status: r.status as StorageLotStatus,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
-    yardCode: r.yardCode,
-    yardName: r.yardName,
+    yardCode: r.yardCode || '',
+    yardName: r.yardName || '',
   }));
 
   return { yards, lots };
@@ -83,19 +105,19 @@ export function saveStorageYardToDb(
   const now = new Date().toISOString();
 
   let existing = yard.id
-    ? (db.prepare('SELECT * FROM storage_yards WHERE id = ?;').get(yard.id) as any)
+    ? (db.prepare('SELECT * FROM storage_yards WHERE id = ?;').get(yard.id) as unknown as SqliteStorageYardRow | undefined)
     : undefined;
 
   if (!existing && yard.yardCode) {
     existing = db
       .prepare('SELECT * FROM storage_yards WHERE tenant_id = ? AND yard_code = ?;')
-      .get(tenantId, yard.yardCode.trim()) as any;
+      .get(tenantId, yard.yardCode.trim()) as unknown as SqliteStorageYardRow | undefined;
   }
 
   if (!existing && yard.name) {
     existing = db
       .prepare('SELECT * FROM storage_yards WHERE tenant_id = ? AND name = ?;')
-      .get(tenantId, trimmedName) as any;
+      .get(tenantId, trimmedName) as unknown as SqliteStorageYardRow | undefined;
   }
 
   if (existing) {
@@ -167,13 +189,13 @@ export function saveStorageLotToDb(
   }
 
   let existing = lot.id
-    ? (db.prepare('SELECT * FROM storage_lots WHERE id = ?;').get(lot.id) as any)
+    ? (db.prepare('SELECT * FROM storage_lots WHERE id = ?;').get(lot.id) as unknown as SqliteStorageLotRow | undefined)
     : undefined;
 
   if (!existing) {
     existing = db
       .prepare('SELECT * FROM storage_lots WHERE tenant_id = ? AND yard_id = ? AND lot_code = ?;')
-      .get(tenantId, yardId, trimmedLotCode) as any;
+      .get(tenantId, yardId, trimmedLotCode) as unknown as SqliteStorageLotRow | undefined;
   }
 
   if (existing) {

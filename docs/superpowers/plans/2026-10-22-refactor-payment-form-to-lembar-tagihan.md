@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 **Priority:** P1 (Correctness — current implementation doesn't match client's actual form)
-**Status:** DRAFT
+**Status:** COMPLETED (commit `6af0d28`)
 **Related Spec:** `docs/superpowers/specs/2026-10-21-weekly-payment-form-design.md` (revised Section 13)
 **Related Original Plan:** `docs/superpowers/plans/2026-10-21-weekly-payment-form.md` (superseded in print layout + several fields)
 **Related ADR:** ADR-0006 (pre-printed number manual input), ADR-0007 (terbilang zero-dependency implementation)
