@@ -158,8 +158,12 @@ git status && git log --oneline -5
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#7).
-2. **If client clarifies DPB rakyat questions** → start Spec #8:
+1. **Implement Sidebar Navigation Grouping & Role Filter:**
+   - Spec: `docs/superpowers/specs/2026-10-22-sidebar-grouping-and-role-filter-design.md`
+   - Plan: `docs/superpowers/plans/2026-10-22-sidebar-grouping-and-role-filter.md`
+   - ADRs: `docs/adr/0009-sidebar-section-grouping-vs-flat-list.md`, `docs/adr/0010-role-based-nav-filter-default-state.md`
+2. **Monitor client feedback** on shipped features (Items #1-#7).
+3. **If client clarifies DPB rakyat questions** → start Spec #8:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
