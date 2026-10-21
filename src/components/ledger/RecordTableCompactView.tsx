@@ -184,9 +184,19 @@ export function RecordTableCompactView({
                     {isMatch ? '0.00' : isSurplus ? `+${volDiff.toFixed(2)}` : volDiff.toFixed(2)}
                   </span>
                 </td>
-                <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.timberNetPayable)}</td>
+                <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">
+                  {r.timberNetPayable == null ? '—' : formatRupiah(r.timberNetPayable)}
+                </td>
                 <td className="p-3.5 whitespace-nowrap font-mono tabular-nums text-gray-700">{formatRupiah(r.freightNetPayable)}</td>
-                <td className="p-3.5 font-bold font-mono tabular-nums text-[#101828] whitespace-nowrap">{formatRupiah(r.grandNetPayable)}</td>
+                <td className="p-3.5 font-bold font-mono tabular-nums text-[#101828] whitespace-nowrap">
+                  {r.grandNetPayable == null ? (
+                    <span className="text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded text-[11px] font-sans font-semibold">
+                      Pending
+                    </span>
+                  ) : (
+                    formatRupiah(r.grandNetPayable)
+                  )}
+                </td>
                 <td className="p-3.5 whitespace-nowrap">
                   {renderPaymentBadge(r.paymentStatus)}
                   {isInvoiceSearchMatch(r, searchQuery || '') && (

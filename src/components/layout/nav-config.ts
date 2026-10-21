@@ -19,6 +19,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/ledger',
   },
   {
+    id: 'pending-pricing',
+    labelId: 'Pending Harga',
+    labelZh: '待定价',
+    href: '/pending-pricing',
+  },
+  {
     id: 'inventory',
     labelId: 'Inventaris',
     labelZh: '库存',

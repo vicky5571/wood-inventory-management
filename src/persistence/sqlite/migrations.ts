@@ -128,7 +128,7 @@ export function runMigrations(db: DatabaseSync): void {
       delivered_volume_m3 REAL NOT NULL CHECK (delivered_volume_m3 >= 0),
       tally_pieces INTEGER NOT NULL CHECK (tally_pieces >= 0),
       tally_volume_m3 REAL NOT NULL CHECK (tally_volume_m3 >= 0),
-      timber_price_per_m3 REAL NOT NULL DEFAULT 0.0 CHECK (timber_price_per_m3 >= 0),
+      timber_price_per_m3 REAL CHECK (timber_price_per_m3 IS NULL OR timber_price_per_m3 >= 0),
       timber_pph_rate REAL NOT NULL DEFAULT 0.5 CHECK (timber_pph_rate >= 0),
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -176,6 +176,61 @@ export function runMigrations(db: DatabaseSync): void {
   try {
     db.exec(`ALTER TABLE receiving_manifests ADD COLUMN broker_id TEXT REFERENCES brokers(id) ON DELETE SET NULL;`);
   } catch {}
+
+  try {
+    const tableInfo = db.prepare(`PRAGMA table_info(receiving_items);`).all() as { name: string; notnull: number }[];
+    const priceCol = tableInfo.find((c) => c.name === 'timber_price_per_m3');
+    if (priceCol && priceCol.notnull === 1) {
+      db.exec(`
+        PRAGMA foreign_keys = OFF;
+        DROP VIEW IF EXISTS v_buku_besar_flat;
+        DROP VIEW IF EXISTS v_receiving_manifest_summaries;
+        DROP VIEW IF EXISTS v_receiving_item_financials;
+
+        CREATE TABLE receiving_items_dg_tmp (
+          id TEXT PRIMARY KEY,
+          manifest_id TEXT NOT NULL REFERENCES receiving_manifests(id) ON DELETE CASCADE,
+          tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+          item_sequence INTEGER NOT NULL DEFAULT 1,
+          species_id TEXT NOT NULL REFERENCES wood_species(id) ON DELETE RESTRICT,
+          lot_id TEXT REFERENCES storage_lots(id) ON DELETE SET NULL,
+          wood_length_m REAL NOT NULL CHECK (wood_length_m > 0),
+          delivered_pieces INTEGER NOT NULL CHECK (delivered_pieces >= 0),
+          delivered_volume_m3 REAL NOT NULL CHECK (delivered_volume_m3 >= 0),
+          tally_pieces INTEGER NOT NULL CHECK (tally_pieces >= 0),
+          tally_volume_m3 REAL NOT NULL CHECK (tally_volume_m3 >= 0),
+          timber_price_per_m3 REAL CHECK (timber_price_per_m3 IS NULL OR timber_price_per_m3 >= 0),
+          timber_pph_rate REAL NOT NULL DEFAULT 0.5 CHECK (timber_pph_rate >= 0),
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        INSERT INTO receiving_items_dg_tmp (
+          id, manifest_id, tenant_id, item_sequence, species_id, lot_id,
+          wood_length_m, delivered_pieces, delivered_volume_m3, tally_pieces,
+          tally_volume_m3, timber_price_per_m3, timber_pph_rate, notes,
+          created_at, updated_at
+        ) SELECT
+          id, manifest_id, tenant_id, item_sequence, species_id, lot_id,
+          wood_length_m, delivered_pieces, delivered_volume_m3, tally_pieces,
+          tally_volume_m3, timber_price_per_m3, timber_pph_rate, notes,
+          created_at, updated_at
+        FROM receiving_items;
+
+        DROP TABLE receiving_items;
+        ALTER TABLE receiving_items_dg_tmp RENAME TO receiving_items;
+
+        CREATE INDEX IF NOT EXISTS idx_items_manifest ON receiving_items(manifest_id);
+        CREATE INDEX IF NOT EXISTS idx_items_species ON receiving_items(species_id);
+        CREATE INDEX IF NOT EXISTS idx_items_lot ON receiving_items(lot_id);
+
+        PRAGMA foreign_keys = ON;
+      `);
+    }
+  } catch (e) {
+    console.error('Failed to migrate receiving_items table to nullable price:', e);
+  }
 
   db.exec(SQLITE_VIEWS_DDL);
 }

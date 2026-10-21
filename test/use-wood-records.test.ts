@@ -47,6 +47,7 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     assert.ok(Array.isArray(hookResult.speciesList));
     assert.strictEqual(typeof hookResult.setFilters, 'function');
     assert.strictEqual(typeof hookResult.saveRecord, 'function');
+    assert.strictEqual(typeof hookResult.updateRecordPrice, 'function');
     assert.strictEqual(typeof hookResult.saveManifest, 'function');
     assert.strictEqual(typeof hookResult.deleteRecord, 'function');
     assert.strictEqual(typeof hookResult.restoreRecord, 'function');

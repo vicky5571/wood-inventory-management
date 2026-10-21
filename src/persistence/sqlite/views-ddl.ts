@@ -3,6 +3,10 @@
  * Pre-compiled views for receiving items, summaries, and buku besar flat projection
  */
 export const SQLITE_VIEWS_DDL = `
+  DROP VIEW IF EXISTS v_buku_besar_flat;
+  DROP VIEW IF EXISTS v_receiving_manifest_summaries;
+  DROP VIEW IF EXISTS v_receiving_item_financials;
+
   CREATE VIEW IF NOT EXISTS v_receiving_item_financials AS
   SELECT
     i.id AS item_id,
@@ -22,10 +26,13 @@ export const SQLITE_VIEWS_DDL = `
     (i.tally_pieces - i.delivered_pieces) AS piece_discrepancy,
     ROUND(i.tally_volume_m3 - i.delivered_volume_m3, 4) AS volume_discrepancy_m3,
     i.timber_price_per_m3,
-    ROUND(i.tally_volume_m3 * i.timber_price_per_m3, 2) AS timber_gross_total,
+    CASE WHEN i.timber_price_per_m3 IS NULL THEN NULL
+         ELSE ROUND(i.tally_volume_m3 * i.timber_price_per_m3, 2) END AS timber_gross_total,
     i.timber_pph_rate,
-    ROUND((i.tally_volume_m3 * i.timber_price_per_m3) * (i.timber_pph_rate / 100.0), 2) AS timber_pph_amount,
-    ROUND((i.tally_volume_m3 * i.timber_price_per_m3) - ((i.tally_volume_m3 * i.timber_price_per_m3) * (i.timber_pph_rate / 100.0)), 2) AS timber_net_payable
+    CASE WHEN i.timber_price_per_m3 IS NULL THEN NULL
+         ELSE ROUND((i.tally_volume_m3 * i.timber_price_per_m3) * (i.timber_pph_rate / 100.0), 2) END AS timber_pph_amount,
+    CASE WHEN i.timber_price_per_m3 IS NULL THEN NULL
+         ELSE ROUND((i.tally_volume_m3 * i.timber_price_per_m3) - ((i.tally_volume_m3 * i.timber_price_per_m3) * (i.timber_pph_rate / 100.0)), 2) END AS timber_net_payable
   FROM receiving_items i
   JOIN wood_species s ON i.species_id = s.id
   LEFT JOIN storage_lots l ON i.lot_id = l.id
@@ -50,16 +57,20 @@ export const SQLITE_VIEWS_DDL = `
     COALESCE(ROUND(SUM(i.delivered_volume_m3), 4), 0.0) AS total_delivered_volume_m3,
     COALESCE(SUM(i.tally_pieces), 0) AS total_tally_pieces,
     COALESCE(ROUND(SUM(i.tally_volume_m3), 4), 0.0) AS total_tally_volume_m3,
-    COALESCE(SUM(f.timber_gross_total), 0.0) AS total_timber_gross,
-    COALESCE(SUM(f.timber_pph_amount), 0.0) AS total_timber_pph,
-    COALESCE(SUM(f.timber_net_payable), 0.0) AS total_timber_net,
+    CASE WHEN COUNT(CASE WHEN i.timber_price_per_m3 IS NULL THEN 1 END) > 0 THEN NULL
+         ELSE COALESCE(SUM(f.timber_gross_total), 0.0) END AS total_timber_gross,
+    CASE WHEN COUNT(CASE WHEN i.timber_price_per_m3 IS NULL THEN 1 END) > 0 THEN NULL
+         ELSE COALESCE(SUM(f.timber_pph_amount), 0.0) END AS total_timber_pph,
+    CASE WHEN COUNT(CASE WHEN i.timber_price_per_m3 IS NULL THEN 1 END) > 0 THEN NULL
+         ELSE COALESCE(SUM(f.timber_net_payable), 0.0) END AS total_timber_net,
     m.freight_rate_per_m3,
     ROUND(COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3, 2) AS freight_gross_total,
     m.freight_pph_rate,
     ROUND((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0), 2) AS freight_pph_amount,
     ROUND((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) - ((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0)), 2) AS freight_net_payable,
     m.broker_fee,
-    ROUND(COALESCE(SUM(f.timber_net_payable), 0.0) + ((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) - ((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + m.broker_fee, 2) AS grand_net_payable,
+    CASE WHEN COUNT(CASE WHEN i.timber_price_per_m3 IS NULL THEN 1 END) > 0 THEN NULL
+         ELSE ROUND(COALESCE(SUM(f.timber_net_payable), 0.0) + ((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) - ((COALESCE(SUM(i.tally_volume_m3), 0.0) * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + m.broker_fee, 2) END AS grand_net_payable,
     m.payment_status,
     m.invoice_number,
     m.payment_date,
@@ -113,12 +124,15 @@ export const SQLITE_VIEWS_DDL = `
       WHEN i.item_sequence = 1 THEN m.broker_fee
       ELSE 0.0
     END AS brokerFee,
-    ROUND(f.timber_net_payable + ((i.tally_volume_m3 * m.freight_rate_per_m3) - ((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + CASE 
-      WHEN COALESCE((SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id), 0) > 0 
-      THEN ROUND(m.broker_fee * (i.tally_volume_m3 / (SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id)), 2)
-      WHEN i.item_sequence = 1 THEN m.broker_fee
-      ELSE 0.0
-    END, 2) AS grandNetPayable,
+    CASE
+      WHEN f.timber_net_payable IS NULL THEN NULL
+      ELSE ROUND(f.timber_net_payable + ((i.tally_volume_m3 * m.freight_rate_per_m3) - ((i.tally_volume_m3 * m.freight_rate_per_m3) * (m.freight_pph_rate / 100.0))) + CASE 
+        WHEN COALESCE((SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id), 0) > 0 
+        THEN ROUND(m.broker_fee * (i.tally_volume_m3 / (SELECT SUM(ri.tally_volume_m3) FROM receiving_items ri WHERE ri.manifest_id = m.id)), 2)
+        WHEN i.item_sequence = 1 THEN m.broker_fee
+        ELSE 0.0
+      END, 2)
+    END AS grandNetPayable,
     m.payment_status AS paymentStatus,
     m.invoice_number AS invoiceNumber,
     m.payment_date AS paymentDate,

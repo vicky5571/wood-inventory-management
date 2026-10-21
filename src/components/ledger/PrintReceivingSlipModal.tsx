@@ -6,8 +6,8 @@ import { Printer, X } from 'lucide-react';
 
 export type { PrintReceivingSlipModalProps };
 
-function formatRupiah(num?: number): string {
-  if (num == null) return 'Rp 0';
+function formatRupiah(num?: number | null): string {
+  if (num == null) return '—';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

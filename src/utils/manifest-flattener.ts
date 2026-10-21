@@ -28,12 +28,18 @@ export function flattenManifest(
     const deliveredVolumeM3 = Math.max(0, Number(item.deliveredVolumeM3) || 0);
     const tallyPieces = Math.max(0, Number(item.tallyPieces) || 0);
     const tallyVolumeM3 = Math.max(0, Number(item.tallyVolumeM3) || 0);
-    const timberPricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0);
+    const isPriceNull =
+      item.timberPricePerM3 === null ||
+      item.timberPricePerM3 === undefined ||
+      (typeof item.timberPricePerM3 === 'string' && (item.timberPricePerM3 as string).trim() === '');
+    const timberPricePerM3 = isPriceNull ? null : Math.max(0, Number(item.timberPricePerM3) || 0);
     const timberPphRate = Math.max(0, Number(item.timberPphRate) || 0);
 
-    const timberGrossTotal = Math.round(tallyVolumeM3 * timberPricePerM3);
-    const timberPphAmount = Math.round(timberGrossTotal * (timberPphRate / 100));
-    const timberNetPayable = timberGrossTotal - timberPphAmount;
+    const timberGrossTotal = timberPricePerM3 !== null ? Math.round(tallyVolumeM3 * timberPricePerM3) : null;
+    const timberPphAmount =
+      timberGrossTotal !== null ? Math.round(timberGrossTotal * (timberPphRate / 100)) : null;
+    const timberNetPayable =
+      timberGrossTotal !== null && timberPphAmount !== null ? timberGrossTotal - timberPphAmount : null;
 
     const freightRatePerM3 = Math.max(0, Number(manifest.freightRatePerM3) || 0);
     const freightGrossTotal = Math.round(tallyVolumeM3 * freightRatePerM3);
@@ -51,7 +57,8 @@ export function flattenManifest(
     } else {
       brokerFee = idx === 0 ? totalBrokerFee : 0;
     }
-    const grandNetPayable = timberNetPayable + freightNetPayable + brokerFee;
+    const grandNetPayable =
+      timberNetPayable === null ? null : timberNetPayable + freightNetPayable + brokerFee;
 
     const record: WoodReceivingRecord = {
       id,

@@ -8,15 +8,13 @@ import type {
   ManifestFormInput,
   PaginationMeta,
 } from '../types/index.ts';
-import { aggregateDashboardMetrics } from '../utils/timber-calc.ts';
+import { aggregateDashboardMetrics, computeRecordCalculations } from '../utils/timber-calc.ts';
 import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
 import { exportRecordsToCsv } from '../utils/records-csv.ts';
 import { filterWoodRecords } from '../utils/record-search.ts';
 import { buildRecordsApiUrl } from '../utils/record-query-url.ts';
 import {
-  WOOD_RECORDS_STORAGE_KEY,
   getMemoryRecordsCache,
-  setMemoryRecordsCache,
   DEFAULT_PAGINATION_META,
   areRecordsEqual,
   persistRecords,
@@ -28,7 +26,6 @@ import {
 } from '../utils/record-storage-cache.ts';
 
 let memoryRecordsCache: WoodReceivingRecord[] | null = null;
-
 export { areRecordsEqual, memoryRecordsCache };
 
 export function useWoodRecords() {
@@ -42,16 +39,13 @@ export function useWoodRecords() {
 
   const recordsRef = useRef<WoodReceivingRecord[]>(allRecords);
   recordsRef.current = allRecords;
-
   const hasMutatedRef = useRef(false);
   const activeSyncsRef = useRef(0);
 
   const syncWithServer = useCallback(async (action: () => Promise<void>, showErrorToast = false) => {
     if (typeof fetch === 'undefined') return;
-
     activeSyncsRef.current += 1;
     setIsSyncing(true);
-
     try {
       await action();
     } catch {
@@ -78,43 +72,31 @@ export function useWoodRecords() {
 
     syncWithServer(async () => {
       const url = buildRecordsApiUrl({
-        page,
-        pageSize,
-        searchQuery: filters.searchQuery,
-        species: filters.species,
-        kavling: filters.kavling,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
+        page, pageSize, searchQuery: filters.searchQuery,
+        species: filters.species, kavling: filters.kavling,
+        startDate: filters.startDate, endDate: filters.endDate,
         paymentStatus: filters.paymentStatus,
       });
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (!hasMutatedRef.current && json?.success && Array.isArray(json.data)) {
-        if (json.pagination) {
-          setPagination(json.pagination);
-        }
-        if (!areRecordsEqual(recordsRef.current, json.data)) {
-          updateRecords(json.data);
-        }
+        if (json.pagination) setPagination(json.pagination);
+        if (!areRecordsEqual(recordsRef.current, json.data)) updateRecords(json.data);
       }
     }, false);
-  }, [page, pageSize, filters, syncWithServer]);
+  }, [page, pageSize, filters, syncWithServer, updateRecords]);
 
   const saveRecord = useCallback((record: WoodReceivingRecord) => {
     hasMutatedRef.current = true;
     const now = new Date().toISOString();
     const prev = recordsRef.current;
     const index = prev.findIndex((r) => r.id === record.id);
-
     const savedRecord: WoodReceivingRecord = index >= 0
       ? { ...prev[index], ...record, updatedAt: now }
       : { ...record, createdAt: record.createdAt || now, updatedAt: now };
 
-    const next = index >= 0
-      ? prev.map((r, i) => (i === index ? savedRecord : r))
-      : [savedRecord, ...prev];
-
+    const next = index >= 0 ? prev.map((r, i) => (i === index ? savedRecord : r)) : [savedRecord, ...prev];
     updateRecords(next);
 
     syncWithServer(async () => {
@@ -125,12 +107,53 @@ export function useWoodRecords() {
       });
       if (!res.ok) notifySyncFailure();
     }, true);
-  }, [syncWithServer]);
+  }, [syncWithServer, updateRecords]);
+
+  const updateRecordPrice = useCallback(async (id: string, price: number | null) => {
+    hasMutatedRef.current = true;
+    const prev = recordsRef.current;
+    const index = prev.findIndex((r) => r.id === id);
+    if (index < 0) return;
+
+    const currentRecord = prev[index];
+    const calcs = computeRecordCalculations({
+      tallyVolumeM3: currentRecord.tallyVolumeM3,
+      deliveredVolumeM3: currentRecord.deliveredVolumeM3,
+      tallyPieces: currentRecord.tallyPieces,
+      deliveredPieces: currentRecord.deliveredPieces,
+      timberPricePerM3: price,
+      timberPphRate: currentRecord.timberPphRate,
+      freightRatePerM3: currentRecord.freightRatePerM3,
+      freightPphAmount: currentRecord.freightPphAmount,
+      brokerFee: currentRecord.brokerFee,
+    });
+
+    const updatedRecord: WoodReceivingRecord = {
+      ...currentRecord,
+      timberPricePerM3: price,
+      ...calcs,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const next = prev.map((r, i) => (i === index ? updatedRecord : r));
+    updateRecords(next);
+
+    await syncWithServer(async () => {
+      const res = await fetch(`/api/records/${encodeURIComponent(id)}/price`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timberPricePerM3: price }),
+      });
+      if (!res.ok) {
+        updateRecords(prev);
+        notifySyncFailure();
+      }
+    }, true);
+  }, [syncWithServer, updateRecords]);
 
   const saveManifest = useCallback(async (manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> => {
     hasMutatedRef.current = true;
     const { next, flattened } = applyManifestToRecords(recordsRef.current, manifest);
-
     updateRecords(next);
 
     syncWithServer(async () => {
@@ -143,22 +166,19 @@ export function useWoodRecords() {
     }, true);
 
     return flattened;
-  }, [syncWithServer]);
+  }, [syncWithServer, updateRecords]);
 
   const restoreRecord = useCallback((record: WoodReceivingRecord, index?: number) => {
     hasMutatedRef.current = true;
     const prev = recordsRef.current;
     if (prev.some((r) => r.id === record.id)) return;
-
     const next = [...prev];
     if (typeof index === 'number' && index >= 0 && index <= next.length) {
       next.splice(index, 0, record);
     } else {
       next.unshift(record);
     }
-
     updateRecords(next);
-
     syncWithServer(async () => {
       const res = await fetch('/api/records', {
         method: 'POST',
@@ -167,28 +187,24 @@ export function useWoodRecords() {
       });
       if (!res.ok) notifySyncFailure();
     }, true);
-  }, [syncWithServer]);
+  }, [syncWithServer, updateRecords]);
 
   const deleteRecord = useCallback((id: string, options?: { showUndoToast?: boolean }) => {
     hasMutatedRef.current = true;
     const prev = recordsRef.current;
     const targetIndex = prev.findIndex((r) => r.id === id);
     const targetRecord = targetIndex >= 0 ? prev[targetIndex] : undefined;
-
     const next = prev.filter((r) => r.id !== id);
     updateRecords(next);
 
     if (targetRecord && options?.showUndoToast !== false) {
-      showDeleteRecordToast(targetRecord, () => {
-        restoreRecord(targetRecord, targetIndex);
-      });
+      showDeleteRecordToast(targetRecord, () => restoreRecord(targetRecord, targetIndex));
     }
-
     syncWithServer(async () => {
       const res = await fetch('/api/records?id=' + encodeURIComponent(id), { method: 'DELETE' });
       if (!res.ok && res.status !== 404) notifySyncFailure();
     }, true);
-  }, [restoreRecord, syncWithServer]);
+  }, [restoreRecord, syncWithServer, updateRecords]);
 
   const resetDemo = useCallback(() => {
     hasMutatedRef.current = true;
@@ -221,30 +237,12 @@ export function useWoodRecords() {
   const metrics: DashboardMetrics = useMemo(() => aggregateDashboardMetrics(records), [records]);
   const speciesList = useMemo(() => Array.from(new Set(allRecords.map((r) => r.woodSpecies))).filter(Boolean), [allRecords]);
   const exportCsv = useCallback(() => exportRecordsToCsv(records), [records]);
-
-  const effectivePagination = useMemo(() => (
-    computeEffectivePagination(pagination, records.length, page, pageSize)
-  ), [pagination, records.length, page, pageSize]);
+  const effectivePagination = useMemo(() => computeEffectivePagination(pagination, records.length, page, pageSize), [pagination, records.length, page, pageSize]);
 
   return {
-    records,
-    allRecords,
-    metrics,
-    filters,
-    speciesList,
-    isHydrated,
-    isSyncing,
-    pagination: effectivePagination,
-    page,
-    pageSize,
-    setPage,
-    setPageSize,
-    setFilters,
-    saveRecord,
-    saveManifest,
-    deleteRecord,
-    restoreRecord,
-    resetDemo,
-    exportCsv,
+    records, allRecords, metrics, filters, speciesList, isHydrated, isSyncing,
+    pagination: effectivePagination, page, pageSize, setPage, setPageSize,
+    setFilters, saveRecord, updateRecordPrice, saveManifest, deleteRecord,
+    restoreRecord, resetDemo, exportCsv,
   };
 }

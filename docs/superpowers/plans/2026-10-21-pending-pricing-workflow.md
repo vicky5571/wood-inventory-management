@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P1
-**Status:** DRAFT
+**Status:** COMPLETE
 **Related Client Feedback:** Item #3
 
 ---
@@ -93,107 +93,107 @@ Payment form generator will:
 ## 3. Implementation Checklist
 
 ### Phase 1: SSOT Types
-- [ ] Change `WoodReceivingRecord.timberPricePerM3: number` → `number | null`
-- [ ] Change `ReceivingItem.timberPricePerM3: number` → `number | null`
-- [ ] Change `ManifestItemInput.timberPricePerM3: number` → `number | null`
-- [ ] Change `RecordCalculationInput.timberPricePerM3: number` → `number | null`
-- [ ] Change `RecordCalculationOutput.timberGrossTotal/timberPphAmount/timberNetPayable/grandNetPayable: number` → `number | null`
-- [ ] Add `PricingStatus` type
-- [ ] Add dashboard metric fields: `pendingPricingCount`, `pendingPricingVolumeM3`, `pendingPricingValueExposureIDR`
-- [ ] Add activity actions: `RECORD_PRICED`
+- [x] Change `WoodReceivingRecord.timberPricePerM3: number` → `number | null`
+- [x] Change `ReceivingItem.timberPricePerM3: number` → `number | null`
+- [x] Change `ManifestItemInput.timberPricePerM3: number` → `number | null`
+- [x] Change `RecordCalculationInput.timberPricePerM3: number` → `number | null`
+- [x] Change `RecordCalculationOutput.timberGrossTotal/timberPphAmount/timberNetPayable/grandNetPayable: number` → `number | null`
+- [x] Add `PricingStatus` type
+- [x] Add dashboard metric fields: `pendingPricingCount`, `pendingPricingVolumeM3`, `pendingPricingValueExposureIDR`
+- [x] Add activity actions: `RECORD_PRICED`
 
 ### Phase 2: Pure Calculator Updates (Test-First)
-- [ ] Update `test/timber-calc.test.ts` or create new `test/pricing-null.test.ts`:
-  - [ ] `calculateTimberPayment` with null price → returns null gross/pph/net
-  - [ ] `computeRecordCalculations` with null price → timber & grand totals null, freight still computed
-  - [ ] `derivePricingStatus` null/undefined → PENDING; number → PRICED
-  - [ ] `aggregateDashboardMetrics` excludes PENDING from financial totals
-  - [ ] `aggregateDashboardMetrics` counts PENDING separately
-  - [ ] `pendingPricingValueExposureIDR` computed from avg of priced records
-- [ ] Modify `src/utils/timber-calc.ts`:
-  - [ ] `calculateTimberPayment` returns `{ gross: null, pphAmount: null, netPayable: null }` when price null
-  - [ ] `computeRecordCalculations` propagates nulls
-  - [ ] `aggregateDashboardMetrics` splits priced vs pending aggregation
-- [ ] Create `src/utils/pricing-status.ts` with `derivePricingStatus`
-- [ ] Run `node --test` → 0 failures
+- [x] Update `test/timber-calc.test.ts` or create new `test/pricing-null.test.ts`:
+  - [x] `calculateTimberPayment` with null price → returns null gross/pph/net
+  - [x] `computeRecordCalculations` with null price → timber & grand totals null, freight still computed
+  - [x] `derivePricingStatus` null/undefined → PENDING; number → PRICED
+  - [x] `aggregateDashboardMetrics` excludes PENDING from financial totals
+  - [x] `aggregateDashboardMetrics` counts PENDING separately
+  - [x] `pendingPricingValueExposureIDR` computed from avg of priced records
+- [x] Modify `src/utils/timber-calc.ts`:
+  - [x] `calculateTimberPayment` returns `{ gross: null, pphAmount: null, netPayable: null }` when price null
+  - [x] `computeRecordCalculations` propagates nulls
+  - [x] `aggregateDashboardMetrics` splits priced vs pending aggregation
+- [x] Create `src/utils/pricing-status.ts` with `derivePricingStatus`
+- [x] Run `node --test` → 0 failures
 
 ### Phase 3: Persistence Layer
-- [ ] SQLite migration: `ALTER TABLE receiving_items` drop NOT NULL constraint on `timber_price_per_m3`
+- [x] SQLite migration: `ALTER TABLE receiving_items` drop NOT NULL constraint on `timber_price_per_m3`
   - Also update CHECK: `(timber_price_per_m3 IS NULL OR timber_price_per_m3 >= 0)`
-- [ ] Supabase migration SQL in `supabase/migrations/XXXX_nullable_pricing.sql`
-- [ ] Update view `receiving_items_calc` in `views-ddl.ts`:
+- [x] Supabase migration SQL in `supabase/migrations/XXXX_nullable_pricing.sql`
+- [x] Update view `receiving_items_calc` in `views-ddl.ts`:
   - Timber gross/pph/net return NULL when price NULL
   - Grand net payable returns NULL when timber net NULL
-- [ ] Update `supabase-record-store.ts`:
+- [x] Update `supabase-record-store.ts`:
   - Serialize `null` instead of `|| 0` for `timberPricePerM3`
   - Deserialize preserving null
-- [ ] Update `sqlite/record-queries.ts` similarly
+- [x] Update `sqlite/record-queries.ts` similarly
 
 ### Phase 4: API Routes
-- [ ] `app/api/records/route.ts` POST — accept null price, store as null
-- [ ] `app/api/records/[id]/route.ts` PUT — accept null price
-- [ ] New endpoint: `app/api/records/[id]/price/route.ts` PATCH
+- [x] `app/api/records/route.ts` POST — accept null price, store as null
+- [x] `app/api/records/[id]/route.ts` PUT — accept null price
+- [x] New endpoint: `app/api/records/[id]/price/route.ts` PATCH
   - Payload: `{ timberPricePerM3: number }` (must be >= 0)
   - Updates only price field, triggers RECORD_PRICED activity
   - Returns updated record with recomputed calculations
-- [ ] Validation: price when provided must be non-negative
+- [x] Validation: price when provided must be non-negative
 
 ### Phase 5: Hook & State
-- [ ] Update `useWoodRecords.ts` to handle null price in CRUD operations
-- [ ] Add method `updateRecordPrice(id: string, price: number)` using PATCH endpoint
-- [ ] Optimistic update; rollback on error
+- [x] Update `useWoodRecords.ts` to handle null price in CRUD operations
+- [x] Add method `updateRecordPrice(id: string, price: number)` using PATCH endpoint
+- [x] Optimistic update; rollback on error
 
 ### Phase 6: Receiving Form UI
-- [ ] Modify `src/components/ledger/RecordFinancialsSection.tsx` (or price input location):
+- [x] Modify `src/components/ledger/RecordFinancialsSection.tsx` (or price input location):
   - Allow empty string input
   - Show "Opsional" badge
   - Helper text explaining pending workflow
-- [ ] Multi-item manifest form `ReceivingManifestForm` or equivalent — same treatment per row
-- [ ] Save handler: convert empty string → null (not 0)
+- [x] Multi-item manifest form `ReceivingManifestForm` or equivalent — same treatment per row
+- [x] Save handler: convert empty string → null (not 0)
 
 ### Phase 7: Pending Pricing Page
-- [ ] Create `src/components/pricing/PendingPricingTable.tsx`:
+- [x] Create `src/components/pricing/PendingPricingTable.tsx`:
   - Inline price input per row with enter-to-save
   - Validation: >= 0
   - Shows computed timber net preview as user types
-- [ ] Create `src/components/pricing/PendingPricingToolbar.tsx`:
+- [x] Create `src/components/pricing/PendingPricingToolbar.tsx`:
   - Search, supplier filter, date range filter
-- [ ] Create `src/components/pricing/PendingPricingKpiStrip.tsx`:
+- [x] Create `src/components/pricing/PendingPricingKpiStrip.tsx`:
   - Total pending count, total pending volume, value exposure estimate
-- [ ] Create `src/components/pricing/PendingPricingEmptyState.tsx`:
+- [x] Create `src/components/pricing/PendingPricingEmptyState.tsx`:
   - "Tidak ada penerimaan tertunda harga. Semua record sudah dihargai."
-- [ ] Create `src/components/pricing/PendingPricingView.tsx` — coordinator (<250 lines)
-- [ ] Create `app/pending-pricing/page.tsx` — route shell
+- [x] Create `src/components/pricing/PendingPricingView.tsx` — coordinator (<250 lines)
+- [x] Create `app/pending-pricing/page.tsx` — route shell
 
 ### Phase 8: Ledger & Dashboard Integration
-- [ ] `RecordTable.tsx` / `RecordTableCompactView.tsx`:
+- [x] `RecordTable.tsx` / `RecordTableCompactView.tsx`:
   - Show "—" instead of "Rp 0" when price null
   - Add PENDING badge in a new column or next to price
-- [ ] `KpiCards.tsx`:
+- [x] `KpiCards.tsx`:
   - New card "Pending Harga" with pending count + volume
   - Click-through → `/pending-pricing`
-- [ ] Record detail / modal:
+- [x] Record detail / modal:
   - Show prominent "Harga belum diisi" banner on PENDING records
   - CTA button "Isi Harga Sekarang"
 
 ### Phase 9: Nav Integration
-- [ ] Add `pending-pricing` entry to `src/components/layout/nav-config.ts`:
+- [x] Add `pending-pricing` entry to `src/components/layout/nav-config.ts`:
   - Position: after `inventory` or inside a "Finance" group (TBD)
   - Label: "Pending Harga" / "待定价"
   - Badge: show count when > 0
 
 ### Phase 10: Verification
-- [ ] Run `npm run test` → 0 failures
-- [ ] Run `npm run build:check` → 0 TS/build errors
-- [ ] Manual smoke test:
-  - [ ] Create record with empty price → saves as PENDING, badge visible
-  - [ ] Record list shows "—" for price column
-  - [ ] `/pending-pricing` shows the record
-  - [ ] Enter price inline → row disappears from pending list, moves to PRICED
-  - [ ] Dashboard pending count decrements
-  - [ ] Grand totals exclude PENDING records (don't inflate)
-  - [ ] Activity log shows RECORD_PRICED entry
-  - [ ] Edit priced record and clear price → reverts to PENDING
+- [x] Run `npm run test` → 0 failures
+- [x] Run `npm run build:check` → 0 TS/build errors
+- [x] Manual smoke test:
+  - [x] Create record with empty price → saves as PENDING, badge visible
+  - [x] Record list shows "—" for price column
+  - [x] `/pending-pricing` shows the record
+  - [x] Enter price inline → row disappears from pending list, moves to PRICED
+  - [x] Dashboard pending count decrements
+  - [x] Grand totals exclude PENDING records (don't inflate)
+  - [x] Activity log shows RECORD_PRICED entry
+  - [x] Edit priced record and clear price → reverts to PENDING
 
 ---
 

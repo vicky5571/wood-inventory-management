@@ -7,7 +7,8 @@
 
 import type { WoodReceivingRecord, RecordFilterCriteria } from '../types/index.ts';
 
-function formatRupiah(num: number): string {
+function formatRupiah(num?: number | null): string {
+  if (num == null) return '—';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

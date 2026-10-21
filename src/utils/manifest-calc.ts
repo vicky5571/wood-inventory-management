@@ -19,18 +19,35 @@ export function computeManifestCalculations(manifest: ManifestFormInput): Manife
   let totalDeliveredPieces = 0, totalDeliveredVolumeM3 = 0;
   let totalTallyPieces = 0, totalTallyVolumeM3 = 0;
   let totalTimberGross = 0, totalTimberPph = 0, totalTimberNet = 0;
+  let hasPendingPrice = false;
 
   const items = (manifest.items || []).map((item) => {
     const deliveredPieces = Math.max(0, Number(item.deliveredPieces) || 0);
     const deliveredVolumeM3 = Math.max(0, Number(item.deliveredVolumeM3) || 0);
     const tallyPieces = Math.max(0, Number(item.tallyPieces) || 0);
     const tallyVolumeM3 = Math.max(0, Number(item.tallyVolumeM3) || 0);
-    const timberPricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0);
+
+    const isPriceNull =
+      item.timberPricePerM3 === null ||
+      item.timberPricePerM3 === undefined ||
+      (typeof item.timberPricePerM3 === 'string' && (item.timberPricePerM3 as string).trim() === '');
+    const timberPricePerM3 = isPriceNull ? null : Math.max(0, Number(item.timberPricePerM3) || 0);
     const timberPphRate = Math.max(0, Number(item.timberPphRate) || 0);
 
-    const timberGrossTotal = Math.round(tallyVolumeM3 * timberPricePerM3);
-    const timberPphAmount = Math.round(timberGrossTotal * (timberPphRate / 100));
-    const timberNetPayable = timberGrossTotal - timberPphAmount;
+    let timberGrossTotal: number | null = null;
+    let timberPphAmount: number | null = null;
+    let timberNetPayable: number | null = null;
+
+    if (timberPricePerM3 !== null) {
+      timberGrossTotal = Math.round(tallyVolumeM3 * timberPricePerM3);
+      timberPphAmount = Math.round(timberGrossTotal * (timberPphRate / 100));
+      timberNetPayable = timberGrossTotal - timberPphAmount;
+      totalTimberGross += timberGrossTotal;
+      totalTimberPph += timberPphAmount;
+      totalTimberNet += timberNetPayable;
+    } else {
+      hasPendingPrice = true;
+    }
 
     const volumeDiscrepancyM3 = Number((tallyVolumeM3 - deliveredVolumeM3).toFixed(4));
     const pieceDiscrepancy = tallyPieces - deliveredPieces;
@@ -39,9 +56,6 @@ export function computeManifestCalculations(manifest: ManifestFormInput): Manife
     totalDeliveredVolumeM3 += deliveredVolumeM3;
     totalTallyPieces += tallyPieces;
     totalTallyVolumeM3 += tallyVolumeM3;
-    totalTimberGross += timberGrossTotal;
-    totalTimberPph += timberPphAmount;
-    totalTimberNet += timberNetPayable;
 
     return {
       ...item,
@@ -69,7 +83,7 @@ export function computeManifestCalculations(manifest: ManifestFormInput): Manife
   const freightPphAmount = Math.round(freightGrossTotal * 0.02);
   const freightNetPayable = freightGrossTotal - freightPphAmount;
   const brokerFee = Math.max(0, Number(manifest.brokerFee) || 0);
-  const grandNetPayable = totalTimberNet + freightNetPayable + brokerFee;
+  const grandNetPayable = hasPendingPrice ? null : totalTimberNet + freightNetPayable + brokerFee;
 
   return {
     totalDeliveredPieces,
@@ -78,9 +92,9 @@ export function computeManifestCalculations(manifest: ManifestFormInput): Manife
     totalTallyVolumeM3,
     volumeDiscrepancyM3,
     pieceDiscrepancy,
-    totalTimberGross,
-    totalTimberPph,
-    totalTimberNet,
+    totalTimberGross: hasPendingPrice ? null : totalTimberGross,
+    totalTimberPph: hasPendingPrice ? null : totalTimberPph,
+    totalTimberNet: hasPendingPrice ? null : totalTimberNet,
     freightGrossTotal,
     freightPphAmount,
     freightNetPayable,

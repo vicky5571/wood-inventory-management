@@ -31,19 +31,26 @@ export const RecordFinancialSection = React.memo(function RecordFinancialSection
         {!hideTimberPricing && (
           <>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">
-                Harga Kayu / m³ (均价 IDR)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold text-gray-700">
+                  Harga Kayu / m³ (均价 IDR)
+                </label>
+                <span className="text-[10px] text-gray-400 font-normal">
+                  (opsional / isi nanti)
+                </span>
+              </div>
               <input
                 type="number"
                 min="0"
-                value={form.timberPricePerM3 ?? 0}
-                onChange={(e) =>
+                placeholder="Kosongkan jika belum ada harga"
+                value={form.timberPricePerM3 ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value.trim();
                   setForm((prev) => ({
                     ...prev,
-                    timberPricePerM3: parseFloat(e.target.value) || 0,
-                  }))
-                }
+                    timberPricePerM3: val === '' ? null : (parseFloat(val) || 0),
+                  }));
+                }}
                 className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
               />
             </div>

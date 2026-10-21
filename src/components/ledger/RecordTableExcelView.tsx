@@ -14,25 +14,11 @@ function formatRupiah(num: number): string {
 }
 
 function renderPaymentBadge(status?: WoodReceivingRecord['paymentStatus']) {
-  if (status === 'PAID') {
-    return (
-      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#00bb7f] border border-emerald-200/80">
-        Lunas / 已结清
-      </span>
-    );
-  }
-  if (status === 'PARTIAL') {
-    return (
-      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-[#b38600] border border-amber-200/80">
-        Sebagian / 部分
-      </span>
-    );
-  }
-  return (
-    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#ed1c24] border border-rose-200/80">
-      Belum Lunas / 未付
-    </span>
-  );
+  const isPaid = status === 'PAID';
+  const isPartial = status === 'PARTIAL';
+  const color = isPaid ? 'bg-emerald-50 text-[#00bb7f] border-emerald-200/80' : isPartial ? 'bg-amber-50 text-[#b38600] border-amber-200/80' : 'bg-rose-50 text-[#ed1c24] border-rose-200/80';
+  const label = isPaid ? 'Lunas / 已结清' : isPartial ? 'Sebagian / 部分' : 'Belum Lunas / 未付';
+  return <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${color}`}>{label}</span>;
 }
 
 export function RecordTableExcelView({
@@ -45,31 +31,20 @@ export function RecordTableExcelView({
   onDelete,
   onPrint,
 }: RecordTableViewProps) {
-  const totals = React.useMemo(() => {
-    return records.reduce(
-      (acc, r) => {
-        acc.delPieces += r.deliveredPieces;
-        acc.delVol += r.deliveredVolumeM3;
-        acc.tallyPieces += r.tallyPieces;
-        acc.tallyVol += r.tallyVolumeM3;
-        acc.timberNet += r.timberNetPayable;
-        acc.freightNet += r.freightNetPayable;
-        acc.broker += r.brokerFee || 0;
-        acc.grandTotal += r.grandNetPayable;
-        return acc;
-      },
-      {
-        delPieces: 0,
-        delVol: 0,
-        tallyPieces: 0,
-        tallyVol: 0,
-        timberNet: 0,
-        freightNet: 0,
-        broker: 0,
-        grandTotal: 0,
-      }
-    );
-  }, [records]);
+  const totals = React.useMemo(() => records.reduce(
+    (acc, r) => {
+      acc.delPieces += r.deliveredPieces;
+      acc.delVol += r.deliveredVolumeM3;
+      acc.tallyPieces += r.tallyPieces;
+      acc.tallyVol += r.tallyVolumeM3;
+      acc.timberNet += r.timberNetPayable ?? 0;
+      acc.freightNet += r.freightNetPayable;
+      acc.broker += r.brokerFee || 0;
+      acc.grandTotal += r.grandNetPayable ?? 0;
+      return acc;
+    },
+    { delPieces: 0, delVol: 0, tallyPieces: 0, tallyVol: 0, timberNet: 0, freightNet: 0, broker: 0, grandTotal: 0 }
+  ), [records]);
 
   const manifestItemCounts = React.useMemo(() => {
     const counts = new Map<string, number>();
@@ -189,16 +164,38 @@ export function RecordTableExcelView({
                     {isMatch ? '0.00' : isSurplus ? `+${volDiff.toFixed(2)}` : volDiff.toFixed(2)}
                   </span>
                 </td>
-                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.timberPricePerM3)}</td>
-                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.timberGrossTotal)}</td>
-                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.timberPphAmount)}</td>
-                <td className="p-2 font-mono tabular-nums text-right font-semibold text-gray-900 border-r border-gray-100">{formatRupiah(r.timberNetPayable)}</td>
+                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">
+                  {r.timberPricePerM3 == null ? (
+                    <span className="text-amber-700 bg-amber-50 px-1 py-0.5 rounded text-[10px] font-sans font-medium border border-amber-200/60">
+                      Pending
+                    </span>
+                  ) : (
+                    formatRupiah(r.timberPricePerM3)
+                  )}
+                </td>
+                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">
+                  {r.timberGrossTotal == null ? '—' : formatRupiah(r.timberGrossTotal)}
+                </td>
+                <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">
+                  {r.timberPphAmount == null ? '—' : formatRupiah(r.timberPphAmount)}
+                </td>
+                <td className="p-2 font-mono tabular-nums text-right font-semibold text-gray-900 border-r border-gray-100">
+                  {r.timberNetPayable == null ? '—' : formatRupiah(r.timberNetPayable)}
+                </td>
                 <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.freightRatePerM3)}</td>
                 <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.freightGrossTotal)}</td>
                 <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.freightPphAmount)}</td>
                 <td className="p-2 font-mono tabular-nums text-right font-semibold text-gray-900 border-r border-gray-100">{formatRupiah(r.freightNetPayable)}</td>
                 <td className="p-2 font-mono tabular-nums text-right text-gray-600 border-r border-gray-100">{formatRupiah(r.brokerFee || 0)}</td>
-                <td className="p-2 font-mono tabular-nums text-right font-bold text-[#101828] border-r border-gray-100">{formatRupiah(r.grandNetPayable)}</td>
+                <td className="p-2 font-mono tabular-nums text-right font-bold text-[#101828] border-r border-gray-100">
+                  {r.grandNetPayable == null ? (
+                    <span className="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-sans font-semibold border border-amber-200/60">
+                      Pending
+                    </span>
+                  ) : (
+                    formatRupiah(r.grandNetPayable)
+                  )}
+                </td>
                 <td className="p-2 whitespace-nowrap border-r border-gray-100">{renderPaymentBadge(r.paymentStatus)}</td>
                 {canWrite && (
                   <td className="p-2 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f9fafb] transition-colors border-l border-gray-200 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">

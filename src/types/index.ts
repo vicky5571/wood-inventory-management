@@ -161,11 +161,11 @@ export interface WoodReceivingRecord {
   tallyVolumeM3: number;         // Volume Tally / 检尺立方 (m³)
 
   // Financials — Timber Material (Pembayaran Kayu)
-  timberPricePerM3: number;      // Harga / m³
-  timberGrossTotal: number;      // Total Harga = tallyVolumeM3 * timberPricePerM3
-  timberPphRate: number;         // PPh rate % (e.g. 0.5% or 1.5%)
-  timberPphAmount: number;       // PPh Tax Amount
-  timberNetPayable: number;      // Net Timber = timberGrossTotal - timberPphAmount
+  timberPricePerM3: number | null;      // Harga / m³ (null = PENDING)
+  timberGrossTotal: number | null;      // Total Harga = tallyVolumeM3 * timberPricePerM3 (null when unpriced)
+  timberPphRate: number;                // PPh rate % (e.g. 0.5% or 1.5%)
+  timberPphAmount: number | null;       // PPh Tax Amount
+  timberNetPayable: number | null;      // Net Timber = timberGrossTotal - timberPphAmount
 
   // Financials — Freight / Logistics (Pembayaran Ongkos Kirim)
   freightRatePerM3: number;      // Ongkir / m³
@@ -176,7 +176,7 @@ export interface WoodReceivingRecord {
   // Broker & Overall Summary
   brokerId?: string;             // Optional FK to Broker.id
   brokerFee: number;             // Broker fee
-  grandNetPayable: number;       // timberNetPayable + freightNetPayable + brokerFee
+  grandNetPayable: number | null;       // timberNetPayable + freightNetPayable + brokerFee (null when timber unpriced)
 
   // Payment Lifecycle & AP Tracking
   paymentStatus?: PaymentStatus; // Status Pembayaran / 付款状态 (UNPAID | PARTIAL | PAID)
@@ -287,7 +287,7 @@ export interface ReceivingItem {
   deliveredVolumeM3: number;
   tallyPieces: number;
   tallyVolumeM3: number;
-  timberPricePerM3: number;
+  timberPricePerM3: number | null;
   timberPphRate: number;
   notes?: string;
   createdAt: string;
@@ -303,9 +303,9 @@ export interface ManifestWithItems extends ReceivingManifest {
     speciesName: string;
     kavlingNumber?: string;
     storageYard?: string;
-    timberGrossTotal: number;
-    timberPphAmount: number;
-    timberNetPayable: number;
+    timberGrossTotal: number | null;
+    timberPphAmount: number | null;
+    timberNetPayable: number | null;
     volumeDiscrepancyM3: number;
     pieceDiscrepancy: number;
   }>;
@@ -314,13 +314,13 @@ export interface ManifestWithItems extends ReceivingManifest {
     totalDeliveredVolumeM3: number;
     totalTallyPieces: number;
     totalTallyVolumeM3: number;
-    totalTimberGross: number;
-    totalTimberPph: number;
-    totalTimberNet: number;
+    totalTimberGross: number | null;
+    totalTimberPph: number | null;
+    totalTimberNet: number | null;
     freightGrossTotal: number;
     freightPphAmount: number;
     freightNetPayable: number;
-    grandNetPayable: number;
+    grandNetPayable: number | null;
   };
 }
 
@@ -337,7 +337,7 @@ export interface ManifestItemInput {
   deliveredVolumeM3: number;
   tallyPieces: number;
   tallyVolumeM3: number;
-  timberPricePerM3: number;
+  timberPricePerM3?: number | null;
   timberPphRate: number;
 }
 
@@ -374,18 +374,18 @@ export interface ManifestCalculationOutput {
   totalTallyVolumeM3: number;
   volumeDiscrepancyM3: number;
   pieceDiscrepancy: number;
-  totalTimberGross: number;
-  totalTimberPph: number;
-  totalTimberNet: number;
+  totalTimberGross: number | null;
+  totalTimberPph: number | null;
+  totalTimberNet: number | null;
   freightGrossTotal: number;
   freightPphAmount: number;
   freightNetPayable: number;
   brokerFee: number;
-  grandNetPayable: number;
+  grandNetPayable: number | null;
   items: Array<ManifestItemInput & {
-    timberGrossTotal: number;
-    timberPphAmount: number;
-    timberNetPayable: number;
+    timberGrossTotal: number | null;
+    timberPphAmount: number | null;
+    timberNetPayable: number | null;
     volumeDiscrepancyM3: number;
     pieceDiscrepancy: number;
   }>;
@@ -464,15 +464,18 @@ export interface DashboardMetrics {
   activeKavlingCount: number;
   recordsWithAlarmCount: number;
   speciesVolumeBreakdown: Record<string, number>;
+  pendingPricingCount: number;
+  pendingPricingVolumeM3: number;
+  pendingPricingValueExposureIDR: number;
 }
 
 /**
  * Financial calculation result for timber material or freight payments.
  */
 export interface PaymentCalculationResult {
-  gross: number;
-  pphAmount: number;
-  netPayable: number;
+  gross: number | null;
+  pphAmount: number | null;
+  netPayable: number | null;
 }
 
 /**
@@ -483,7 +486,7 @@ export interface RecordCalculationInput {
   deliveredVolumeM3: number;
   tallyPieces: number;
   deliveredPieces: number;
-  timberPricePerM3: number;
+  timberPricePerM3?: number | null;
   timberPphRate?: number;
   freightRatePerM3: number;
   freightPphAmount?: number;
@@ -496,12 +499,12 @@ export interface RecordCalculationInput {
 export interface RecordCalculationOutput {
   volumeDiscrepancyM3: number;
   pieceDiscrepancy: number;
-  timberGrossTotal: number;
-  timberPphAmount: number;
-  timberNetPayable: number;
+  timberGrossTotal: number | null;
+  timberPphAmount: number | null;
+  timberNetPayable: number | null;
   freightGrossTotal: number;
   freightNetPayable: number;
-  grandNetPayable: number;
+  grandNetPayable: number | null;
 }
 
 export type UserRoleLevel = 1 | 2 | 3;
@@ -706,7 +709,10 @@ export type ActivityActionType =
   | 'CONTRACT_DELETED'
   | 'CONTRACT_RESTORED'
   | 'RECEIPT_CREATED'
-  | 'RECEIPT_DELETED';
+  | 'RECEIPT_DELETED'
+  | 'RECORD_PRICED';
+
+export type PricingStatus = 'PENDING' | 'PRICED';
 
 /**
  * Operational audit log entry item

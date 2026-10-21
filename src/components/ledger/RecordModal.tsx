@@ -39,7 +39,8 @@ const createItem = (r?: Partial<WoodReceivingRecord>, defaultTimberPphRate: numb
   kavlingNumber: r?.kavlingNumber || 'KAV-01', storageYard: r?.storageYard || 'TPK-Timur',
   deliveredPieces: r?.deliveredPieces ?? 0, deliveredVolumeM3: r?.deliveredVolumeM3 ?? 0,
   tallyPieces: r?.tallyPieces ?? 0, tallyVolumeM3: r?.tallyVolumeM3 ?? 0,
-  timberPricePerM3: r?.timberPricePerM3 ?? 0, timberPphRate: r?.timberPphRate ?? defaultTimberPphRate,
+  timberPricePerM3: r?.timberPricePerM3 !== undefined ? r.timberPricePerM3 : null,
+  timberPphRate: r?.timberPphRate ?? defaultTimberPphRate,
 });
 
 export function RecordModal({
@@ -167,7 +168,7 @@ export function RecordModal({
       storageYard: primary.storageYard || form.storageYard || 'TPK-Timur',
       deliveredPieces: submitPreview.totalDeliveredPieces, deliveredVolumeM3: submitPreview.totalDeliveredVolumeM3,
       tallyPieces: submitPreview.totalTallyPieces, tallyVolumeM3: submitPreview.totalTallyVolumeM3,
-      timberPricePerM3: primary.timberPricePerM3, timberPphRate: primary.timberPphRate,
+      timberPricePerM3: primary.timberPricePerM3 ?? null, timberPphRate: primary.timberPphRate,
       timberGrossTotal: submitPreview.totalTimberGross, timberPphAmount: submitPreview.totalTimberPph,
       timberNetPayable: submitPreview.totalTimberNet, freightGrossTotal: submitPreview.freightGrossTotal,
       freightNetPayable: submitPreview.freightNetPayable, grandNetPayable: submitPreview.grandNetPayable,

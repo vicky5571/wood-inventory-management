@@ -61,7 +61,7 @@ export const RecordReconciliationCard = React.memo(function RecordReconciliation
         <div className="bg-gray-800/80 px-3 py-2 rounded-xl border border-gray-700/60">
           <div className="text-[10px] uppercase text-gray-400 font-medium">Net Material Kayu</div>
           <div className="font-mono tabular-nums font-semibold text-gray-100 mt-0.5">
-            {formatRupiah(timberNet)}
+            {timberNet === null ? <span className="text-amber-400 text-xs font-normal">Pending Harga</span> : formatRupiah(timberNet)}
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export const RecordReconciliationCard = React.memo(function RecordReconciliation
         <div className="bg-[#ffc908]/20 px-3.5 py-2 rounded-xl border border-[#ffc908]/40">
           <div className="text-[10px] uppercase text-[#ffc908] font-bold">Total Grand Net</div>
           <div className="font-mono tabular-nums font-bold text-base text-[#ffc908] mt-0.5">
-            {formatRupiah(preview.grandNetPayable)}
+            {preview.grandNetPayable === null ? <span className="text-amber-300 text-sm font-normal">Pending</span> : formatRupiah(preview.grandNetPayable)}
           </div>
         </div>
       </div>

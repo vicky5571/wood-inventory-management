@@ -2,6 +2,7 @@ import React from 'react';
 import type { DashboardMetrics } from '@/src/types';
 import { classifyDiscrepancy } from '@/src/utils/timber-calc';
 import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { KpiCardPendingPricing } from './KpiCardPendingPricing';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -46,7 +47,7 @@ function SubMetricBox({ title, children, isRose = false }: { title: string; chil
 
 export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {/* 1. Total Volume Hero Card */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group">
         <div className="h-1 w-full bg-[#ffc908]" />
@@ -229,6 +230,9 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
           </SubMetricBox>
         </div>
       </div>
+
+      {/* 6. Pending Pricing Card */}
+      <KpiCardPendingPricing metrics={metrics} />
     </div>
   );
 }

@@ -77,7 +77,7 @@ export function ManifestItemsTable({
       deliveredVolumeM3: 0,
       tallyPieces: 0,
       tallyVolumeM3: 0,
-      timberPricePerM3: lastItem ? lastItem.timberPricePerM3 : 0,
+      timberPricePerM3: lastItem ? lastItem.timberPricePerM3 : null,
       timberPphRate: lastItem ? lastItem.timberPphRate : 0.5,
     };
     const next = [...cur, newItem];

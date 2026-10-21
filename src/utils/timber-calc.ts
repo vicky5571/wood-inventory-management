@@ -22,11 +22,14 @@ import { evaluateDiscrepancy } from './discrepancy.ts';
  */
 export function calculateTimberPayment(
   volumeM3: number,
-  pricePerM3: number,
+  pricePerM3: number | null,
   pphRatePercent: number = 0
 ): PaymentCalculationResult {
-  if (volumeM3 < 0 || pricePerM3 < 0 || pphRatePercent < 0) {
+  if (volumeM3 < 0 || pphRatePercent < 0 || (pricePerM3 !== null && pricePerM3 < 0)) {
     throw new RangeError('Values must be non-negative');
+  }
+  if (pricePerM3 === null) {
+    return { gross: null, pphAmount: null, netPayable: null };
   }
   const gross = Number((volumeM3 * pricePerM3).toFixed(2));
   const pphAmount = Number((gross * (pphRatePercent / 100)).toFixed(2));
@@ -42,7 +45,7 @@ export function calculateFreightPayment(
   volumeM3: number,
   freightRatePerM3: number,
   pphAmount: number = 0
-): PaymentCalculationResult {
+): { gross: number; pphAmount: number; netPayable: number } {
   if (volumeM3 < 0 || freightRatePerM3 < 0 || pphAmount < 0) {
     throw new RangeError('Values must be non-negative');
   }
@@ -57,12 +60,15 @@ export function calculateFreightPayment(
 export function computeRecordCalculations(
   input: RecordCalculationInput
 ): RecordCalculationOutput {
-  const timber = calculateTimberPayment(input.tallyVolumeM3, input.timberPricePerM3, input.timberPphRate ?? 0);
+  const price = input.timberPricePerM3 ?? null;
+  const timber = calculateTimberPayment(input.tallyVolumeM3, price, input.timberPphRate ?? 0);
   const freight = calculateFreightPayment(input.tallyVolumeM3, input.freightRatePerM3, input.freightPphAmount ?? 0);
   const broker = input.brokerFee ?? 0;
   if (broker < 0) throw new RangeError('Broker fee must be non-negative');
 
-  const grandNetPayable = Number((timber.netPayable + freight.netPayable + broker).toFixed(2));
+  const grandNetPayable = timber.netPayable == null
+    ? null
+    : Number((timber.netPayable + freight.netPayable + broker).toFixed(2));
   const volumeDiscrepancyM3 = Number((input.tallyVolumeM3 - input.deliveredVolumeM3).toFixed(4));
   const pieceDiscrepancy = input.tallyPieces - input.deliveredPieces;
 
@@ -95,6 +101,11 @@ export function aggregateDashboardMetrics(
   let unpaidRecordsCount = 0;
   let recordsWithAlarmCount = 0;
 
+  let pendingPricingCount = 0;
+  let pendingPricingVolumeM3 = 0;
+  let sumPricedTimberPrice = 0;
+  let pricedCount = 0;
+
   const kavlingSet = new Set<string>();
   const speciesVolumeBreakdown: Record<string, number> = {};
 
@@ -103,9 +114,23 @@ export function aggregateDashboardMetrics(
     totalTallyVolumeM3 += r.tallyVolumeM3;
     totalDeliveredPieces += r.deliveredPieces;
     totalTallyPieces += r.tallyPieces;
-    totalNetTimberPayable += r.timberNetPayable;
     totalNetFreightPayable += r.freightNetPayable;
-    totalGrandExpenditure += r.grandNetPayable;
+
+    if (r.timberPricePerM3 == null) {
+      pendingPricingCount += 1;
+      pendingPricingVolumeM3 += r.tallyVolumeM3;
+    } else {
+      totalNetTimberPayable += (r.timberNetPayable ?? 0);
+      totalGrandExpenditure += (r.grandNetPayable ?? 0);
+      sumPricedTimberPrice += r.timberPricePerM3;
+      pricedCount += 1;
+
+      const status = r.paymentStatus || 'UNPAID';
+      if (status !== 'PAID') {
+        totalOutstandingPayable += (r.grandNetPayable ?? 0);
+        unpaidRecordsCount += 1;
+      }
+    }
 
     const evalRes = evaluateDiscrepancy({
       tallyVolumeM3: r.tallyVolumeM3,
@@ -119,12 +144,6 @@ export function aggregateDashboardMetrics(
       recordsWithAlarmCount += 1;
     }
 
-    const status = r.paymentStatus || 'UNPAID';
-    if (status !== 'PAID') {
-      totalOutstandingPayable += r.grandNetPayable;
-      unpaidRecordsCount += 1;
-    }
-
     if (r.kavlingNumber && r.kavlingNumber.trim()) {
       kavlingSet.add(r.kavlingNumber.trim());
     }
@@ -134,6 +153,9 @@ export function aggregateDashboardMetrics(
       ((speciesVolumeBreakdown[species] ?? 0) + r.tallyVolumeM3).toFixed(4)
     );
   }
+
+  const avgPricePerM3 = pricedCount > 0 ? sumPricedTimberPrice / pricedCount : 0;
+  const pendingPricingValueExposureIDR = Math.round(pendingPricingVolumeM3 * avgPricePerM3);
 
   return {
     totalDeliveredVolumeM3: Number(totalDeliveredVolumeM3.toFixed(4)),
@@ -151,6 +173,9 @@ export function aggregateDashboardMetrics(
     activeKavlingCount: kavlingSet.size,
     recordsWithAlarmCount,
     speciesVolumeBreakdown,
+    pendingPricingCount,
+    pendingPricingVolumeM3: Number(pendingPricingVolumeM3.toFixed(4)),
+    pendingPricingValueExposureIDR,
   };
 }
 

@@ -352,7 +352,11 @@ export class SupabaseRecordStore {
         delivered_volume_m3: Number(item.deliveredVolumeM3) || 0,
         tally_pieces: Number(item.tallyPieces) || 0,
         tally_volume_m3: Number(item.tallyVolumeM3) || 0,
-        timber_price_per_m3: Number(item.timberPricePerM3) || 0,
+        timber_price_per_m3:
+          item.timberPricePerM3 == null ||
+          (typeof item.timberPricePerM3 === 'string' && (item.timberPricePerM3 as string).trim() === '')
+            ? null
+            : Number(item.timberPricePerM3),
         timber_pph_rate: Number(item.timberPphRate ?? 0.5),
         notes: null,
         updated_at: now,
@@ -430,17 +434,17 @@ export class SupabaseRecordStore {
       deliveredVolumeM3: Number(r.deliveredVolumeM3 ?? 0),
       tallyPieces: Number(r.tallyPieces ?? 0),
       tallyVolumeM3: Number(r.tallyVolumeM3 ?? 0),
-      timberPricePerM3: Number(r.timberPricePerM3 ?? 0),
-      timberGrossTotal: Number(r.timberGrossTotal ?? 0),
+      timberPricePerM3: r.timberPricePerM3 == null ? null : Number(r.timberPricePerM3),
+      timberGrossTotal: r.timberGrossTotal == null ? null : Number(r.timberGrossTotal),
       timberPphRate: Number(r.timberPphRate ?? 0.5),
-      timberPphAmount: Number(r.timberPphAmount ?? 0),
-      timberNetPayable: Number(r.timberNetPayable ?? 0),
+      timberPphAmount: r.timberPphAmount == null ? null : Number(r.timberPphAmount),
+      timberNetPayable: r.timberNetPayable == null ? null : Number(r.timberNetPayable),
       freightRatePerM3: Number(r.freightRatePerM3 ?? 0),
       freightGrossTotal: Number(r.freightGrossTotal ?? 0),
       freightPphAmount: Number(r.freightPphAmount ?? 0),
       freightNetPayable: Number(r.freightNetPayable ?? 0),
       brokerFee: Number(r.brokerFee ?? 0),
-      grandNetPayable: Number(r.grandNetPayable ?? 0),
+      grandNetPayable: r.grandNetPayable == null ? null : Number(r.grandNetPayable),
       paymentStatus: (r.paymentStatus as PaymentStatus) || 'UNPAID',
     };
   }

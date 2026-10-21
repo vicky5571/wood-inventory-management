@@ -159,11 +159,16 @@ function saveManifestCore(
     const speciesId = resolveSpeciesId(db, tenantId, item.woodSpecies);
     const lotId = resolveLotId(db, tenantId, item.storageYard, item.kavlingNumber);
     const itemId = item.id || `item-${manifestId}-${idx + 1}`;
+    const isPriceNull =
+      item.timberPricePerM3 === null ||
+      item.timberPricePerM3 === undefined ||
+      (typeof item.timberPricePerM3 === 'string' && (item.timberPricePerM3 as string).trim() === '');
+    const priceVal = isPriceNull ? null : Number(item.timberPricePerM3);
 
     insertItemStmt.run(
       itemId, manifestId, tenantId, idx + 1, speciesId, lotId,
       item.woodLengthM || 4.0, item.deliveredPieces || 0, item.deliveredVolumeM3 || 0,
-      item.tallyPieces || 0, item.tallyVolumeM3 || 0, item.timberPricePerM3 || 0,
+      item.tallyPieces || 0, item.tallyVolumeM3 || 0, priceVal,
       item.timberPphRate ?? 0.5, cAt, uAt
     );
   }

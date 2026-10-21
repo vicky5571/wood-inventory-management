@@ -1,0 +1,88 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import type { DashboardMetrics } from '@/src/types';
+import { Tag } from 'lucide-react';
+
+function formatRupiah(num: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+export function KpiCardPendingPricing({ metrics }: { metrics: DashboardMetrics }) {
+  const count = metrics.pendingPricingCount ?? 0;
+  const volume = metrics.pendingPricingVolumeM3 ?? 0;
+  const exposure = metrics.pendingPricingValueExposureIDR ?? 0;
+
+  return (
+    <Link
+      href="/pending-pricing"
+      className={`bg-white rounded-2xl border transition-all flex flex-col overflow-hidden group shadow-xs hover:shadow-md cursor-pointer ${
+        count > 0 ? 'border-amber-300 ring-1 ring-amber-200' : 'border-gray-200/80'
+      }`}
+    >
+      <div className={`h-1 w-full ${count > 0 ? 'bg-[#ffc908]' : 'bg-gray-300'}`} />
+      <div
+        className={`flex items-center justify-between border-b px-4 py-3 ${
+          count > 0
+            ? 'border-amber-100 bg-gradient-to-br from-amber-50/70 to-white'
+            : 'border-gray-100 bg-gradient-to-br from-gray-50/40 to-white'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+              count > 0 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-bold text-[#101828] uppercase tracking-wide">
+            Pending Harga <span className="text-[11px] font-normal normal-case text-gray-500 tracking-normal">(待定价)</span>
+          </span>
+        </div>
+        {count > 0 ? (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+            {count} Item
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Lengkap
+          </span>
+        )}
+      </div>
+
+      <div className="px-4 pt-3.5 pb-2.5">
+        <div className="flex items-baseline gap-1.5">
+          <span
+            className={`text-3xl font-bold font-mono tracking-tight ${
+              count > 0 ? 'text-amber-700' : 'text-[#101828]'
+            }`}
+          >
+            {volume.toFixed(2)}
+          </span>
+          <span className="text-xs font-semibold text-gray-500">m³ Pending</span>
+        </div>
+      </div>
+
+      <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="rounded-xl px-2.5 py-2 border bg-gray-50/80 border-gray-100 text-slate-600 flex flex-col justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wider">Estimasi</span>
+          <span className="text-[11px] font-bold font-mono tabular-nums text-gray-800 mt-0.5 truncate">
+            {formatRupiah(exposure)}
+          </span>
+        </div>
+        <div className="rounded-xl px-2.5 py-2 border bg-amber-50/60 border-amber-100/80 text-amber-800 flex flex-col justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-wider">Aksi</span>
+          <span className="text-[11px] font-bold mt-0.5 group-hover:underline">
+            Tetapkan &rarr;
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}

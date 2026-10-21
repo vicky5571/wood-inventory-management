@@ -10,7 +10,8 @@ import { toast } from '../utils/toast-store.ts';
 import { DEFAULT_TIMBER_SPECIES } from '../utils/timber-species.ts';
 import type { WoodReceivingRecord } from '../types/index.ts';
 
-function formatRupiah(num: number): string {
+function formatRupiah(num?: number | null): string {
+  if (num == null) return '—';
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -162,7 +163,8 @@ export function openRecordModal(
     const delVol = parseFloat(String(data.get('deliveredVolumeM3') || '0')) || 0;
     const tallyPcs = parseInt(String(data.get('tallyPieces') || '0'), 10) || 0;
     const delPcs = parseInt(String(data.get('deliveredPieces') || '0'), 10) || 0;
-    const timberPrice = parseFloat(String(data.get('timberPricePerM3') || '0')) || 0;
+    const rawTimberPrice = data.get('timberPricePerM3');
+    const timberPrice = rawTimberPrice === null || rawTimberPrice === '' ? null : (parseFloat(String(rawTimberPrice)) || 0);
     const timberPph = parseFloat(String(data.get('timberPphRate') || '0')) || 0;
     const freightRate = parseFloat(String(data.get('freightRatePerM3') || '0')) || 0;
     const freightPph = parseFloat(String(data.get('freightPphAmount') || '0')) || 0;
@@ -173,7 +175,7 @@ export function openRecordModal(
       deliveredVolumeM3: Math.max(0, delVol),
       tallyPieces: Math.max(0, tallyPcs),
       deliveredPieces: Math.max(0, delPcs),
-      timberPricePerM3: Math.max(0, timberPrice),
+      timberPricePerM3: timberPrice === null ? null : Math.max(0, timberPrice),
       timberPphRate: Math.max(0, timberPph),
       freightRatePerM3: Math.max(0, freightRate),
       freightPphAmount: Math.max(0, freightPph),

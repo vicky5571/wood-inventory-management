@@ -30,11 +30,14 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
 }: ManifestItemRowProps) {
   const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0), delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
   const tallyPcs = Math.max(0, Number(item.tallyPieces) || 0), delivPcs = Math.max(0, Number(item.deliveredPieces) || 0);
-  const pricePerM3 = Math.max(0, Number(item.timberPricePerM3) || 0), pphRate = Math.max(0, Number(item.timberPphRate) || 0);
+  const isPriceNull = item.timberPricePerM3 === null || item.timberPricePerM3 === undefined || (typeof item.timberPricePerM3 === 'string' && (item.timberPricePerM3 as string).trim() === '');
+  const pricePerM3 = isPriceNull ? null : Math.max(0, Number(item.timberPricePerM3) || 0);
+  const pphRate = Math.max(0, Number(item.timberPphRate) || 0);
 
   const volDiff = Number((tallyVol - delivVol).toFixed(4)), pcsDiff = tallyPcs - delivPcs;
-  const timberGross = Math.round(tallyVol * pricePerM3), timberPph = Math.round(timberGross * (pphRate / 100));
-  const timberNet = timberGross - timberPph;
+  const timberGross = pricePerM3 === null ? null : Math.round(tallyVol * pricePerM3);
+  const timberPph = timberGross === null ? null : Math.round(timberGross * (pphRate / 100));
+  const timberNet = timberGross === null || timberPph === null ? null : timberGross - timberPph;
 
   const isSurplusOrMatch = volDiff >= 0;
   const cannotDelete = disabledDelete ?? totalItems <= 1;
@@ -95,7 +98,9 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
         <div className="flex items-center gap-3">
           <div className="text-right">
             <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-medium">Subtotal Net Kayu</span>
-            <span className="font-mono tabular-nums text-xs font-bold text-gray-900">{formatRupiah(timberNet)}</span>
+            <span className="font-mono tabular-nums text-xs font-bold text-gray-900">
+              {timberNet === null ? '—' : formatRupiah(timberNet)}
+            </span>
           </div>
 
           <button
@@ -178,8 +183,17 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={labelCls}>Harga / m³ (单价)</label>
-              <input type="number" min="0" value={item.timberPricePerM3 ?? 0}
-                onChange={(e) => updateField('timberPricePerM3', parseFloat(e.target.value) || 0)} className={inputCls} />
+              <input
+                type="number"
+                min="0"
+                placeholder="Pending"
+                value={item.timberPricePerM3 ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value.trim();
+                  updateField('timberPricePerM3', val === '' ? null : (parseFloat(val) || 0));
+                }}
+                className={inputCls}
+              />
             </div>
             <div>
               <label className={labelCls}>PPh % (税率)</label>
