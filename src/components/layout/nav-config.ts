@@ -37,6 +37,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/contracts',
   },
   {
+    id: 'payment-forms',
+    labelId: 'Form Pembayaran',
+    labelZh: '付款单',
+    href: '/payment-forms',
+  },
+  {
     id: 'tally',
     labelId: 'Tally Lapangan',
     labelZh: '检尺录入',

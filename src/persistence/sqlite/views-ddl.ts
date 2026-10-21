@@ -18,6 +18,7 @@ export const SQLITE_VIEWS_DDL = `
     i.lot_id,
     l.lot_code AS kavling_number,
     y.name AS storage_yard,
+    i.payment_form_id,
     i.wood_length_m,
     i.delivered_pieces,
     i.delivered_volume_m3,
@@ -134,6 +135,7 @@ export const SQLITE_VIEWS_DDL = `
       END, 2)
     END AS grandNetPayable,
     m.payment_status AS paymentStatus,
+    COALESCE(i.payment_form_id, m.payment_form_id) AS paymentFormId,
     m.invoice_number AS invoiceNumber,
     m.payment_date AS paymentDate,
     m.payment_notes AS paymentNotes,

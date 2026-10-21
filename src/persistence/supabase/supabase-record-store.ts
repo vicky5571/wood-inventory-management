@@ -445,6 +445,7 @@ export class SupabaseRecordStore {
       freightNetPayable: Number(r.freightNetPayable ?? 0),
       brokerFee: Number(r.brokerFee ?? 0),
       grandNetPayable: r.grandNetPayable == null ? null : Number(r.grandNetPayable),
+      paymentFormId: r.paymentFormId || r.payment_form_id || undefined,
       paymentStatus: (r.paymentStatus as PaymentStatus) || 'UNPAID',
     };
   }

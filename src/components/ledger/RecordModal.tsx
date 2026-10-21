@@ -5,13 +5,9 @@ import type { WoodReceivingRecord, ManifestFormInput, ManifestItemInput } from '
 import { computeManifestCalculations } from '@/src/utils/timber-calc.ts';
 import { toast } from '@/src/utils/toast-store';
 import {
-  hasMeaningfulManifestDraft,
-  hasMeaningfulDraftData,
-  loadManifestDraft,
-  saveManifestDraft,
-  clearManifestDraft,
-  loadRecordDraft,
-  clearRecordDraft,
+  hasMeaningfulManifestDraft, hasMeaningfulDraftData,
+  loadManifestDraft, saveManifestDraft, clearManifestDraft,
+  loadRecordDraft, clearRecordDraft,
 } from '@/src/utils/record-draft';
 import { DraftRecoveryBanner } from './DraftRecoveryBanner';
 import { RecordDocumentSection } from './RecordDocumentSection';
@@ -19,7 +15,7 @@ import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
 import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { useSettings } from '@/src/hooks/useSettings';
-import { X, Scale, CheckCircle2, Zap } from 'lucide-react';
+import { X, Scale, CheckCircle2, Zap, AlertTriangle } from 'lucide-react';
 import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
 import { validateDiscrepancyInputs } from '@/src/utils/discrepancy-validation';
 
@@ -46,12 +42,9 @@ const createItem = (r?: Partial<WoodReceivingRecord>, defaultTimberPphRate: numb
 export function RecordModal({
   isOpen, initialRecord, allRecords, availableSpecies, onClose, onSave,
 }: {
-  isOpen: boolean;
-  initialRecord: WoodReceivingRecord | null;
-  allRecords?: WoodReceivingRecord[];
-  availableSpecies?: string[];
-  onClose: () => void;
-  onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
+  isOpen: boolean; initialRecord: WoodReceivingRecord | null;
+  allRecords?: WoodReceivingRecord[]; availableSpecies?: string[];
+  onClose: () => void; onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
 }) {
   const { settings } = useSettings();
   const [form, setForm] = useState<Partial<WoodReceivingRecord>>({});
@@ -62,16 +55,9 @@ export function RecordModal({
     if (!isOpen) { setPendingDraft(null); return; }
     if (initialRecord) {
       const manifestId = initialRecord.manifest_id || initialRecord.id;
-      const siblings = allRecords
-        ? allRecords.filter((r) => (r.manifest_id && r.manifest_id === manifestId) || r.id === manifestId)
-        : [];
-      const editItems = siblings.length > 0
-        ? siblings.map((r) => createItem(r, settings.defaultTimberPphRate))
-        : [createItem(initialRecord, settings.defaultTimberPphRate)];
-      const totalBrokerFee = siblings.length > 1
-        ? siblings.reduce((sum, s) => sum + (s.brokerFee || 0), 0)
-        : (initialRecord.brokerFee || 0);
-
+      const siblings = allRecords ? allRecords.filter((r) => (r.manifest_id && r.manifest_id === manifestId) || r.id === manifestId) : [];
+      const editItems = siblings.length > 0 ? siblings.map((r) => createItem(r, settings.defaultTimberPphRate)) : [createItem(initialRecord, settings.defaultTimberPphRate)];
+      const totalBrokerFee = siblings.length > 1 ? siblings.reduce((sum, s) => sum + (s.brokerFee || 0), 0) : (initialRecord.brokerFee || 0);
       setForm({ ...initialRecord, manifest_id: manifestId, brokerFee: totalBrokerFee });
       setItems(editItems);
       setPendingDraft(null);
@@ -79,9 +65,8 @@ export function RecordModal({
       setForm(defaultRecord(settings.defaultBrokerFee));
       setItems([createItem(undefined, settings.defaultTimberPphRate)]);
       const mDraft = loadManifestDraft();
-      if (mDraft && hasMeaningfulManifestDraft(mDraft)) {
-        setPendingDraft(mDraft);
-      } else {
+      if (mDraft && hasMeaningfulManifestDraft(mDraft)) setPendingDraft(mDraft);
+      else {
         const rDraft = loadRecordDraft();
         setPendingDraft(rDraft && hasMeaningfulDraftData(rDraft) ? { ...rDraft, items: [createItem(rDraft, settings.defaultTimberPphRate)] } : null);
       }
@@ -96,10 +81,6 @@ export function RecordModal({
     return () => clearTimeout(timer);
   }, [form, items, initialRecord, isOpen]);
 
-  const handleItemsChange = useCallback((nextItems: ManifestItemInput[]) => {
-    setItems(nextItems);
-  }, []);
-
   const handleQuickFill = useCallback(() => {
     const { form: devForm, items: devItems } = getQuickReceivingDraft(availableSpecies);
     setForm((prev) => ({ ...prev, ...devForm }));
@@ -113,8 +94,7 @@ export function RecordModal({
     docDate: form.docDate, truckPlateNumber: form.truckPlateNumber || '',
     forestryDocNumber: form.forestryDocNumber || '', receiptNumber: form.receiptNumber || '',
     contractNumber: form.contractNumber || '', supplierName: form.supplierName || '',
-    brokerId: form.brokerId,
-    freightRatePerM3: Math.max(0, Number(form.freightRatePerM3) || 0),
+    brokerId: form.brokerId, freightRatePerM3: Math.max(0, Number(form.freightRatePerM3) || 0),
     freightPphAmount: form.freightPphAmount, brokerFee: Math.max(0, Number(form.brokerFee) || 0),
     paymentStatus: form.paymentStatus, invoiceNumber: form.invoiceNumber,
     paymentDate: form.paymentDate, paymentNotes: form.paymentNotes, items,
@@ -145,12 +125,8 @@ export function RecordModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     for (const it of items) {
-      const val = validateDiscrepancyInputs({
-        tallyVolumeM3: it.tallyVolumeM3, deliveredVolumeM3: it.deliveredVolumeM3,
-        tallyPieces: it.tallyPieces, deliveredPieces: it.deliveredPieces,
-      });
+      const val = validateDiscrepancyInputs({ tallyVolumeM3: it.tallyVolumeM3, deliveredVolumeM3: it.deliveredVolumeM3, tallyPieces: it.tallyPieces, deliveredPieces: it.deliveredPieces });
       if (!val.ok) {
         toast.error('Validasi Gagal (输入验证失败)', Object.values(val.errors)[0] || 'Nilai tidak boleh negatif');
         return;
@@ -159,13 +135,21 @@ export function RecordModal({
 
     const submitPreview = computeManifestCalculations(manifestPayload);
     const primary = items[0] || createItem(form, settings.defaultTimberPphRate);
+
+    // Edit guard: lock volume and pricing if linked to a locked/paid payment form
+    if (initialRecord?.paymentFormId && initialRecord.paymentStatus === 'PAID') {
+      const volChanged = Math.abs(submitPreview.totalTallyVolumeM3 - (initialRecord.tallyVolumeM3 || 0)) > 0.001;
+      const priceChanged = primary.timberPricePerM3 !== initialRecord.timberPricePerM3;
+      if (volChanged || priceChanged) {
+        toast.error('Pengeditan Terkunci (编辑已锁定)', 'Record ini sudah lunas dalam Form Pembayaran. Void form terlebih dahulu untuk mengubah volume atau harga.');
+        return;
+      }
+    }
+
     const savedRecord: WoodReceivingRecord = {
-      ...(form as WoodReceivingRecord),
-      manifest_id: manifestPayload.id, item_id: primary.id,
-      woodSpecies: primary.woodSpecies || form.woodSpecies || '',
-      woodLengthM: primary.woodLengthM ?? form.woodLengthM ?? 4.0,
-      kavlingNumber: primary.kavlingNumber || form.kavlingNumber || 'KAV-01',
-      storageYard: primary.storageYard || form.storageYard || 'TPK-Timur',
+      ...(form as WoodReceivingRecord), manifest_id: manifestPayload.id, item_id: primary.id,
+      woodSpecies: primary.woodSpecies || form.woodSpecies || '', woodLengthM: primary.woodLengthM ?? form.woodLengthM ?? 4.0,
+      kavlingNumber: primary.kavlingNumber || form.kavlingNumber || 'KAV-01', storageYard: primary.storageYard || form.storageYard || 'TPK-Timur',
       deliveredPieces: submitPreview.totalDeliveredPieces, deliveredVolumeM3: submitPreview.totalDeliveredVolumeM3,
       tallyPieces: submitPreview.totalTallyPieces, tallyVolumeM3: submitPreview.totalTallyVolumeM3,
       timberPricePerM3: primary.timberPricePerM3 ?? null, timberPphRate: primary.timberPphRate,
@@ -176,7 +160,6 @@ export function RecordModal({
     };
 
     onSave(savedRecord, manifestPayload);
-
     if (!initialRecord) {
       clearManifestDraft(); clearRecordDraft();
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -209,12 +192,7 @@ export function RecordModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              className="px-2.5 py-1 text-2xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg flex items-center gap-1 transition cursor-pointer"
-              title="Isi otomatis formulir penerimaan dengan data sampel dev"
-            >
+            <button type="button" onClick={handleQuickFill} className="px-2.5 py-1 text-2xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg flex items-center gap-1 transition cursor-pointer" title="Isi cepat dev">
               <Zap className="w-3 h-3 text-amber-600 fill-amber-500" />
               <span>Isi Cepat (Dev)</span>
             </button>
@@ -227,8 +205,16 @@ export function RecordModal({
         {pendingDraft && <DraftRecoveryBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />}
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-5">
+          {initialRecord?.paymentFormId && (
+            <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-900">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Terkunci Form Pembayaran:</span> Record ini terdaftar dalam form pembayaran mingguan. Pembatalan (VOID) form diperlukan terlebih dahulu jika ingin merevisi volume atau harga yang telah diterbitkan/lunas.
+              </div>
+            </div>
+          )}
           <RecordDocumentSection form={form} setForm={setForm} availableSpecies={availableSpecies} hideSpeciesSection={true} />
-          <ManifestItemsTable items={items} onChange={handleItemsChange} availableSpecies={availableSpecies} />
+          <ManifestItemsTable items={items} onChange={setItems} availableSpecies={availableSpecies} />
           <RecordFinancialSection form={form} setForm={setForm} hideTimberPricing={true} />
           <RecordReconciliationCard preview={preview} />
 

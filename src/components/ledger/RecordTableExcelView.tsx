@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import type { WoodReceivingRecord } from '@/src/types';
 import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import type { RecordTableViewProps, SortField } from './RecordTableCompactView';
@@ -31,20 +32,13 @@ export function RecordTableExcelView({
   onDelete,
   onPrint,
 }: RecordTableViewProps) {
-  const totals = React.useMemo(() => records.reduce(
-    (acc, r) => {
-      acc.delPieces += r.deliveredPieces;
-      acc.delVol += r.deliveredVolumeM3;
-      acc.tallyPieces += r.tallyPieces;
-      acc.tallyVol += r.tallyVolumeM3;
-      acc.timberNet += r.timberNetPayable ?? 0;
-      acc.freightNet += r.freightNetPayable;
-      acc.broker += r.brokerFee || 0;
-      acc.grandTotal += r.grandNetPayable ?? 0;
-      return acc;
-    },
-    { delPieces: 0, delVol: 0, tallyPieces: 0, tallyVol: 0, timberNet: 0, freightNet: 0, broker: 0, grandTotal: 0 }
-  ), [records]);
+  const totals = React.useMemo(() => records.reduce((acc, r) => {
+    acc.delPieces += r.deliveredPieces; acc.delVol += r.deliveredVolumeM3;
+    acc.tallyPieces += r.tallyPieces; acc.tallyVol += r.tallyVolumeM3;
+    acc.timberNet += r.timberNetPayable ?? 0; acc.freightNet += r.freightNetPayable;
+    acc.broker += r.brokerFee || 0; acc.grandTotal += r.grandNetPayable ?? 0;
+    return acc;
+  }, { delPieces: 0, delVol: 0, tallyPieces: 0, tallyVol: 0, timberNet: 0, freightNet: 0, broker: 0, grandTotal: 0 }), [records]);
 
   const manifestItemCounts = React.useMemo(() => {
     const counts = new Map<string, number>();
@@ -196,7 +190,18 @@ export function RecordTableExcelView({
                     formatRupiah(r.grandNetPayable)
                   )}
                 </td>
-                <td className="p-2 whitespace-nowrap border-r border-gray-100">{renderPaymentBadge(r.paymentStatus)}</td>
+                <td className="p-2 whitespace-nowrap border-r border-gray-100">
+                  {renderPaymentBadge(r.paymentStatus)}
+                  {r.paymentFormId && (
+                    <Link
+                      href={`/payment-forms/${r.paymentFormId}`}
+                      className="block mt-1 text-[9px] font-mono font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-1 py-0.5 rounded border border-blue-200/80 transition text-center"
+                      title={`Lihat Form: ${r.paymentFormId}`}
+                    >
+                      Form AP
+                    </Link>
+                  )}
+                </td>
                 {canWrite && (
                   <td className="p-2 whitespace-nowrap text-center sticky right-0 z-10 bg-white group-hover:bg-[#f9fafb] transition-colors border-l border-gray-200 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                     <div className="inline-flex items-center gap-1">

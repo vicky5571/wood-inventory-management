@@ -5,34 +5,18 @@ import type { WoodReceivingRecord } from '@/src/types';
 import { Pencil, Trash2, Printer, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { isInvoiceSearchMatch } from '@/src/utils/record-search';
 
+import Link from 'next/link';
+
 function formatRupiah(num: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(num);
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
 }
 
 function renderPaymentBadge(status?: WoodReceivingRecord['paymentStatus']) {
-  if (status === 'PAID') {
-    return (
-      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#00bb7f] border border-emerald-200/80">
-        Lunas / 已结清
-      </span>
-    );
-  }
-  if (status === 'PARTIAL') {
-    return (
-      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-[#b38600] border border-amber-200/80">
-        Sebagian / 部分
-      </span>
-    );
-  }
-  return (
-    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-[#ed1c24] border border-rose-200/80">
-      Belum Lunas / 未付
-    </span>
-  );
+  const isPaid = status === 'PAID';
+  const isPartial = status === 'PARTIAL';
+  const color = isPaid ? 'bg-emerald-50 text-[#00bb7f] border-emerald-200/80' : isPartial ? 'bg-amber-50 text-[#b38600] border-amber-200/80' : 'bg-rose-50 text-[#ed1c24] border-rose-200/80';
+  const label = isPaid ? 'Lunas / 已结清' : isPartial ? 'Sebagian / 部分' : 'Belum Lunas / 未付';
+  return <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${color}`}>{label}</span>;
 }
 
 export type SortField = 'receiptDate' | 'tallyVolumeM3' | 'grandNetPayable';
@@ -199,6 +183,15 @@ export function RecordTableCompactView({
                 </td>
                 <td className="p-3.5 whitespace-nowrap">
                   {renderPaymentBadge(r.paymentStatus)}
+                  {r.paymentFormId && (
+                    <Link
+                      href={`/payment-forms/${r.paymentFormId}`}
+                      className="block mt-1 text-[9px] font-mono font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded border border-blue-200/80 transition"
+                      title={`Lihat Form Pembayaran: ${r.paymentFormId}`}
+                    >
+                      Form: {r.paymentFormId.slice(0, 12)}
+                    </Link>
+                  )}
                   {isInvoiceSearchMatch(r, searchQuery || '') && (
                     <span className="block mt-1 text-[9px] font-mono font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/80">
                       Faktur: {r.invoiceNumber}

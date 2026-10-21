@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P2
-**Status:** DRAFT
+**Status:** COMPLETE
 **Related Client Feedback:** Item #2
 
 ---
@@ -170,115 +170,115 @@ Reuse `@media print` CSS pattern from existing print modals. Single-page A4 port
 ## 3. Implementation Checklist
 
 ### Phase 1: SSOT Types
-- [ ] Add `PaymentFormStatus`, `PaymentForm`, `PaymentFormLineItem`, `PaymentFormWithLines`, `PaymentFormFilterCriteria`, `PaymentFormGenerationResult` to `src/types/index.ts`
-- [ ] Add `paymentFormId?: string` to `WoodReceivingRecord` and `ReceivingItem`
-- [ ] Add activity actions: `PAYMENT_FORM_CREATED`, `PAYMENT_FORM_UPDATED`, `PAYMENT_FORM_ISSUED`, `PAYMENT_FORM_PAID`, `PAYMENT_FORM_VOIDED`
+- [x] Add `PaymentFormStatus`, `PaymentForm`, `PaymentFormLineItem`, `PaymentFormWithLines`, `PaymentFormFilterCriteria`, `PaymentFormGenerationResult` to `src/types/index.ts`
+- [x] Add `paymentFormId?: string` to `WoodReceivingRecord` and `ReceivingItem`
+- [x] Add activity actions: `PAYMENT_FORM_CREATED`, `PAYMENT_FORM_UPDATED`, `PAYMENT_FORM_ISSUED`, `PAYMENT_FORM_PAID`, `PAYMENT_FORM_VOIDED`
 
 ### Phase 2: Pure Helpers (Test-First)
-- [ ] Create `test/week-window.test.ts`:
-  - [ ] Saturday date -> same date as start
-  - [ ] Friday date -> previous Saturday as start
-  - [ ] Wednesday date -> previous Saturday as start
-  - [ ] Timezone edge cases (date near midnight WIB)
-  - [ ] Year boundary (Dec 31 Fri -> start Dec 26 Sat)
-- [ ] Implement `src/utils/week-window.ts` with `getWeekWindow(date)` and `formatWeekLabel(startDate)`
-- [ ] Create `test/payment-form-grouping.test.ts`:
-  - [ ] Empty records -> empty groups
-  - [ ] Single record -> single group
-  - [ ] Multiple records same supplier/species/contract -> single group with multiple lines
-  - [ ] Different contracts same supplier/species -> separate groups
-  - [ ] Multi-item manifest -> items split into their species groups
-  - [ ] PENDING-priced records excluded
-  - [ ] Records already linked to ISSUED form -> excluded with reason
-  - [ ] Records already linked to DRAFT form -> merged into existing
-  - [ ] Case/whitespace normalization on grouping keys
-- [ ] Implement `src/utils/payment-form-grouping.ts` with `groupRecordsForPayment()` and `computeFormTotals()`
-- [ ] Create `test/payment-form-numbering.test.ts`:
-  - [ ] Sequential numbering per (week, supplier, species)
-  - [ ] Collision handling when supplierCode truncation clashes
-- [ ] Implement `src/utils/payment-form-number.ts`
-- [ ] Run `node --test` -> 0 failures
+- [x] Create `test/week-window.test.ts`:
+  - [x] Saturday date -> same date as start
+  - [x] Friday date -> previous Saturday as start
+  - [x] Wednesday date -> previous Saturday as start
+  - [x] Timezone edge cases (date near midnight WIB)
+  - [x] Year boundary (Dec 31 Fri -> start Dec 26 Sat)
+- [x] Implement `src/utils/week-window.ts` with `getWeekWindow(date)` and `formatWeekLabel(startDate)`
+- [x] Create `test/payment-form-grouping.test.ts`:
+  - [x] Empty records -> empty groups
+  - [x] Single record -> single group
+  - [x] Multiple records same supplier/species/contract -> single group with multiple lines
+  - [x] Different contracts same supplier/species -> separate groups
+  - [x] Multi-item manifest -> items split into their species groups
+  - [x] PENDING-priced records excluded
+  - [x] Records already linked to ISSUED form -> excluded with reason
+  - [x] Records already linked to DRAFT form -> merged into existing
+  - [x] Case/whitespace normalization on grouping keys
+- [x] Implement `src/utils/payment-form-grouping.ts` with `groupRecordsForPayment()` and `computeFormTotals()`
+- [x] Create `test/payment-form-numbering.test.ts`:
+  - [x] Sequential numbering per (week, supplier, species)
+  - [x] Collision handling when supplierCode truncation clashes
+- [x] Implement `src/utils/payment-form-number.ts`
+- [x] Run `node --test` -> 0 failures
 
 ### Phase 3: Persistence Layer
-- [ ] SQLite migration: create `payment_forms` table + add `payment_form_id` columns to `receiving_items` (and `wood_receiving_records` for backward compat)
-- [ ] Supabase migration SQL in `supabase/migrations/XXXX_payment_forms.sql`
-- [ ] Implement `src/persistence/sqlite/payment-form-queries.ts`
-- [ ] Implement `src/persistence/supabase/supabase-payment-form-store.ts`
-- [ ] Update `receiving_items_calc_view` to passthrough `payment_form_id`
-- [ ] Add payment form adapter to persistence facade
+- [x] SQLite migration: create `payment_forms` table + add `payment_form_id` columns to `receiving_items` (and `wood_receiving_records` for backward compat)
+- [x] Supabase migration SQL in `supabase/migrations/XXXX_payment_forms.sql`
+- [x] Implement `src/persistence/sqlite/payment-form-queries.ts`
+- [x] Implement `src/persistence/supabase/supabase-payment-form-store.ts`
+- [x] Update `receiving_items_calc_view` to passthrough `payment_form_id`
+- [x] Add payment form adapter to persistence facade
 
 ### Phase 4: API Routes
-- [ ] `app/api/payment-forms/route.ts` — GET (list with filter), POST (manual create blank)
-- [ ] `app/api/payment-forms/[id]/route.ts` — GET (with lines), PUT (update DRAFT), DELETE (void)
-- [ ] `app/api/payment-forms/generate/route.ts` — POST `{ weekStartDate }` -> returns `PaymentFormGenerationResult`
-- [ ] `app/api/payment-forms/[id]/status/route.ts` — PATCH `{ status, invoiceNumber?, paymentDate?, paymentMethod? }`
-- [ ] Validation: status transitions enforced server-side
-- [ ] Linked record paymentStatus cascade on form status change
+- [x] `app/api/payment-forms/route.ts` — GET (list with filter), POST (manual create blank)
+- [x] `app/api/payment-forms/[id]/route.ts` — GET (with lines), PUT (update DRAFT), DELETE (void)
+- [x] `app/api/payment-forms/generate/route.ts` — POST `{ weekStartDate }` -> returns `PaymentFormGenerationResult`
+- [x] `app/api/payment-forms/[id]/status/route.ts` — PATCH `{ status, invoiceNumber?, paymentDate?, paymentMethod? }`
+- [x] Validation: status transitions enforced server-side
+- [x] Linked record paymentStatus cascade on form status change
 
 ### Phase 5: Hook & State
-- [ ] Create `src/hooks/usePaymentForms.ts`:
+- [x] Create `src/hooks/usePaymentForms.ts`:
   - List, get-by-id, generate, updateStatus, void
   - Optimistic updates for status transitions
   - Local cache keyed by `weekStartDate`
-- [ ] Activity log wiring for all state changes
+- [x] Activity log wiring for all state changes
 
 ### Phase 6: List & Detail UI
-- [ ] `src/components/payment-forms/PaymentFormKpiStrip.tsx` — total forms this week, draft/issued/paid breakdown, total AP outstanding
-- [ ] `src/components/payment-forms/PaymentFormToolbar.tsx` — week picker (Sat only), status filter, supplier filter, "Generate for this week" button
-- [ ] `src/components/payment-forms/PaymentFormTable.tsx` — sortable, status badges, click-through to detail
-- [ ] `src/components/payment-forms/PaymentFormEmptyState.tsx`
-- [ ] `src/components/payment-forms/PaymentFormListView.tsx` — coordinator (<250 lines)
-- [ ] `app/payment-forms/page.tsx` — route shell
-- [ ] `src/components/payment-forms/PaymentFormHeaderCard.tsx` — metadata, status badge, action buttons
-- [ ] `src/components/payment-forms/PaymentFormLinesTable.tsx` — line items with per-record drilldown
-- [ ] `src/components/payment-forms/PaymentFormTotalsFooter.tsx`
-- [ ] `src/components/payment-forms/PaymentFormDetailView.tsx` — coordinator (<250 lines)
-- [ ] `app/payment-forms/[id]/page.tsx` — route shell
+- [x] `src/components/payment-forms/PaymentFormKpiStrip.tsx` — total forms this week, draft/issued/paid breakdown, total AP outstanding
+- [x] `src/components/payment-forms/PaymentFormToolbar.tsx` — week picker (Sat only), status filter, supplier filter, "Generate for this week" button
+- [x] `src/components/payment-forms/PaymentFormTable.tsx` — sortable, status badges, click-through to detail
+- [x] `src/components/payment-forms/PaymentFormEmptyState.tsx`
+- [x] `src/components/payment-forms/PaymentFormListView.tsx` — coordinator (<250 lines)
+- [x] `app/payment-forms/page.tsx` — route shell
+- [x] `src/components/payment-forms/PaymentFormHeaderCard.tsx` — metadata, status badge, action buttons
+- [x] `src/components/payment-forms/PaymentFormLinesTable.tsx` — line items with per-record drilldown
+- [x] `src/components/payment-forms/PaymentFormTotalsFooter.tsx`
+- [x] `src/components/payment-forms/PaymentFormDetailView.tsx` — coordinator (<250 lines)
+- [x] `app/payment-forms/[id]/page.tsx` — route shell
 
 ### Phase 7: Generation Modal
-- [ ] `src/components/payment-forms/GenerateFormsModal.tsx`:
+- [x] `src/components/payment-forms/GenerateFormsModal.tsx`:
   - Date picker constrained to Saturdays
   - Preview section: shows grouping breakdown before commit
   - Submit -> API call -> redirect to list with filter applied to generated forms
   - Result summary: N created, M updated, K skipped (with reasons)
 
 ### Phase 8: Status Transition UI
-- [ ] `src/components/payment-forms/IssueFormModal.tsx` — DRAFT -> ISSUED (prompts for form number override, auto-generates by default)
-- [ ] `src/components/payment-forms/MarkPaidModal.tsx` — ISSUED -> PAID (prompts for invoiceNumber, paymentDate, paymentMethod)
-- [ ] `src/components/payment-forms/VoidFormModal.tsx` — any -> VOID (prompts for reason, destructive confirm)
-- [ ] Each modal: optimistic update + toast feedback
+- [x] `src/components/payment-forms/IssueFormModal.tsx` — DRAFT -> ISSUED (prompts for form number override, auto-generates by default)
+- [x] `src/components/payment-forms/MarkPaidModal.tsx` — ISSUED -> PAID (prompts for invoiceNumber, paymentDate, paymentMethod)
+- [x] `src/components/payment-forms/VoidFormModal.tsx` — any -> VOID (prompts for reason, destructive confirm)
+- [x] Each modal: optimistic update + toast feedback
 
 ### Phase 9: Print Modal
-- [ ] `src/components/payment-forms/PrintPaymentFormModal.tsx`:
+- [x] `src/components/payment-forms/PrintPaymentFormModal.tsx`:
   - Reuse `@media print` CSS pattern from `PrintReceivingSlipModal.tsx`
   - A4 portrait layout, header + supplier block + lines table + totals + signatures
   - Browser `window.print()` on open
   - Hide app chrome in print mode
 
 ### Phase 10: Ledger Integration
-- [ ] Add column "Form Pembayaran" to `RecordTable.tsx` showing linked payment form number (or "—")
-- [ ] Click form number -> navigate to `/payment-forms/[id]`
-- [ ] Filter: show records with no payment form (candidates for next generation)
-- [ ] Prevent editing `tallyVolumeM3`, `timberPricePerM3`, etc. when record is linked to ISSUED/PAID form (edit requires voiding form first)
+- [x] Add column "Form Pembayaran" to `RecordTable.tsx` showing linked payment form number (or "—")
+- [x] Click form number -> navigate to `/payment-forms/[id]`
+- [x] Filter: show records with no payment form (candidates for next generation)
+- [x] Prevent editing `tallyVolumeM3`, `timberPricePerM3`, etc. when record is linked to ISSUED/PAID form (edit requires voiding form first)
 
 ### Phase 11: Nav & Verification
-- [ ] Add `payment-forms` entry to `src/components/layout/nav-config.ts`:
+- [x] Add `payment-forms` entry to `src/components/layout/nav-config.ts`:
   - Label: "Form Pembayaran" / "付款单"
   - Badge: show DRAFT count when > 0
-- [ ] Run `npm run test` -> 0 failures
-- [ ] Run `npm run build:check` -> 0 TS/build errors
-- [ ] Confirm all coordinator files <250 lines
-- [ ] Manual smoke test:
-  - [ ] Add 3 records for same supplier/species/contract in one week -> generate forms -> 1 form with 3 lines
-  - [ ] Add 2 records different species -> generate -> 2 forms
-  - [ ] Add record with PENDING price -> generate -> record skipped with reason
-  - [ ] Issue form -> form number assigned, lines locked
-  - [ ] Mark PAID -> linked records' paymentStatus = PAID
-  - [ ] Void PAID form -> records revert to UNPAID
-  - [ ] Print form -> A4 layout correct, no app chrome visible
-  - [ ] Try to edit record in ISSUED form -> blocked with explanation
-  - [ ] Week picker constrained to Saturdays
-  - [ ] Multi-item manifest with 2 species -> 2 separate forms generated
+- [x] Run `npm run test` -> 0 failures
+- [x] Run `npm run build:check` -> 0 TS/build errors
+- [x] Confirm all coordinator files <250 lines
+- [x] Manual smoke test:
+  - [x] Add 3 records for same supplier/species/contract in one week -> generate forms -> 1 form with 3 lines
+  - [x] Add 2 records different species -> generate -> 2 forms
+  - [x] Add record with PENDING price -> generate -> record skipped with reason
+  - [x] Issue form -> form number assigned, lines locked
+  - [x] Mark PAID -> linked records' paymentStatus = PAID
+  - [x] Void PAID form -> records revert to UNPAID
+  - [x] Print form -> A4 layout correct, no app chrome visible
+  - [x] Try to edit record in ISSUED form -> blocked with explanation
+  - [x] Week picker constrained to Saturdays
+  - [x] Multi-item manifest with 2 species -> 2 separate forms generated
 
 ---
 

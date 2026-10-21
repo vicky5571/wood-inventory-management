@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { SQLITE_VIEWS_DDL } from './views-ddl.ts';
 import { ensureContractTables } from './contract-queries.ts';
+import { ensurePaymentFormTables } from './payment-form-queries.ts';
 
 export function runMigrations(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON;');
@@ -232,5 +233,6 @@ export function runMigrations(db: DatabaseSync): void {
     console.error('Failed to migrate receiving_items table to nullable price:', e);
   }
 
+  ensurePaymentFormTables(db);
   db.exec(SQLITE_VIEWS_DDL);
 }

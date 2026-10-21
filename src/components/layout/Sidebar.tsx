@@ -5,27 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNavigation } from '@/src/context/NavigationContext';
 import {
-  Trees,
-  LayoutDashboard,
-  TableProperties,
-  Truck,
-  Building2,
-  History,
-  Settings,
-  ClipboardCheck,
-  Menu,
-  X,
-  Warehouse,
-  FileText,
-  Users,
-  Tag,
+  Trees, LayoutDashboard, TableProperties, Truck, Building2,
+  History, Settings, ClipboardCheck, Menu, X, Warehouse,
+  FileText, Users, Tag, CreditCard,
 } from 'lucide-react';
 import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  analytics: LayoutDashboard, ledger: TableProperties, 'pending-pricing': Tag, inventory: Warehouse, contracts: FileText, tally: ClipboardCheck, sales: Truck,
-  suppliers: Building2, brokers: Users, activity: History, settings: Settings,
+  analytics: LayoutDashboard, ledger: TableProperties, 'pending-pricing': Tag,
+  inventory: Warehouse, contracts: FileText, 'payment-forms': CreditCard,
+  tally: ClipboardCheck, sales: Truck, suppliers: Building2, brokers: Users,
+  activity: History, settings: Settings,
 };
 
 export function Sidebar() {

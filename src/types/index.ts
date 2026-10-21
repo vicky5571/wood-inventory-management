@@ -180,6 +180,7 @@ export interface WoodReceivingRecord {
 
   // Payment Lifecycle & AP Tracking
   paymentStatus?: PaymentStatus; // Status Pembayaran / 付款状态 (UNPAID | PARTIAL | PAID)
+  paymentFormId?: string;        // FK to PaymentForm (Form Pembayaran Mingguan)
   invoiceNumber?: string;        // No. Faktur / Invoice / 发票号
   paymentDate?: string;          // Tanggal Bayar / 付款日期 (YYYY-MM-DD)
   paymentNotes?: string;         // Catatan Pembayaran / 付款备注
@@ -289,6 +290,7 @@ export interface ReceivingItem {
   tallyVolumeM3: number;
   timberPricePerM3: number | null;
   timberPphRate: number;
+  paymentFormId?: string;        // FK to PaymentForm for multi-item manifests
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -710,7 +712,12 @@ export type ActivityActionType =
   | 'CONTRACT_RESTORED'
   | 'RECEIPT_CREATED'
   | 'RECEIPT_DELETED'
-  | 'RECORD_PRICED';
+  | 'RECORD_PRICED'
+  | 'PAYMENT_FORM_CREATED'
+  | 'PAYMENT_FORM_UPDATED'
+  | 'PAYMENT_FORM_ISSUED'
+  | 'PAYMENT_FORM_PAID'
+  | 'PAYMENT_FORM_VOIDED';
 
 export type PricingStatus = 'PENDING' | 'PRICED';
 
@@ -1010,6 +1017,88 @@ export interface ContractReceiptFormInput {
   coveredVolumeM3: number;
   coveredPieces?: number;
   notes?: string;
+}
+
+/**
+ * Weekly Payment Form (Sabtu-Jumat, Grouped per Supplier x Species x Contract)
+ */
+export type PaymentFormStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'VOID';
+
+export interface PaymentForm {
+  id: string;
+  tenantId: string;
+  formNumber: string;                 // e.g. "PAY-2026-W42-PTA-JATI-01"
+  weekStartDate: string;              // Saturday (YYYY-MM-DD)
+  weekEndDate: string;                // Friday (YYYY-MM-DD)
+
+  // Grouping key fields
+  supplierName: string;
+  supplierId?: string;
+  woodSpecies: string;
+  contractNumber: string;             // Empty string for non-contract
+
+  // Content references
+  recordIds: string[];
+  itemIds: string[];                  // For multi-item manifest items
+
+  // Snapshot totals (cached; recomputed until ISSUED)
+  totalTallyVolumeM3: number;
+  totalTallyPieces: number;
+  totalTimberGrossIDR: number;
+  totalTimberPphIDR: number;
+  totalTimberNetIDR: number;
+
+  // Workflow
+  status: PaymentFormStatus;
+  issuedAt?: string;
+  paidAt?: string;
+  invoiceNumber?: string;
+  paymentDate?: string;
+  paymentMethod?: string;
+  notes?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentFormLineItem {
+  recordId: string;
+  itemId?: string;
+  receiptDate: string;
+  truckPlateNumber: string;
+  forestryDocNumber: string;          // SKSHHK
+  receiptNumber: string;              // Kwitansi
+  kavlingNumber: string;
+  tallyVolumeM3: number;
+  tallyPieces: number;
+  timberPricePerM3: number;           // Non-null (PENDING excluded)
+  timberGrossIDR: number;
+  timberPphIDR: number;
+  timberNetIDR: number;
+}
+
+export interface PaymentFormWithLines extends PaymentForm {
+  lines: PaymentFormLineItem[];
+}
+
+export interface PaymentFormFilterCriteria {
+  weekStartDate?: string;
+  status?: PaymentFormStatus | 'ALL';
+  supplierName?: string;
+  searchQuery?: string;
+}
+
+export interface PaymentFormGenerationResult {
+  createdCount: number;
+  updatedCount: number;               // Existing DRAFT forms merged into
+  skippedCount: number;
+  skippedReasons: Array<{
+    recordId: string;
+    itemId?: string;
+    reason: 'PENDING_PRICE' | 'ALREADY_IN_LOCKED_FORM' | 'OUT_OF_WINDOW';
+    lockedFormNumber?: string;
+  }>;
+  formIds: string[];                  // IDs of created/updated forms
 }
 
 

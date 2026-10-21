@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { NAV_ITEMS, resolveActiveNavSection, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Navbar Navigation & Layout Config Suite', async (t) => {
-  await t.test('NAV_ITEMS contains bilingual configuration for all 11 required operational routes', () => {
-    assert.equal(NAV_ITEMS.length, 11);
+  await t.test('NAV_ITEMS contains bilingual configuration for all 12 required operational routes', () => {
+    assert.equal(NAV_ITEMS.length, 12);
 
     const ids = NAV_ITEMS.map((item) => item.id);
-    assert.deepEqual(ids, ['analytics', 'ledger', 'pending-pricing', 'inventory', 'contracts', 'tally', 'sales', 'suppliers', 'brokers', 'activity', 'settings']);
+    assert.deepEqual(ids, ['analytics', 'ledger', 'pending-pricing', 'inventory', 'contracts', 'payment-forms', 'tally', 'sales', 'suppliers', 'brokers', 'activity', 'settings']);
 
     const analytics = NAV_ITEMS.find((item) => item.id === 'analytics')!;
     assert.equal(analytics.href, '/');
@@ -33,6 +33,11 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
     assert.equal(contracts.href, '/contracts');
     assert.equal(contracts.labelId, 'Kontrak');
     assert.equal(contracts.labelZh, '合同');
+
+    const paymentForms = NAV_ITEMS.find((item) => item.id === 'payment-forms')!;
+    assert.equal(paymentForms.href, '/payment-forms');
+    assert.equal(paymentForms.labelId, 'Form Pembayaran');
+    assert.equal(paymentForms.labelZh, '付款单');
 
     const tally = NAV_ITEMS.find((item) => item.id === 'tally')!;
     assert.equal(tally.href, '/tally');
