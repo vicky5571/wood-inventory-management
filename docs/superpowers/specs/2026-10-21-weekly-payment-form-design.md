@@ -1,10 +1,21 @@
-# Design Spec: Weekly Payment Form (Saturday-Friday, Grouped per Supplier x Species x Contract)
+# Design Spec: Lembar Tagihan — Weekly Payment Form (SUPERSEDED by Refactor)
 
 **Document:** `docs/superpowers/specs/2026-10-21-weekly-payment-form-design.md`
-**Date:** 2026-10-21
-**Status:** Draft — Pending Approval
-**Related Plan:** `docs/superpowers/plans/2026-10-21-weekly-payment-form.md`
-**Architecture:** New `PaymentForm` entity consolidating receiving records within a Sat-Fri weekly window, grouped per unique (supplier × woodSpecies × contractNumber) tuple. Dual purpose: AP tracker with status workflow (DRAFT → ISSUED → PAID → VOID) + printable document (`@media print` CSS). Bidirectional FK linkage with `WoodReceivingRecord.paymentFormId` for fast lookup and double-inclusion guard. Multi-item manifests split per species into separate forms. PENDING-priced records excluded from generation.
+**Date:** 2026-10-21 (revised 2026-10-22)
+**Status:** Superseded by refactor plan `docs/superpowers/plans/2026-10-22-refactor-payment-form-to-lembar-tagihan.md`
+**Related Plan:** `docs/superpowers/plans/2026-10-21-weekly-payment-form.md` (original) + refactor plan above
+**Architecture:** `PaymentForm` entity (now "Lembar Tagihan") consolidates receiving records within a Sat-Fri weekly window, grouped per `(supplier × woodSpecies × contractNumber)` tuple. Dual purpose: AP tracker with status workflow (DRAFT → ISSUED → PAID → VOID) + printable physical document matching PT. Brilliant Jaya Wood Industry's pre-printed `LEMBAR TAGIHAN / 请款单` carbon copy book layout.
+
+> **⚠️ Revision Notice:** This spec was originally designed with a generic AP document layout. After client provided actual physical form reference (image dated 2026-10-22), the following fields and semantics were **refactored**:
+>
+> - `formNumber` (auto-generated `PAY-YYYY-W##-...`) → `preprintedNumber` (user-input manual from physical carbon book, e.g. `018532`)
+> - Weekly window display → `issueDate` single date on print (window remains internal grouping metadata)
+> - Line item structure → 6-column table matching physical form: Kategori, Konten, Tujuan, Harga Satuan, Jumlah, Unit, Total
+> - Signature blocks → 5 fixed slots (Manager Umum, Finance, Kepala Akuntan, Kepala Dep., Pembuat) as template cetak only (no approval tracking)
+> - Added `AppSettings.companyName` for header
+> - Added `terbilang` auto-generated amount-in-words (UPPERCASE)
+>
+> See refactor plan for migration path. Spec sections below marked **[REVISED]** where overridden.
 
 ---
 
@@ -592,4 +603,197 @@ ls test/week-window.test.ts \
 node --test test/week-window.test.ts test/payment-form-grouping.test.ts test/payment-form-numbering.test.ts 2>&1 | grep "fail 0"
 npm run drift:check && npm test
 # EXPECT: all green
+```
+
+---
+
+## 13. REVISION LOG — Lembar Tagihan Physical Form Alignment (2026-10-22)
+
+Client provided actual physical form reference (`LEMBAR TAGIHAN / 请款单` from PT. Brilliant Jaya Wood Industry's carbon copy book). The following design changes were applied via refactor plan `docs/superpowers/plans/2026-10-22-refactor-payment-form-to-lembar-tagihan.md`.
+
+### 13.1 Field Changes to `PaymentForm` Entity
+
+```ts
+export interface PaymentForm {
+  id: string;
+  tenantId: string;
+
+  // [REVISED] Renamed + semantics changed
+  // formNumber: string;                       // OLD: auto-generated PAY-YYYY-W##-...
+  preprintedNumber: string;                     // NEW: user-input from physical book (e.g. "018532")
+
+  // [REVISED] Added single-date field; week range remains for internal grouping only
+  issueDate: string;                            // NEW: single date printed on form (YYYY-MM-DD)
+  weekStartDate: string;                        // UNCHANGED: Saturday (grouping metadata)
+  weekEndDate: string;                          // UNCHANGED: Friday (grouping metadata)
+
+  // Grouping key fields (unchanged)
+  supplierName: string;
+  supplierId?: string;
+  woodSpecies: string;
+  contractNumber: string;
+
+  // [REVISED] Line items now explicit entity with physical form columns
+  lines: PaymentFormLineItem[];                 // Replaces recordIds[] + itemIds[] for printed representation
+  recordIds: string[];                          // UNCHANGED: internal reference to source WoodReceivingRecords
+  itemIds: string[];                            // UNCHANGED: internal reference to ReceivingItems
+
+  // [NEW] Totals extended
+  totalAmountIDR: number;                       // NEW: sum of line.totalIDR (replaces totalTimberNetIDR as print total)
+  terbilang: string;                            // NEW: amount in words (UPPERCASE Indonesian)
+  totalTallyVolumeM3: number;                   // UNCHANGED
+  totalTallyPieces: number;                     // UNCHANGED
+  totalTimberGrossIDR: number;                  // UNCHANGED
+  totalTimberPphIDR: number;                    // UNCHANGED
+  totalTimberNetIDR: number;                    // UNCHANGED
+
+  // [NEW] Optional notes field matching "ket" (keterangan) on physical form
+  notes?: string;                               // Expanded role: "ket" field on form
+
+  // Workflow (unchanged)
+  status: PaymentFormStatus;
+  issuedAt?: string;
+  paidAt?: string;
+  invoiceNumber?: string;
+  paymentDate?: string;
+  paymentMethod?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+### 13.2 Line Item Structure Refactored
+
+```ts
+// [REVISED] Line item now matches physical form 6-column table
+export type LineItemUnit = 'm³' | 'batang' | 'rit' | 'lain-lain';
+
+export interface PaymentFormLineItem {
+  id: string;                           // NEW: stable client-side id for list keying
+  paymentFormId: string;                // NEW: FK upward
+  itemSequence: number;                 // NEW: ordering within form
+
+  // Physical form columns (6 data columns)
+  kategori: string;                     // NEW: Kategori akuntansi (e.g. "Pembelian Kayu", "Biaya Ongkir", free text with suggestions)
+  konten: string;                       // NEW: Konten (SKSHHK number + wood species, free text)
+  tujuan: string;                       // NEW: Tujuan — supplier name/address (free text, not FK-locked)
+  hargaSatuanIDR: number;               // RENAMED from timberPricePerM3 (more generic)
+  jumlah: number;                       // RENAMED from tallyVolumeM3 (unit-agnostic)
+  unit: LineItemUnit;                   // NEW: unit of jumlah
+  totalIDR: number;                     // COMPUTED: hargaSatuanIDR * jumlah
+
+  // Optional reference back to source record (for traceability)
+  sourceRecordId?: string;              // NEW: optional WoodReceivingRecord.id reference
+  sourceItemId?: string;                // NEW: optional ReceivingItem.id reference
+
+  notes?: string;
+}
+```
+
+### 13.3 AppSettings Addition
+
+```ts
+export interface AppSettings {
+  // ...existing fields
+  companyName: string;                  // NEW: default "PT. BRILLIANT JAYA WOOD INDUSTRY"
+}
+```
+
+### 13.4 New Pure Helper — Terbilang (`src/utils/terbilang.ts`)
+
+```ts
+/**
+ * Converts a numeric amount to Indonesian words (UPPERCASE).
+ * Zero-dependency implementation using standard Indonesian number conventions.
+ *
+ * @param amount - Numeric amount (can have decimal for sen; "koma" format used per Q7c)
+ * @returns Uppercase string suffixed with "RUPIAH"
+ *
+ * @example
+ * terbilang(50000000) → "LIMA PULUH JUTA RUPIAH"
+ * terbilang(50000000.75) → "LIMA PULUH JUTA KOMA TUJUH PULUH LIMA RUPIAH"
+ * terbilang(0) → "NOL RUPIAH"
+ * terbilang(1234567) → "SATU JUTA DUA RATUS TIGA PULUH EMPAT RIBU LIMA RATUS ENAM PULUH TUJUH RUPIAH"
+ */
+export function terbilang(amount: number): string
+```
+
+**Capitalization:** UPPERCASE (per Q7a).
+**Suffix:** auto-append `" RUPIAH"` (per Q7b).
+**Precision:** uses `"KOMA"` format for decimals (per Q7c, e.g. `"KOMA TUJUH PULUH LIMA RUPIAH"` for `.75`).
+
+### 13.5 Status Workflow — No Change
+
+Status transitions DRAFT → ISSUED → PAID → VOID remain unchanged. **5 signature slots on print are template-only; no approval tracking per role per Q5=A.**
+
+### 13.6 Print Layout — Full Rewrite
+
+`PrintPaymentFormModal.tsx` rewritten to match physical form layout:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    请款单 / LEMBAR TAGIHAN                       │
+│          PT. BRILLIANT JAYA WOOD INDUSTRY                        │
+│                              N° [018532]                         │
+│  年 [2026] Tahun  月 [10] Bulan  日 [22] Tanggal                 │
+├────────────────┬──────────┬──────────┬──────────┬──────────┬────┤
+│ 项目 kategori  │ 内容     │ 单价     │ 数量     │ 金额          │
+│                │ konten   │ Harga sat│ jumlah   │ total         │
+│                │ 劲贷理由 │ (rupiah) │          │ (rupiah)      │
+│                │ Tujuan   │          │          │               │
+├────────────────┼──────────┼──────────┼──────────┼──────────┼────┤
+│ [kategori]     │ [konten] │ [harga]  │ [jumlah  │ [total]       │
+│                │ [tujuan] │          │  unit]   │               │
+│ ...            │ ...      │ ...      │ ...      │ ...           │
+├────────────────┴──────────┴──────────┴──────────┴──────────┴────┤
+│ 金额大写 / terbilang: [TERBILANG UPPERCASE RUPIAH]              │
+│ 备注 / ket: [notes]                                              │
+├────────────────┬──────────────┬──────────┬──────────┬──────────┤
+│ 总经理         │ 资金         │ 财务     │ 部门     │ 经办人   │
+│ manager umum   │ finance      │ kepala   │ kepala   │ pembuat  │
+│                │              │ akuntan  │ dep.     │          │
+│ _____________  │ ___________  │ _______  │ _______  │ _______  │
+└────────────────┴──────────────┴──────────┴──────────┴──────────┘
+```
+
+**Signature slots:** underscore lines only; no name/timestamp populated by system (per Q5=A).
+
+### 13.7 Verification Checklist Addendum (Section 12.X)
+
+Append to Section 12:
+
+```bash
+# 12.10 Lembar Tagihan Refactor Compliance
+
+# AppSettings has companyName
+grep -c "companyName" src/types/index.ts
+# EXPECT: >= 1
+
+# PaymentForm has preprintedNumber + issueDate + terbilang + lines
+grep -cE "preprintedNumber|issueDate|terbilang:" src/types/index.ts
+# EXPECT: >= 3
+
+# LineItemUnit enum defined
+grep -c "export type LineItemUnit" src/types/index.ts
+# EXPECT: 1
+
+# PaymentFormLineItem has 6 physical form columns
+grep -cE "kategori:|konten:|tujuan:|hargaSatuanIDR:|jumlah:|unit:" src/types/index.ts
+# EXPECT: >= 6
+
+# Terbilang helper exists
+grep -c "export function terbilang" src/utils/terbilang.ts
+# EXPECT: 1
+
+ls test/terbilang.test.ts
+# EXPECT: file exists
+
+# Print modal uses company name from settings (not hardcoded)
+grep -c "companyName" src/components/payment-forms/PrintPaymentFormModal.tsx
+# EXPECT: >= 1
+
+# Pre-printed number is user input, not auto-generated
+grep -c "preprintedNumber" src/components/payment-forms/
+# EXPECT: >= 2 (input field + display)
 ```

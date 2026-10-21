@@ -98,7 +98,7 @@ export function PaymentFormTable({ forms, onPrint }: PaymentFormTableProps) {
                     href={`/payment-forms/${form.id}`}
                     className="hover:text-blue-600 hover:underline"
                   >
-                    {form.formNumber}
+                    {form.preprintedNumber ? `N° ${form.preprintedNumber}` : 'DRAFT'}
                   </Link>
                 </td>
                 <td className="p-3 text-gray-600 whitespace-nowrap text-[11px]">
@@ -118,7 +118,7 @@ export function PaymentFormTable({ forms, onPrint }: PaymentFormTableProps) {
                   <span className="text-gray-400 block text-[10px]">({form.totalTallyPieces} btg)</span>
                 </td>
                 <td className="p-3 text-right font-mono font-bold text-gray-950 whitespace-nowrap">
-                  {formatRupiah(form.totalTimberNetIDR)}
+                  {formatRupiah(form.totalAmountIDR || form.totalTimberNetIDR)}
                 </td>
                 <td className="p-3 text-center whitespace-nowrap">
                   {renderStatusBadge(form.status)}

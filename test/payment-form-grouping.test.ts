@@ -161,5 +161,16 @@ test('Payment Form Grouping Engine Suite', async (t) => {
     assert.equal(totals.totalTimberGrossIDR, 17000000);
     assert.equal(totals.totalTimberPphIDR, 42500);
     assert.equal(totals.totalTimberNetIDR, 16957500);
+    assert.equal(totals.totalAmountIDR, 16957500);
+    assert.equal(totals.terbilang, 'ENAM BELAS JUTA SEMBILAN RATUS LIMA PULUH TUJUH RIBU LIMA RATUS RUPIAH');
+
+    const firstLine = group.lines[0];
+    assert.equal(firstLine.kategori, 'Pembelian Kayu');
+    assert.equal(firstLine.konten, 'DKP-001 - Jati');
+    assert.equal(firstLine.tujuan, 'PT Rimba Jaya');
+    assert.equal(firstLine.hargaSatuanIDR, 2000000);
+    assert.equal(firstLine.jumlah, 5.0);
+    assert.equal(firstLine.unit, 'm³');
+    assert.equal(firstLine.totalIDR, 9975000);
   });
 });

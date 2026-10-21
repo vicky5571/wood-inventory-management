@@ -4,9 +4,9 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-21 (ADR + CHANGELOG added)
-**Last Session By:** AI pair-programming session (anti-drift infrastructure setup)
-**Branch:** main (verify current via `git branch --show-current`)
+**Last Updated:** 2026-10-22 (Lembar Tagihan Refactor complete)
+**Last Session By:** AI pair-programming session (Lembar Tagihan physical form refactor)
+**Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
 
@@ -22,7 +22,7 @@
 
 ## ✅ Completed Modules (Shipped & Verified)
 
-All 7 client feedback items from October 2026 have been implemented, tested, and merged.
+All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor have been implemented, tested, and verified.
 
 | # | Module | Spec | Plan | Status |
 |---|---|---|---|---|
@@ -32,24 +32,32 @@ All 7 client feedback items from October 2026 have been implemented, tested, and
 | 4 | Broker Master Data | `2026-10-21-broker-master-data-design.md` | `2026-10-21-broker-master-data.md` | ✅ Merged |
 | 5 | Pending Pricing Workflow | `2026-10-21-pending-pricing-workflow-design.md` | `2026-10-21-pending-pricing-workflow.md` | ✅ Merged |
 | 6 | Weekly Payment Form | `2026-10-21-weekly-payment-form-design.md` | `2026-10-21-weekly-payment-form.md` | ✅ Merged |
+| 6b | Lembar Tagihan Refactor | `2026-10-21-weekly-payment-form-design.md` (Sec 13) | `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` | ✅ Completed |
 | 7 | Production + Sorting | `2026-10-21-production-and-sorting-design.md` | `2026-10-21-production-and-sorting.md` | ✅ Merged |
 
-**Verification evidence (as of 2026-10-21):**
-- `npm test` → 741 passed, 0 failed
-- `npm run build:check` → 0 errors
-- `npm run drift:check` → ✅ No new drift (84 pre-existing violations grandfathered)
+**Verification evidence (as of 2026-10-22):**
+- `npm test` → 748 passed, 0 failed
+- `npm run build:check` → 0 errors (Next.js production build clean)
+- `npm run drift:check` → ✅ No new drift (25 pre-existing violations grandfathered, down from 84)
 
 ---
 
 ## 🚧 In Progress
 
-**None currently.** All planned work is complete.
+None. All 11 phases of `2026-10-22-refactor-payment-form-to-lembar-tagihan.md` are complete and verified.
 
 ### Recently Completed (This Session)
 
-- ✅ Anti-drift infrastructure (`AGENTS.md` enhancement, `scripts/drift-check.ts`, `docs/SESSION_STATE.md`)
-- ✅ ADR directory with template + 5 initial ADRs (0001-0005)
-- ✅ `CHANGELOG.md` retrospective covering all shipped work
+- ✅ **Lembar Tagihan Refactor**:
+  - SSOT entity updates in `src/types/index.ts` (`preprintedNumber`, `issueDate`, `totalAmountIDR`, `terbilang`, `lines[]`, `companyName`, `LineItemUnit`).
+  - Zero-dependency Indonesian amount-in-words helper (`src/utils/terbilang.ts` + 11 unit tests in `test/terbilang.test.ts`).
+  - SQLite & Supabase migration for new columns and `payment_form_lines` child table.
+  - Interactive 6-column `LineItemEditor.tsx` for DRAFT editing.
+  - Subcomponent `PaymentFormMetaEditor.tsx` keeping coordinator `< 250 LOC`.
+  - Read-only 6-column `PaymentFormLinesTable.tsx` for ISSUED/PAID forms.
+  - Rewritten bilingual A4 portrait print layout with 5 template-only blank signatures (`PrintPaymentFormModal.tsx`).
+  - Settings UI field for `companyName` with non-empty/max 100 validation in `app/settings/page.tsx`.
+  - Automated tests updated: 748/748 passing with 0 failures.
 - ✅ Spec Verification Checklist appended to all 7 feature specs
 - ✅ **Debt Cleanup Round 1**:
   - ✅ 15 retrospective specs for historical plans — `MISSING_SPEC` baseline count 15 → 0
@@ -168,6 +176,6 @@ git status && git log --oneline -5
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 741+ passed, 0 failed
+- `npm test` → 748 passed, 0 failed
 - `npm run build:check` → 0 errors
-- `npm run drift:check` → ✅ No new drift
+- `npm run drift:check` → ✅ No new drift (25 pre-existing violations grandfathered, down from 84)

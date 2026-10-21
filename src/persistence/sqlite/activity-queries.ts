@@ -2,6 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { ActivityLogEntry, ActivityActionType, AppSettings } from '../../types/index.ts';
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
+  companyName: 'PT. BRILLIANT JAYA WOOD INDUSTRY',
   defaultTimberPphRate: 0.5,
   defaultFreightPphRate: 2.0,
   defaultBrokerFee: 250000,
@@ -26,6 +27,7 @@ interface SqliteActivityLogRow {
 
 interface SqliteAppSettingsRow {
   tenant_id: string;
+  company_name?: string | null;
   default_timber_pph_rate: number;
   default_freight_pph_rate: number;
   default_broker_fee: number;
@@ -146,6 +148,7 @@ export function getSettingsFromDb(db: DatabaseSync): AppSettings {
   const alarmVolumeM3 = row.discrepancy_alarm_volume_m3 != null ? Number(row.discrepancy_alarm_volume_m3) : 1.5;
 
   return {
+    companyName: row.company_name ? String(row.company_name) : DEFAULT_APP_SETTINGS.companyName,
     defaultTimberPphRate: Number(row.default_timber_pph_rate),
     defaultFreightPphRate: Number(row.default_freight_pph_rate),
     defaultBrokerFee: Number(row.default_broker_fee),
@@ -160,6 +163,7 @@ export function getSettingsFromDb(db: DatabaseSync): AppSettings {
 export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>): AppSettings {
   const current = getSettingsFromDb(db);
   const updated: AppSettings = {
+    companyName: patch.companyName?.trim() || current.companyName,
     defaultTimberPphRate: patch.defaultTimberPphRate ?? current.defaultTimberPphRate,
     defaultFreightPphRate: patch.defaultFreightPphRate ?? current.defaultFreightPphRate,
     defaultBrokerFee: patch.defaultBrokerFee ?? current.defaultBrokerFee,
@@ -172,6 +176,7 @@ export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>):
 
   db.prepare(`
     UPDATE app_settings SET
+      company_name = ?,
       default_timber_pph_rate = ?,
       default_freight_pph_rate = ?,
       default_broker_fee = ?,
@@ -183,6 +188,7 @@ export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>):
       updated_at = datetime('now')
     WHERE tenant_id = 'default-tenant'
   `).run(
+    updated.companyName,
     updated.defaultTimberPphRate,
     updated.defaultFreightPphRate,
     updated.defaultBrokerFee,

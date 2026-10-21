@@ -29,8 +29,37 @@ export async function GET(
     }
 
     return NextResponse.json({ success: true, data: formWithLines });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+    const { id } = await params;
+    const body = await request.json();
+
+    const existing = await paymentFormStore.getById(id);
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Form pembayaran tidak ditemukan' }, { status: 404 });
+    }
+    if (existing.status !== 'DRAFT') {
+      return NextResponse.json({ success: false, error: 'Hanya form DRAFT yang dapat diedit' }, { status: 400 });
+    }
+
+    const updated = await paymentFormStore.update(id, body);
+    return NextResponse.json({ success: true, data: updated });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -58,14 +87,15 @@ export async function DELETE(
     await serverRecordStore.appendActivityLog({
       action: 'PAYMENT_FORM_VOIDED',
       entityId: id,
-      entitySummary: `Form Pembayaran dibatalkan (VOID): ${existing.formNumber}`,
+      entitySummary: `Form Pembayaran dibatalkan (VOID): ${existing.preprintedNumber || existing.id}`,
       operatorName: user.name,
       operatorRole: user.title || `Level ${user.roleLevel}`,
-      metadata: { formId: id, formNumber: existing.formNumber },
+      metadata: { formId: id, preprintedNumber: existing.preprintedNumber },
     });
 
     return NextResponse.json({ success: true, data: voided });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

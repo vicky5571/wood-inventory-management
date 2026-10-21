@@ -3,8 +3,8 @@
 /**
  * src/hooks/usePaymentForms.ts
  *
- * Client React hook managing Weekly Payment Forms lifecycle, filtering,
- * optimistic updates, and generation workflows.
+ * Client React hook managing Weekly Payment Forms (Lembar Tagihan) lifecycle,
+ * filtering, optimistic updates, and editing workflows.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -50,8 +50,9 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
       if (json.success && Array.isArray(json.data)) {
         setForms(json.data);
       }
-    } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +74,9 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
         return json.data;
       }
       return null;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal memuat form';
+      setError(msg);
       return null;
     } finally {
       setIsLoading(false);
@@ -106,12 +108,39 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
         toast.success('Generate Form Pembayaran Selesai (付款单生成成功)', toastMsg);
 
         return result;
-      } catch (err: any) {
-        setError(err.message);
-        toast.error('Gagal Generate Form', err.message);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Gagal generate form';
+        setError(msg);
+        toast.error('Gagal Generate Form', msg);
         throw err;
       } finally {
         setIsGenerating(false);
+      }
+    },
+    [refreshForms]
+  );
+
+  const updateForm = useCallback(
+    async (id: string, updates: Partial<PaymentForm>): Promise<PaymentFormWithLines> => {
+      try {
+        const res = await fetch(`/api/payment-forms/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Gagal menyimpan perubahan form');
+        }
+        const updated: PaymentFormWithLines = json.data;
+        setActiveForm(updated);
+        await refreshForms();
+        toast.success('Perubahan Disimpan (已保存)', 'Rincian form berhasil diperbarui');
+        return updated;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Gagal menyimpan form';
+        toast.error('Gagal Menyimpan Form', msg);
+        throw err;
       }
     },
     [refreshForms]
@@ -121,10 +150,9 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
     async (
       id: string,
       status: PaymentFormStatus,
-      data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string }
+      data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; preprintedNumber?: string; issueDate?: string }
     ): Promise<PaymentFormWithLines> => {
       const previousForms = forms;
-      // Optimistic update in forms list
       setForms((prev) => prev.map((f) => (f.id === id ? { ...f, status, ...data, updatedAt: new Date().toISOString() } : f)));
       if (activeForm && activeForm.id === id) {
         setActiveForm({ ...activeForm, status, ...data, updatedAt: new Date().toISOString() });
@@ -145,11 +173,12 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
         setActiveForm(updated);
         await refreshForms();
 
-        toast.success('Status Berhasil Diperbarui (状态已更新)', `Form ${updated.formNumber} -> ${status}`);
+        toast.success('Status Berhasil Diperbarui (状态已更新)', `Form ${updated.preprintedNumber || updated.id} -> ${status}`);
         return updated;
-      } catch (err: any) {
+      } catch (err: unknown) {
         setForms(previousForms);
-        toast.error('Gagal Mengubah Status', err.message);
+        const msg = err instanceof Error ? err.message : 'Gagal mengubah status';
+        toast.error('Gagal Mengubah Status', msg);
         throw err;
       }
     },
@@ -161,6 +190,20 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
       return updateStatus(id, 'VOID', { notes });
     },
     [updateStatus]
+  );
+
+  const setPreprintedNumber = useCallback(
+    async (id: string, preprintedNumber: string): Promise<PaymentFormWithLines> => {
+      return updateForm(id, { preprintedNumber });
+    },
+    [updateForm]
+  );
+
+  const setIssueDate = useCallback(
+    async (id: string, issueDate: string): Promise<PaymentFormWithLines> => {
+      return updateForm(id, { issueDate });
+    },
+    [updateForm]
   );
 
   const kpis = useMemo(() => {
@@ -175,7 +218,7 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
       if (f.status === 'DRAFT') draftCount++;
       else if (f.status === 'ISSUED') {
         issuedCount++;
-        totalOutstandingAP += f.totalTimberNetIDR;
+        totalOutstandingAP += f.totalAmountIDR || f.totalTimberNetIDR;
       } else if (f.status === 'PAID') paidCount++;
       else if (f.status === 'VOID') voidCount++;
 
@@ -208,6 +251,9 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
     refreshForms,
     loadFormById,
     generateWeeklyForms,
+    updateForm,
+    setPreprintedNumber,
+    setIssueDate,
     updateStatus,
     voidForm,
     kpis,

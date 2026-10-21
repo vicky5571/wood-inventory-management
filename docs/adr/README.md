@@ -46,3 +46,5 @@ Use `template.md` as the starting point for every new ADR.
 | 0003 | Loose String-Match Linkage for Contract-Record Association | Accepted |
 | 0004 | Broker as Separate Entity (Not Supplier Subtype) | Accepted |
 | 0005 | Free-Text Autocomplete Over Master Catalog for Production Products | Accepted |
+| 0006 | Pre-printed Form Number — Manual User Input (Not Auto-Generated) | Accepted |
+| 0007 | Terbilang (Amount-in-Words) — Zero-Dependency Internal Implementation | Accepted |

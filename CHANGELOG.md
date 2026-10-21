@@ -27,7 +27,25 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 
 ### Changed
 - **`scripts/drift-check.ts`** — added exemption for plans with prefix `refactor-`, `cleanup-`, or `chore-` (single-file hygiene work does not require spec pairing).
-- **Baseline** — reduced from 84 → 68 violations via retrospective spec creation.
+- **Baseline** — reduced from 84 → 25 violations via retrospective spec creation, SSOT cleanup, and eliminating `any` in persistence modules.
+- **Payment Form → Lembar Tagihan Refactor** — aligned PaymentForm entity, UI, and print layout to match physical form `LEMBAR TAGIHAN / 请款单` from PT. Brilliant Jaya Wood Industry:
+  - Renamed `formNumber` → `preprintedNumber` (user-input manual, no auto-generation per ADR-0006).
+  - Added `issueDate`, `terbilang`, `totalAmountIDR`, `lines[]`, `notes` fields.
+  - Line items restructured to 6-column physical table (`kategori`, `konten`, `tujuan`, `hargaSatuanIDR`, `jumlah`, `unit`, `totalIDR`).
+  - Added `LineItemUnit` enum (`'m³' | 'batang' | 'rit' | 'lain-lain'`).
+  - Added `AppSettings.companyName` (editable from `/settings`, default: "PT. BRILLIANT JAYA WOOD INDUSTRY").
+  - Created zero-dependency pure Indonesian amount-in-words helper `src/utils/terbilang.ts` with 11 comprehensive unit tests (`test/terbilang.test.ts`).
+  - Created `src/components/payment-forms/LineItemEditor.tsx` interactive 6-column editor for DRAFT forms.
+  - Created `src/components/payment-forms/PaymentFormMetaEditor.tsx` subcomponent.
+  - Updated `src/components/payment-forms/PaymentFormLinesTable.tsx` for read-only 6-column presentation of issued/paid forms.
+  - Rewrote `src/components/payment-forms/PrintPaymentFormModal.tsx` to A4 portrait bilingual layout (Indonesian + Mandarin) with preprinted serial number, date breakdown, and 5 template-only blank signature slots.
+  - Updated SQLite schema migrations (`payment_form_lines`, `preprinted_number`, `issue_date`, `total_amount_idr`, `terbilang`, `company_name`) and Supabase migration `20261022000000_lembar_tagihan_refactor.sql`.
+  - Deleted obsolete `payment-form-number.ts` and `payment-form-numbering.test.ts`.
+  - Spec: `docs/superpowers/specs/2026-10-21-weekly-payment-form-design.md` Section 13
+  - Plan: `docs/superpowers/plans/2026-10-22-refactor-payment-form-to-lembar-tagihan.md`
+  - ADRs: ADR-0006, ADR-0007
+- **ADR-0006** added — Pre-printed form number manual input.
+- **ADR-0007** added — Terbilang zero-dependency implementation.
 
 ---
 

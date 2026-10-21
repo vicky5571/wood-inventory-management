@@ -785,6 +785,7 @@ export interface AppSettings {
   discrepancyAlarmPercent: number;
   yardName: string;
   yardCode: string;
+  companyName: string;
 }
 
 /**
@@ -1041,7 +1042,8 @@ export type PaymentFormStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'VOID';
 export interface PaymentForm {
   id: string;
   tenantId: string;
-  formNumber: string;                 // e.g. "PAY-2026-W42-PTA-JATI-01"
+  preprintedNumber: string;           // User-input from physical carbon book (e.g. "018532")
+  issueDate: string;                  // Single date printed on form (YYYY-MM-DD)
   weekStartDate: string;              // Saturday (YYYY-MM-DD)
   weekEndDate: string;                // Friday (YYYY-MM-DD)
 
@@ -1052,10 +1054,13 @@ export interface PaymentForm {
   contractNumber: string;             // Empty string for non-contract
 
   // Content references
+  lines: PaymentFormLineItem[];
   recordIds: string[];
   itemIds: string[];                  // For multi-item manifest items
 
-  // Snapshot totals (cached; recomputed until ISSUED)
+  // Snapshot totals
+  totalAmountIDR: number;             // Sum of line.totalIDR (print total)
+  terbilang: string;                  // Amount in words (UPPERCASE Indonesian)
   totalTallyVolumeM3: number;
   totalTallyPieces: number;
   totalTimberGrossIDR: number;
@@ -1075,25 +1080,40 @@ export interface PaymentForm {
   updatedAt: string;
 }
 
+export type LineItemUnit = 'm³' | 'batang' | 'rit' | 'lain-lain';
+
 export interface PaymentFormLineItem {
-  recordId: string;
+  id: string;                         // Stable client-side ID
+  paymentFormId: string;              // FK to parent PaymentForm
+  itemSequence: number;               // Ordering within form
+
+  // Physical form columns (6 data columns)
+  kategori: string;                   // Category (e.g. "Pembelian Kayu", "Biaya Ongkir")
+  konten: string;                     // Content (e.g. SKSHHK number + wood species)
+  tujuan: string;                     // Destination / Supplier name & address
+  hargaSatuanIDR: number;             // Unit price
+  jumlah: number;                     // Quantity
+  unit: LineItemUnit;                 // Unit
+  totalIDR: number;                   // hargaSatuanIDR * jumlah
+
+  // Optional traceability references back to source log receiving record
+  sourceRecordId?: string;
+  sourceItemId?: string;
+
+  // Backward-compatibility aliases for legacy tests and consumers
+  recordId?: string;
   itemId?: string;
-  receiptDate: string;
-  truckPlateNumber: string;
-  forestryDocNumber: string;          // SKSHHK
-  receiptNumber: string;              // Kwitansi
-  kavlingNumber: string;
-  tallyVolumeM3: number;
-  tallyPieces: number;
-  timberPricePerM3: number;           // Non-null (PENDING excluded)
-  timberGrossIDR: number;
-  timberPphIDR: number;
-  timberNetIDR: number;
+  tallyPieces?: number;
+  tallyVolumeM3?: number;
+  timberPricePerM3?: number;
+  timberGrossIDR?: number;
+  timberPphIDR?: number;
+  timberNetIDR?: number;
+
+  notes?: string;
 }
 
-export interface PaymentFormWithLines extends PaymentForm {
-  lines: PaymentFormLineItem[];
-}
+export interface PaymentFormWithLines extends PaymentForm {}
 
 export interface PaymentFormGroup {
   key: string;

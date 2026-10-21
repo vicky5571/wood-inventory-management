@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettings } from '@/src/hooks/useSettings';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useActivityLog } from '@/src/hooks/useActivityLog';
+import { toast } from '@/src/utils/toast-store';
 import { SpeciesSettings } from '@/src/components/settings/SpeciesSettings';
 import { TaxSettings } from '@/src/components/settings/TaxSettings';
 import { StorageSettings } from '@/src/components/settings/StorageSettings';
@@ -13,7 +14,8 @@ import {
   Percent,
   Warehouse,
   ShieldCheck,
-  User,
+  Building2,
+  Save,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -21,6 +23,14 @@ export default function SettingsPage() {
   const { user, canWrite } = useAuth();
   const { addLog } = useActivityLog();
   const [activeTab, setActiveTab] = useState<'species' | 'tax' | 'storage' | 'account'>('species');
+  const [companyName, setCompanyName] = useState(settings.companyName || 'PT. BRILLIANT JAYA WOOD INDUSTRY');
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settings.companyName) {
+      setCompanyName(settings.companyName);
+    }
+  }, [settings.companyName]);
 
   const handleSaveTax = (updated: Parameters<typeof saveSettings>[0]) => {
     saveSettings(updated);
@@ -30,6 +40,28 @@ export default function SettingsPage() {
       operatorName: user?.name,
       operatorRole: user?.title,
     });
+  };
+
+  const handleSaveCompany = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = companyName.trim();
+    if (!trimmed) {
+      setCompanyError('Nama perusahaan tidak boleh kosong');
+      return;
+    }
+    if (trimmed.length > 100) {
+      setCompanyError('Nama perusahaan maksimal 100 karakter');
+      return;
+    }
+    setCompanyError(null);
+    saveSettings({ companyName: trimmed });
+    addLog({
+      action: 'SETTINGS_UPDATED',
+      entitySummary: `Nama perusahaan diperbarui menjadi: ${trimmed}`,
+      operatorName: user?.name,
+      operatorRole: user?.title,
+    });
+    toast.success('Nama Perusahaan Disimpan (公司名称已更新)', trimmed);
   };
 
   return (
@@ -42,9 +74,49 @@ export default function SettingsPage() {
             <span>Pengaturan Sistem & Master Data (系统设置与主数据)</span>
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Konfigurasi master varietas kayu, batasan pajak komoditas kehutanan, dan profil otorisasi pengguna.
+            Konfigurasi identitas perusahaan, master varietas kayu, batasan pajak komoditas kehutanan, dan profil otorisasi pengguna.
           </p>
         </div>
+      </div>
+
+      {/* Company Name Card */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs max-w-3xl">
+        <form onSubmit={handleSaveCompany} className="flex flex-col gap-3">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-amber-600" />
+              <span>Identitas Badan Usaha (企业名称)</span>
+            </h3>
+            {canWrite && (
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Simpan Nama (保存)</span>
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-700">Nama Perusahaan (公司名称)</label>
+            <input
+              type="text"
+              disabled={!canWrite}
+              maxLength={100}
+              value={companyName}
+              onChange={(e) => {
+                setCompanyName(e.target.value);
+                if (companyError) setCompanyError(null);
+              }}
+              placeholder="Contoh: PT. BRILLIANT JAYA WOOD INDUSTRY"
+              className="text-xs font-bold uppercase tracking-wide border border-gray-200 rounded-xl px-3 py-2 text-gray-900 bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition disabled:opacity-60"
+            />
+            {companyError && <p className="text-xs text-rose-600 font-medium">{companyError}</p>}
+            <p className="text-[11px] text-gray-500">
+              Nama perusahaan ini akan tercetak di header Lembar Tagihan dan dokumen lain.
+            </p>
+          </div>
+        </form>
       </div>
 
       {/* Tabs Selector */}

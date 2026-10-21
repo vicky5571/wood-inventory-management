@@ -74,7 +74,7 @@ export function PaymentFormHeaderCard({
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl font-bold font-mono text-gray-950 tracking-tight">
-                {form.formNumber}
+                {form.preprintedNumber ? `N° ${form.preprintedNumber}` : 'DRAFT (Belum Ada No. Seri)'}
               </h1>
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badge.bg} ${badge.text} ${badge.border}`}

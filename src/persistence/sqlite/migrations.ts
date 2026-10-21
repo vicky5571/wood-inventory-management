@@ -151,6 +151,7 @@ export function runMigrations(db: DatabaseSync): void {
       discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0),
       yard_name TEXT NOT NULL DEFAULT 'TPK-01 Utama (Central Yard)',
       yard_code TEXT NOT NULL DEFAULT 'TPK-01',
+      company_name TEXT NOT NULL DEFAULT 'PT. BRILLIANT JAYA WOOD INDUSTRY',
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -174,6 +175,9 @@ export function runMigrations(db: DatabaseSync): void {
   } catch {}
   try {
     db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0);`);
+  } catch {}
+  try {
+    db.exec(`ALTER TABLE app_settings ADD COLUMN company_name TEXT NOT NULL DEFAULT 'PT. BRILLIANT JAYA WOOD INDUSTRY';`);
   } catch {}
 
   try {

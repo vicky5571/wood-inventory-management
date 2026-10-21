@@ -1,8 +1,60 @@
 import { supabaseFetch } from './supabase-client.ts';
 import type { Supplier, WoodSpecies, AppSettings, ActivityLogEntry, ActivityActionType } from '../../types/index.ts';
 
+interface SupabaseSupplierRow {
+  id: string;
+  code: string;
+  name: string;
+  contact_person?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  tax_id_npwp?: string | null;
+  is_active: boolean;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface SupabaseSpeciesRow {
+  id: string;
+  code: string;
+  common_name: string;
+  botanical_name?: string | null;
+  density_kg_m3?: number | null;
+  is_hardwood?: boolean | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface SupabaseAppSettingsRow {
+  tenant_id: string;
+  company_name?: string | null;
+  default_timber_pph_rate: number;
+  default_freight_pph_rate: number;
+  default_broker_fee: number;
+  acceptable_discrepancy_threshold_pct?: number | null;
+  discrepancy_alarm_volume_m3?: number | null;
+  discrepancy_alarm_percent?: number | null;
+  yard_name: string;
+  yard_code: string;
+  updated_at?: string;
+}
+
+interface SupabaseActivityLogRow {
+  id: string;
+  tenant_id: string;
+  action: string;
+  entity_id?: string | null;
+  entity_summary: string;
+  operator_name: string;
+  operator_role: string;
+  metadata_json?: string | null;
+  timestamp: string;
+}
+
 export async function fetchSupabaseSuppliers(): Promise<Supplier[]> {
-  const rows = await supabaseFetch<any[]>('/suppliers?select=*&order=name.asc');
+  const rows = await supabaseFetch<SupabaseSupplierRow[]>('/suppliers?select=*&order=name.asc');
   return rows.map((r) => ({
     id: r.id,
     code: r.code,
@@ -35,7 +87,7 @@ export async function saveSupabaseSupplier(data: Partial<Supplier> & { name: str
     updated_at: now,
   };
 
-  const res = await supabaseFetch<any[]>('/suppliers', {
+  const res = await supabaseFetch<SupabaseSupplierRow[]>('/suppliers', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=representation',
     body: JSON.stringify(payload),
@@ -64,7 +116,7 @@ export async function deleteSupabaseSupplier(id: string): Promise<boolean> {
 }
 
 export async function fetchSupabaseSpecies(): Promise<WoodSpecies[]> {
-  const rows = await supabaseFetch<any[]>('/wood_species?select=*&order=common_name.asc');
+  const rows = await supabaseFetch<SupabaseSpeciesRow[]>('/wood_species?select=*&order=common_name.asc');
   return rows.map((r) => ({
     id: r.id,
     code: r.code,
@@ -95,7 +147,7 @@ export async function saveSupabaseSpecies(
     updated_at: now,
   };
 
-  const res = await supabaseFetch<any[]>('/wood_species', {
+  const res = await supabaseFetch<SupabaseSpeciesRow[]>('/wood_species', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=representation',
     body: JSON.stringify(payload),
@@ -115,9 +167,10 @@ export async function saveSupabaseSpecies(
 }
 
 export async function fetchSupabaseSettings(): Promise<AppSettings> {
-  const rows = await supabaseFetch<any[]>('/app_settings?tenant_id=eq.default-tenant&select=*&limit=1');
+  const rows = await supabaseFetch<SupabaseAppSettingsRow[]>('/app_settings?tenant_id=eq.default-tenant&select=*&limit=1');
   if (rows.length === 0) {
     return {
+      companyName: 'PT. BRILLIANT JAYA WOOD INDUSTRY',
       defaultTimberPphRate: 0.5,
       defaultFreightPphRate: 2.0,
       defaultBrokerFee: 250000,
@@ -134,6 +187,7 @@ export async function fetchSupabaseSettings(): Promise<AppSettings> {
   const alarmVolumeM3 = r.discrepancy_alarm_volume_m3 != null ? Number(r.discrepancy_alarm_volume_m3) : 1.5;
 
   return {
+    companyName: r.company_name ? String(r.company_name) : 'PT. BRILLIANT JAYA WOOD INDUSTRY',
     defaultTimberPphRate: Number(r.default_timber_pph_rate),
     defaultFreightPphRate: Number(r.default_freight_pph_rate),
     defaultBrokerFee: Number(r.default_broker_fee),
@@ -148,6 +202,7 @@ export async function fetchSupabaseSettings(): Promise<AppSettings> {
 export async function saveSupabaseSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await fetchSupabaseSettings();
   const updated: AppSettings = {
+    companyName: patch.companyName?.trim() || current.companyName,
     defaultTimberPphRate: patch.defaultTimberPphRate ?? current.defaultTimberPphRate,
     defaultFreightPphRate: patch.defaultFreightPphRate ?? current.defaultFreightPphRate,
     defaultBrokerFee: patch.defaultBrokerFee ?? current.defaultBrokerFee,
@@ -159,6 +214,7 @@ export async function saveSupabaseSettings(patch: Partial<AppSettings>): Promise
   };
   const payload = {
     tenant_id: 'default-tenant',
+    company_name: updated.companyName,
     default_timber_pph_rate: updated.defaultTimberPphRate,
     default_freight_pph_rate: updated.defaultFreightPphRate,
     default_broker_fee: updated.defaultBrokerFee,
@@ -170,7 +226,7 @@ export async function saveSupabaseSettings(patch: Partial<AppSettings>): Promise
     updated_at: new Date().toISOString(),
   };
 
-  await supabaseFetch<any[]>('/app_settings', {
+  await supabaseFetch<SupabaseAppSettingsRow[]>('/app_settings', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=representation',
     body: JSON.stringify(payload),
@@ -183,7 +239,7 @@ export async function fetchSupabaseActivityLogs(actionFilter?: string, limit: nu
   if (actionFilter && actionFilter.trim()) {
     url += `&action=eq.${encodeURIComponent(actionFilter.trim())}`;
   }
-  const rows = await supabaseFetch<any[]>(url);
+  const rows = await supabaseFetch<SupabaseActivityLogRow[]>(url);
   return rows.map((r) => ({
     id: r.id,
     action: r.action as ActivityActionType,
@@ -213,7 +269,7 @@ export async function appendSupabaseActivityLog(
     timestamp,
   };
 
-  await supabaseFetch<any[]>('/activity_logs', {
+  await supabaseFetch<SupabaseActivityLogRow[]>('/activity_logs', {
     method: 'POST',
     prefer: 'return=minimal',
     body: JSON.stringify(payload),

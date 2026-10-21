@@ -6,6 +6,7 @@ import type { AppSettings } from '../types/index.ts';
 const STORAGE_KEY = 'wood_app_settings_v1';
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  companyName: 'PT. BRILLIANT JAYA WOOD INDUSTRY',
   defaultTimberPphRate: 0.5,
   defaultFreightPphRate: 2.0,
   defaultBrokerFee: 250000,
@@ -25,6 +26,12 @@ export function normalizeSettings(data: unknown): AppSettings {
     ...DEFAULT_SETTINGS,
     ...parsed,
   };
+
+  if (typeof parsed.companyName === 'string' && parsed.companyName.trim()) {
+    merged.companyName = parsed.companyName.trim();
+  } else {
+    merged.companyName = DEFAULT_SETTINGS.companyName;
+  }
 
   // Migration: carry old acceptableDiscrepancyThresholdPct forward if discrepancyAlarmPercent is absent
   if (typeof parsed.discrepancyAlarmPercent !== 'number' || isNaN(parsed.discrepancyAlarmPercent)) {

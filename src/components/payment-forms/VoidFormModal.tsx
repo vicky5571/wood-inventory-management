@@ -67,7 +67,7 @@ export function VoidFormModal({ isOpen, form, onClose, onConfirm }: VoidFormModa
 
         <form onSubmit={handleVoid} className="p-6">
           <p className="text-xs text-gray-600 mb-3">
-            Anda akan membatalkan form <span className="font-mono font-bold text-gray-900">{form.formNumber}</span> ({form.supplierName} - {form.woodSpecies}).
+            Anda akan membatalkan form <span className="font-mono font-bold text-gray-900">{form.preprintedNumber ? `N° ${form.preprintedNumber}` : form.id}</span> ({form.supplierName} - {form.woodSpecies}).
           </p>
 
           <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 mb-4 flex items-start gap-2.5 text-xs text-rose-900 leading-relaxed">

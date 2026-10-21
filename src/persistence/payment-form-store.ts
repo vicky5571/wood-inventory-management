@@ -1,7 +1,7 @@
 /**
  * src/persistence/payment-form-store.ts
  *
- * Unified persistence facade and generation orchestrator for Weekly Payment Forms.
+ * Unified persistence facade and generation orchestrator for Weekly Payment Forms (Lembar Tagihan).
  * Provides fallback between Supabase and local SQLite storage.
  */
 
@@ -12,6 +12,7 @@ import {
   listPaymentForms,
   getPaymentFormById,
   createPaymentForm,
+  updatePaymentForm,
   updatePaymentFormStatus,
   linkRecordsToForm,
 } from './sqlite/payment-form-queries.ts';
@@ -23,7 +24,6 @@ import {
   computeFormTotals,
   buildGroupingKey,
 } from '../utils/payment-form-grouping.ts';
-import { generateFormNumber } from '../utils/payment-form-number.ts';
 import type {
   PaymentForm,
   PaymentFormWithLines,
@@ -60,10 +60,19 @@ class PaymentFormStore {
     return createPaymentForm(db, form);
   }
 
+  public async update(
+    id: string,
+    updates: Partial<PaymentForm>,
+    tenantId: string = 'default-tenant'
+  ): Promise<PaymentFormWithLines> {
+    const db = this.getDb();
+    return updatePaymentForm(db, id, updates, tenantId);
+  }
+
   public async updateStatus(
     id: string,
     status: PaymentFormStatus,
-    data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string },
+    data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; preprintedNumber?: string; issueDate?: string },
     tenantId: string = 'default-tenant'
   ): Promise<PaymentFormWithLines> {
     const db = this.getDb();
@@ -112,9 +121,8 @@ class PaymentFormStore {
         const mergedRecordIds = Array.from(new Set([...existingDraft.recordIds, ...group.recordIds]));
         const mergedLines = (await this.getById(existingDraft.id, tenantId))?.lines || [];
 
-        // Add lines not already present
         for (const line of group.lines) {
-          if (!mergedLines.some((l) => l.recordId === line.recordId)) {
+          if (!mergedLines.some((l) => (l.sourceRecordId || (l as unknown as { recordId?: string }).recordId) === (line.sourceRecordId || (line as unknown as { recordId?: string }).recordId))) {
             mergedLines.push(line);
           }
         }
@@ -122,12 +130,15 @@ class PaymentFormStore {
         const totals = computeFormTotals(mergedLines);
         db.prepare(`
           UPDATE payment_forms SET
-            record_ids = ?, total_tally_volume_m3 = ?, total_tally_pieces = ?,
+            record_ids = ?, total_amount_idr = ?, terbilang = ?,
+            total_tally_volume_m3 = ?, total_tally_pieces = ?,
             total_timber_gross_idr = ?, total_timber_pph_idr = ?, total_timber_net_idr = ?,
             updated_at = ?
           WHERE id = ? AND tenant_id = ?
         `).run(
           JSON.stringify(mergedRecordIds),
+          totals.totalAmountIDR,
+          totals.terbilang,
           totals.totalTallyVolumeM3,
           totals.totalTallyPieces,
           totals.totalTimberGrossIDR,
@@ -142,34 +153,23 @@ class PaymentFormStore {
         updatedCount++;
         formIds.push(existingDraft.id);
       } else {
-        const existingCountForTuple = weekForms.filter(
-          (f) =>
-            f.supplierName.trim().toLowerCase() === group.supplierName.trim().toLowerCase() &&
-            f.woodSpecies.trim().toLowerCase() === group.woodSpecies.trim().toLowerCase()
-        ).length;
-
-        const sequence = existingCountForTuple + 1;
-        const formNumber = generateFormNumber({
-          weekStartDate: startDate,
-          supplierName: group.supplierName,
-          supplierCode: group.supplierId,
-          woodSpecies: group.woodSpecies,
-          sequence,
-        });
-
         const totals = computeFormTotals(group.lines);
         const newForm: PaymentForm = {
           id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           tenantId,
-          formNumber,
+          preprintedNumber: '',
+          issueDate: '',
           weekStartDate: startDate,
           weekEndDate: endDate,
           supplierName: group.supplierName,
           supplierId: group.supplierId,
           woodSpecies: group.woodSpecies,
           contractNumber: group.contractNumber,
+          lines: group.lines,
           recordIds: group.recordIds,
           itemIds: group.itemIds,
+          totalAmountIDR: totals.totalAmountIDR,
+          terbilang: totals.terbilang,
           totalTallyVolumeM3: totals.totalTallyVolumeM3,
           totalTallyPieces: totals.totalTallyPieces,
           totalTimberGrossIDR: totals.totalTimberGrossIDR,

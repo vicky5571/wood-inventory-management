@@ -3,12 +3,14 @@
 /**
  * src/components/payment-forms/PrintPaymentFormModal.tsx
  *
- * Printable A4 portrait weekly payment form document with `@media print` CSS.
- * Displays consolidated delivery line items, tax breakdowns, and 3-column signature block.
+ * Printable A4 portrait Lembar Tagihan (请款单) bilingual document matching the
+ * physical carbon copy form book. Kept strictly under 250 LOC.
  */
 
 import React, { useEffect } from 'react';
 import { Printer, X } from 'lucide-react';
+import { useSettings } from '../../hooks/useSettings.ts';
+import { terbilang } from '../../utils/terbilang.ts';
 import type { PaymentFormWithLines } from '../../types/index.ts';
 
 interface PrintPaymentFormModalProps {
@@ -16,6 +18,14 @@ interface PrintPaymentFormModalProps {
   form: PaymentFormWithLines | null;
   onClose: () => void;
 }
+
+const SIGNATURE_SLOTS = [
+  { zh: '总经理', id: 'Manager Umum' },
+  { zh: '资金', id: 'Finance' },
+  { zh: '财务负责人', id: 'Kepala Akuntan' },
+  { zh: '部门负责人', id: 'Kepala Dep.' },
+  { zh: '经办人', id: 'Pembuat' },
+];
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -25,7 +35,22 @@ function formatRupiah(num: number): string {
   }).format(num);
 }
 
+function parseDateParts(dateStr?: string) {
+  if (!dateStr) {
+    const now = new Date();
+    return {
+      year: String(now.getFullYear()),
+      month: String(now.getMonth() + 1).padStart(2, '0'),
+      day: String(now.getDate()).padStart(2, '0'),
+    };
+  }
+  const parts = dateStr.slice(0, 10).split('-');
+  return { year: parts[0] || '____', month: parts[1] || '__', day: parts[2] || '__' };
+}
+
 export function PrintPaymentFormModal({ isOpen, form, onClose }: PrintPaymentFormModalProps) {
+  const { settings } = useSettings();
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,6 +62,13 @@ export function PrintPaymentFormModal({ isOpen, form, onClose }: PrintPaymentFor
 
   if (!isOpen || !form) return null;
 
+  const companyName = settings.companyName || 'PT. BRILLIANT JAYA WOOD INDUSTRY';
+  const { year, month, day } = parseDateParts(form.issueDate);
+  const totalAmount = form.totalAmountIDR ?? form.totalTimberNetIDR ?? 0;
+  const amountInWords = form.terbilang || terbilang(totalAmount);
+  const displayLines = form.lines && form.lines.length > 0 ? form.lines : [];
+  const emptyRowsCount = Math.max(0, 5 - displayLines.length);
+
   return (
     <div
       role="dialog"
@@ -44,12 +76,13 @@ export function PrintPaymentFormModal({ isOpen, form, onClose }: PrintPaymentFor
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto"
     >
       <style>{`
+        @page { size: A4 portrait; margin: 12mm 15mm; }
         @media print {
           body * { visibility: hidden !important; }
-          #printable-payment-form, #printable-payment-form * { visibility: visible !important; }
-          #printable-payment-form {
+          #printable-lembar-tagihan, #printable-lembar-tagihan * { visibility: visible !important; }
+          #printable-lembar-tagihan {
             position: absolute !important; left: 0 !important; top: 0 !important;
-            width: 100% !important; margin: 0 !important; padding: 24px !important;
+            width: 100% !important; margin: 0 !important; padding: 0 !important;
             background: white !important; color: black !important;
             box-shadow: none !important; border: none !important;
           }
@@ -58,11 +91,10 @@ export function PrintPaymentFormModal({ isOpen, form, onClose }: PrintPaymentFor
       `}</style>
 
       <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-gray-100 rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-        {/* Top Control Bar (no-print) */}
         <div className="no-print flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Pratinjau Cetak Form</span>
-            <span className="text-xs text-gray-400">/ 打印预览</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-600">Pratinjau Lembar Tagihan</span>
+            <span className="text-xs text-gray-400">/ 请款单打印预览</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -77,134 +109,133 @@ export function PrintPaymentFormModal({ isOpen, form, onClose }: PrintPaymentFor
               type="button"
               onClick={onClose}
               className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
-              title="Tutup (关闭)"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Document Body */}
         <div className="p-6 overflow-y-auto bg-gray-100/60 flex justify-center">
           <div
-            id="printable-payment-form"
+            id="printable-lembar-tagihan"
             className="w-full bg-white border border-gray-300 p-8 text-gray-900 font-sans shadow-md text-xs leading-normal"
           >
             {/* Header */}
-            <div className="text-center pb-4 mb-4 border-b-2 border-gray-900">
-              <h2 className="text-base font-black tracking-widest text-gray-950 uppercase">
-                TIMBERGUARD / PT RIMBA MANDIRI
+            <div className="relative pb-2 mb-2 text-center">
+              <h2 className="text-base font-black tracking-widest text-gray-950">
+                请 款 单 <span className="text-sm font-bold">/ LEMBAR TAGIHAN</span>
               </h2>
-              <p className="text-sm font-bold text-gray-800 tracking-wide mt-1">
-                FORM PEMBAYARAN KAYU MINGGUAN (木材周付款结算单)
-              </p>
-              <p className="text-[10px] text-gray-500 mt-0.5">
-                Dokumen Resmi Konsolidasi & Rekapitulasi Pembayaran Penerimaan Log Pabrik
-              </p>
-            </div>
-
-            {/* Document Metadata Table */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">No. Form Pembayaran (付款单号):</span>
-                <span className="font-mono font-bold text-gray-950">{form.formNumber}</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">Periode Mingguan (结算周期):</span>
-                <span className="font-semibold text-gray-900">{form.weekStartDate} s/d {form.weekEndDate}</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">Supplier / Vendor (供应商):</span>
-                <span className="font-bold text-gray-900">{form.supplierName}</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">Jenis Kayu (树种):</span>
-                <span className="font-bold text-gray-900">{form.woodSpecies}</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">No. Kontrak (合同编号):</span>
-                <span className="font-mono text-gray-900">{form.contractNumber || 'Non-Kontrak (Spot)'}</span>
-              </div>
-              <div className="flex justify-between py-0.5 border-b border-gray-200">
-                <span className="text-gray-500">Status Pembayaran (状态):</span>
-                <span className="font-bold text-gray-900">{form.status}</span>
+              <p className="text-xs font-bold text-gray-700 tracking-wide mt-0.5 uppercase">{companyName}</p>
+              <div className="absolute right-0 top-0 text-right">
+                <span className="text-xs font-semibold text-gray-500">N° </span>
+                <span className="text-sm font-mono font-bold text-rose-700 underline decoration-rose-300">
+                  {form.preprintedNumber || '___________'}
+                </span>
               </div>
             </div>
 
-            {/* Line Items Table */}
-            <table className="w-full border-collapse border border-gray-300 text-center mb-4 text-[11px]">
+            {/* Date line */}
+            <div className="flex justify-end items-center gap-2 mb-3 text-[11px] font-medium text-gray-700">
+              <span>年</span>
+              <span className="font-mono font-bold px-1.5 border-b border-gray-400 min-w-[40px] text-center">{year}</span>
+              <span>Tahun</span>
+              <span>月</span>
+              <span className="font-mono font-bold px-1.5 border-b border-gray-400 min-w-[24px] text-center">{month}</span>
+              <span>Bulan</span>
+              <span>日</span>
+              <span className="font-mono font-bold px-1.5 border-b border-gray-400 min-w-[24px] text-center">{day}</span>
+              <span>Tanggal</span>
+            </div>
+
+            {/* Main Table */}
+            <table className="w-full border-collapse border border-gray-800 text-left mb-2 text-[11px]">
               <thead>
-                <tr className="bg-gray-100 text-gray-800 font-bold">
-                  <th className="border border-gray-300 p-1.5">No</th>
-                  <th className="border border-gray-300 p-1.5">Tgl Masuk</th>
-                  <th className="border border-gray-300 p-1.5">No. Polisi</th>
-                  <th className="border border-gray-300 p-1.5">SKSHHK</th>
-                  <th className="border border-gray-300 p-1.5">No. Kwitansi</th>
-                  <th className="border border-gray-300 p-1.5">Kav</th>
-                  <th className="border border-gray-300 p-1.5 font-mono">Btg</th>
-                  <th className="border border-gray-300 p-1.5 font-mono">Vol m³</th>
-                  <th className="border border-gray-300 p-1.5 font-mono text-right">Harga / m³</th>
-                  <th className="border border-gray-300 p-1.5 font-mono text-right">Gross (Rp)</th>
-                  <th className="border border-gray-300 p-1.5 font-mono text-right">PPh (Rp)</th>
-                  <th className="border border-gray-300 p-1.5 font-mono text-right">Net (Rp)</th>
+                <tr className="bg-gray-100 text-gray-900 font-bold text-center border-b border-gray-800">
+                  <th className="border border-gray-800 p-1.5 w-[18%]">
+                    <div>项目</div>
+                    <div className="text-[10px] font-normal text-gray-600">Kategori</div>
+                  </th>
+                  <th className="border border-gray-800 p-1.5 w-[38%]">
+                    <div>内容 / 劲贷理由</div>
+                    <div className="text-[10px] font-normal text-gray-600">Konten / Tujuan</div>
+                  </th>
+                  <th className="border border-gray-800 p-1.5 w-[16%] text-right">
+                    <div>单价 (印尼盾)</div>
+                    <div className="text-[10px] font-normal text-gray-600">Harga Satuan (Rp)</div>
+                  </th>
+                  <th className="border border-gray-800 p-1.5 w-[12%] text-center">
+                    <div>数量</div>
+                    <div className="text-[10px] font-normal text-gray-600">Jumlah</div>
+                  </th>
+                  <th className="border border-gray-800 p-1.5 w-[16%] text-right">
+                    <div>金额 (印尼盾)</div>
+                    <div className="text-[10px] font-normal text-gray-600">Total (Rp)</div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {form.lines.map((line, idx) => (
-                  <tr key={`${line.recordId}-${idx}`} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 p-1">{idx + 1}</td>
-                    <td className="border border-gray-300 p-1 whitespace-nowrap">{line.receiptDate}</td>
-                    <td className="border border-gray-300 p-1 font-mono font-medium">{line.truckPlateNumber}</td>
-                    <td className="border border-gray-300 p-1 font-mono">{line.forestryDocNumber}</td>
-                    <td className="border border-gray-300 p-1 font-mono">{line.receiptNumber}</td>
-                    <td className="border border-gray-300 p-1">{line.kavlingNumber}</td>
-                    <td className="border border-gray-300 p-1 font-mono">{line.tallyPieces}</td>
-                    <td className="border border-gray-300 p-1 font-mono font-bold">{line.tallyVolumeM3.toFixed(2)}</td>
-                    <td className="border border-gray-300 p-1 font-mono text-right">{formatRupiah(line.timberPricePerM3)}</td>
-                    <td className="border border-gray-300 p-1 font-mono text-right">{formatRupiah(line.timberGrossIDR)}</td>
-                    <td className="border border-gray-300 p-1 font-mono text-right text-gray-600">({formatRupiah(line.timberPphIDR)})</td>
-                    <td className="border border-gray-300 p-1 font-mono font-bold text-right text-gray-950">{formatRupiah(line.timberNetIDR)}</td>
+                {displayLines.map((line, idx) => (
+                  <tr key={line.id || idx} className="border-b border-gray-400">
+                    <td className="border-r border-gray-800 p-1.5 font-medium align-top">{line.kategori}</td>
+                    <td className="border-r border-gray-800 p-1.5 align-top">
+                      <div className="font-semibold text-gray-900">{line.konten}</div>
+                      {line.tujuan && <div className="text-[10px] text-gray-600 italic mt-0.5">Tujuan: {line.tujuan}</div>}
+                    </td>
+                    <td className="border-r border-gray-800 p-1.5 font-mono text-right align-top">
+                      {formatRupiah(line.hargaSatuanIDR)}
+                    </td>
+                    <td className="border-r border-gray-800 p-1.5 font-mono text-center align-top whitespace-nowrap">
+                      {line.jumlah} <span className="text-[10px] text-gray-600">{line.unit}</span>
+                    </td>
+                    <td className="p-1.5 font-mono font-bold text-right align-top">{formatRupiah(line.totalIDR)}</td>
+                  </tr>
+                ))}
+                {Array.from({ length: emptyRowsCount }).map((_, i) => (
+                  <tr key={`empty-${i}`} className="border-b border-gray-300 h-8">
+                    <td className="border-r border-gray-800 p-1.5">&nbsp;</td>
+                    <td className="border-r border-gray-800 p-1.5">&nbsp;</td>
+                    <td className="border-r border-gray-800 p-1.5">&nbsp;</td>
+                    <td className="border-r border-gray-800 p-1.5">&nbsp;</td>
+                    <td className="p-1.5">&nbsp;</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-gray-100 font-bold border-t-2 border-gray-400">
-                  <td colSpan={6} className="border border-gray-300 p-2 text-right uppercase">
-                    Total Rekapitulasi:
+                <tr className="border-t-2 border-gray-800 font-bold bg-gray-50">
+                  <td colSpan={4} className="border-r border-gray-800 p-2 text-right uppercase tracking-wider text-xs">
+                    合计 Total:
                   </td>
-                  <td className="border border-gray-300 p-2 font-mono">{form.totalTallyPieces}</td>
-                  <td className="border border-gray-300 p-2 font-mono font-black">{form.totalTallyVolumeM3.toFixed(2)}</td>
-                  <td className="border border-gray-300 p-2"></td>
-                  <td className="border border-gray-300 p-2 font-mono text-right">{formatRupiah(form.totalTimberGrossIDR)}</td>
-                  <td className="border border-gray-300 p-2 font-mono text-right text-gray-700">({formatRupiah(form.totalTimberPphIDR)})</td>
-                  <td className="border border-gray-300 p-2 font-mono font-black text-right text-gray-950 text-sm bg-amber-100/60">
-                    {formatRupiah(form.totalTimberNetIDR)}
+                  <td className="p-2 font-mono font-black text-right text-xs text-gray-950">
+                    {formatRupiah(totalAmount)}
                   </td>
                 </tr>
               </tfoot>
             </table>
 
-            {/* 3-Column Signature Blocks */}
-            <div className="pt-6 mt-6 border-t border-gray-300">
-              <div className="grid grid-cols-3 gap-6 text-center">
-                <div className="flex flex-col items-center">
-                  <p className="font-bold text-gray-800">Penerima / Supplier (领款人)</p>
-                  <p className="text-[10px] text-gray-500">Penyedia Bahan Baku Kayu</p>
-                  <div className="h-16 w-36 border-b border-dashed border-gray-400 mt-2" />
-                  <p className="text-[10px] text-gray-400 mt-1">(Nama Terang & Tanda Tangan)</p>
-                </div>
-                <div className="flex flex-col items-center">
-                  <p className="font-bold text-gray-800">Bendahara / Keuangan (财务审核)</p>
-                  <p className="text-[10px] text-gray-500">Bagian Verifikasi Pembayaran</p>
-                  <div className="h-16 w-36 border-b border-dashed border-gray-400 mt-2" />
-                  <p className="text-[10px] text-gray-400 mt-1">(Kasir / Finance)</p>
-                </div>
-                <div className="flex flex-col items-center">
-                  <p className="font-bold text-gray-800">Mengetahui / Pimpinan (总经理)</p>
-                  <p className="text-[10px] text-gray-500">Manajemen / Factory Manager</p>
-                  <div className="h-16 w-36 border-b border-dashed border-gray-400 mt-2" />
-                  <p className="text-[10px] text-gray-400 mt-1">(Direktur Operasional)</p>
-                </div>
+            {/* Terbilang & Ket */}
+            <div className="border border-gray-800 p-2 mb-4 text-[11px] space-y-1">
+              <div className="flex items-baseline gap-1">
+                <span className="font-bold text-gray-900 whitespace-nowrap">金额大写 / Terbilang:</span>
+                <span className="font-mono font-bold uppercase tracking-wide text-gray-900">{amountInWords}</span>
+              </div>
+              <div className="flex items-baseline gap-1 pt-1 border-t border-dashed border-gray-300">
+                <span className="font-bold text-gray-900 whitespace-nowrap">备注 / Ket:</span>
+                <span className="text-gray-700">{form.notes || '—'}</span>
+              </div>
+            </div>
+
+            {/* 5 Signature Slots */}
+            <div className="pt-2">
+              <div className="grid grid-cols-5 gap-2 text-center text-[10px]">
+                {SIGNATURE_SLOTS.map((slot) => (
+                  <div key={slot.id} className="flex flex-col items-center justify-between h-20">
+                    <div>
+                      <p className="font-bold text-gray-900">{slot.zh}</p>
+                      <p className="text-gray-600">{slot.id}</p>
+                    </div>
+                    <div className="w-24 border-b border-gray-800" />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

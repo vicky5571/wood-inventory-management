@@ -44,6 +44,8 @@ export async function PATCH(
       paymentDate: body.paymentDate,
       paymentMethod: body.paymentMethod,
       notes: body.notes,
+      preprintedNumber: body.preprintedNumber,
+      issueDate: body.issueDate,
     });
 
     let action: ActivityActionType = 'PAYMENT_FORM_UPDATED';
@@ -54,14 +56,15 @@ export async function PATCH(
     await serverRecordStore.appendActivityLog({
       action,
       entityId: id,
-      entitySummary: `Status Form Pembayaran ${updated.formNumber} diubah ke ${targetStatus}`,
+      entitySummary: `Status Form Pembayaran ${updated.preprintedNumber || updated.id} diubah ke ${targetStatus}`,
       operatorName: user.name,
       operatorRole: user.title || `Level ${user.roleLevel}`,
-      metadata: { formId: id, formNumber: updated.formNumber, targetStatus },
+      metadata: { formId: id, preprintedNumber: updated.preprintedNumber, issueDate: updated.issueDate, targetStatus },
     });
 
     return NextResponse.json({ success: true, data: updated });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }
