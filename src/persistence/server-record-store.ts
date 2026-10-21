@@ -23,6 +23,7 @@ import type {
   StorageLotStatus,
   StorageLotWithYard,
   Supplier,
+  Broker,
   WoodSpecies,
   AppSettings,
   ActivityLogEntry,
@@ -188,6 +189,18 @@ export class ServerRecordStore {
 
   deleteSupplier(id: string): Promise<boolean> {
     return this.masterDataBridge.deleteSupplier(id);
+  }
+
+  getBrokers(): Promise<Broker[]> {
+    return this.masterDataBridge.getBrokers();
+  }
+
+  saveBroker(data: Partial<Broker> & { name: string }): Promise<Broker> {
+    return this.masterDataBridge.saveBroker(data);
+  }
+
+  deleteBroker(id: string): Promise<boolean> {
+    return this.masterDataBridge.deleteBroker(id);
   }
 
   getSpecies(): Promise<WoodSpecies[]> {

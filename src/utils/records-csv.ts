@@ -31,6 +31,7 @@ export const CSV_HEADERS = [
   'Total Ongkir Kotor (货物价格)',
   'PPh Ongkir (税)',
   'Net Ongkir (应付金额)',
+  'Nama Broker (经纪人)',
   'Broker (中介费)',
   'Total Bayar (总应付)',
   'Status Bayar (付款状态)',
@@ -40,7 +41,7 @@ export function escapeCsvField(str: string): string {
   return `"${(str || '').replace(/"/g, '""')}"`;
 }
 
-export function generateRecordsCsvContent(records: WoodReceivingRecord[]): string {
+export function generateRecordsCsvContent(records: WoodReceivingRecord[], brokerMap?: Record<string, string>): string {
   const rows = records.map((r) => [
     r.receiptDate,
     escapeCsvField(r.docDate || ''),
@@ -65,6 +66,7 @@ export function generateRecordsCsvContent(records: WoodReceivingRecord[]): strin
     r.freightGrossTotal,
     r.freightPphAmount,
     r.freightNetPayable,
+    escapeCsvField(r.brokerId ? (brokerMap?.[r.brokerId] || r.brokerId) : ''),
     r.brokerFee,
     r.grandNetPayable,
     escapeCsvField(r.paymentStatus || 'UNPAID'),

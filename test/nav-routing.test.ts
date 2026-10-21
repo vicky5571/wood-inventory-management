@@ -13,12 +13,13 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
       '/tally',
       '/sales',
       '/suppliers',
+      '/brokers',
       '/activity',
       '/settings',
     ]);
 
     const ids = NAV_ITEMS.map((item) => item.id);
-    assert.deepEqual(ids, ['analytics', 'ledger', 'inventory', 'contracts', 'tally', 'sales', 'suppliers', 'activity', 'settings']);
+    assert.deepEqual(ids, ['analytics', 'ledger', 'inventory', 'contracts', 'tally', 'sales', 'suppliers', 'brokers', 'activity', 'settings']);
   });
 
   await t.test('isNavItemActive accurately matches root and sub-paths', () => {
@@ -32,6 +33,7 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
     assert.equal(isNavItemActive('/tally', '/tally'), true);
     assert.equal(isNavItemActive('/sales', '/sales'), true);
     assert.equal(isNavItemActive('/suppliers', '/suppliers'), true);
+    assert.equal(isNavItemActive('/brokers', '/brokers'), true);
     assert.equal(isNavItemActive('/activity', '/activity'), true);
     assert.equal(isNavItemActive('/settings', '/settings'), true);
   });

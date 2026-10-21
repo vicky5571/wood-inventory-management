@@ -17,6 +17,7 @@ import {
   Warehouse,
   FileText,
   ClipboardCheck,
+  Users,
 } from 'lucide-react';
 import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
@@ -29,6 +30,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   tally: ClipboardCheck,
   sales: Truck,
   suppliers: Building2,
+  brokers: Users,
   activity: History,
   settings: Settings,
 };
@@ -150,13 +152,9 @@ export function Navbar() {
                   key={item.id}
                   ref={(el) => { tabRefs.current[item.id] = el; }}
                   href={item.href}
-                  className={`
-                    relative z-10 flex items-center gap-2 px-3.5 py-[7px] rounded-[10px] text-xs transition-colors duration-200
-                    ${isActive
-                      ? 'text-[#101828] font-bold'
-                      : 'text-gray-500 hover:text-[#101828] font-medium'
-                    }
-                  `}
+                  className={`relative z-10 flex items-center gap-2 px-3.5 py-[7px] rounded-[10px] text-xs transition-colors duration-200 ${
+                    isActive ? 'text-[#101828] font-bold' : 'text-gray-500 hover:text-[#101828] font-medium'
+                  }`}
                 >
                   {Icon && (
                     <Icon className={`w-3.5 h-3.5 transition-colors duration-200 ${isActive ? 'text-amber-600' : 'text-gray-400'}`} />
@@ -180,13 +178,9 @@ export function Navbar() {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label={isMobileMenuOpen ? 'Tutup navigasi' : 'Buka navigasi'}
               aria-expanded={isMobileMenuOpen}
-              className={`
-                md:hidden relative p-2 rounded-xl transition-all duration-200
-                ${isMobileMenuOpen
-                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                }
-              `}
+              className={`md:hidden relative p-2 rounded-xl transition-all duration-200 ${
+                isMobileMenuOpen ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+              }`}
             >
               <div className="relative w-5 h-5">
                 <Menu className={`w-5 h-5 absolute inset-0 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'}`} />
@@ -198,12 +192,7 @@ export function Navbar() {
       </header>
 
       {/* Mobile Drawer Overlay + Panel */}
-      <div
-        className={`
-          md:hidden fixed inset-0 z-[35] transition-all duration-300
-          ${isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}
-        `}
-      >
+      <div className={`md:hidden fixed inset-0 z-[35] transition-all duration-300 ${isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
         {/* Backdrop */}
         <div
           className={`absolute inset-0 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
@@ -212,12 +201,7 @@ export function Navbar() {
 
         {/* Drawer Panel — slides down from top */}
         <div
-          className={`
-            absolute top-[60px] left-0 right-0 bg-white/95 backdrop-blur-xl
-            border-b border-gray-200 shadow-[0_8px_32px_-4px_rgb(0_0_0/0.12)]
-            transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]
-            ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}
-          `}
+          className={`absolute top-[60px] left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-[0_8px_32px_-4px_rgb(0_0_0/0.12)] transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}
         >
           <div className="px-4 py-4 flex flex-col gap-1">
             {NAV_ITEMS.map((item, index) => {
@@ -229,23 +213,16 @@ export function Navbar() {
                   key={item.id}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`
-                    group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200
-                    ${isActive
-                      ? 'bg-amber-50/80 text-amber-900 font-semibold border border-amber-200/60'
-                      : 'text-gray-600 hover:bg-gray-50 font-medium border border-transparent hover:border-gray-100'
-                    }
-                  `}
-                  style={{
-                    transitionDelay: isMobileMenuOpen ? `${index * 50}ms` : '0ms',
-                  }}
+                  className={`group flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                    isActive ? 'bg-amber-50/80 text-amber-900 font-semibold border border-amber-200/60' : 'text-gray-600 hover:bg-gray-50 font-medium border border-transparent hover:border-gray-100'
+                  }`}
+                  style={{ transitionDelay: isMobileMenuOpen ? `${index * 50}ms` : '0ms' }}
                 >
                   <div className="flex items-center gap-3">
                     {Icon && (
-                      <div className={`
-                        w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200
-                        ${isActive ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200/80 group-hover:text-gray-500'}
-                      `}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                        isActive ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200/80 group-hover:text-gray-500'
+                      }`}>
                         <Icon className="w-4 h-4" />
                       </div>
                     )}

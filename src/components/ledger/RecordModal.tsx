@@ -112,6 +112,7 @@ export function RecordModal({
     docDate: form.docDate, truckPlateNumber: form.truckPlateNumber || '',
     forestryDocNumber: form.forestryDocNumber || '', receiptNumber: form.receiptNumber || '',
     contractNumber: form.contractNumber || '', supplierName: form.supplierName || '',
+    brokerId: form.brokerId,
     freightRatePerM3: Math.max(0, Number(form.freightRatePerM3) || 0),
     freightPphAmount: form.freightPphAmount, brokerFee: Math.max(0, Number(form.brokerFee) || 0),
     paymentStatus: form.paymentStatus, invoiceNumber: form.invoiceNumber,

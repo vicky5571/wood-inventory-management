@@ -174,6 +174,7 @@ export interface WoodReceivingRecord {
   freightNetPayable: number;     // Net Ongkir = freightGrossTotal - freightPphAmount
 
   // Broker & Overall Summary
+  brokerId?: string;             // Optional FK to Broker.id
   brokerFee: number;             // Broker fee
   grandNetPayable: number;       // timberNetPayable + freightNetPayable + brokerFee
 
@@ -259,6 +260,7 @@ export interface ReceivingManifest {
   receiptNumber: string;
   contractNumber: string;
   supplierId: string;
+  brokerId?: string;
   freightRatePerM3: number;
   freightPphRate: number;
   brokerFee: number;
@@ -351,6 +353,7 @@ export interface ManifestFormInput {
   receiptNumber: string;
   contractNumber: string;
   supplierName: string;
+  brokerId?: string;
   freightRatePerM3: number;
   freightPphAmount?: number;
   brokerFee: number;
@@ -621,6 +624,60 @@ export interface SupplierStats {
 }
 
 /**
+ * Global Master Data: Broker / Perantara Profile.
+ * Third-party commission-based intermediary (no wood ownership).
+ */
+export interface Broker {
+  id: string;
+  tenantId?: string;
+  code: string;                       // e.g. "BRK-001"
+  name: string;                       // Nama broker (person or entity)
+  contactPerson?: string;
+  phone?: string;                     // WhatsApp / Phone
+  address?: string;
+  taxId?: string;                     // NPWP (optional)
+  defaultCommissionPerM3?: number;    // Hint for form prefill; actual stored per-record
+  notes?: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BrokerFilterCriteria {
+  searchQuery?: string;
+  status?: 'ALL' | 'ACTIVE' | 'INACTIVE';
+}
+
+export interface BrokerWithMetrics extends Broker {
+  totalDeals: number;
+  totalCommissionIDR: number;
+  totalVolumeM3Facilitated: number;
+  averageCommissionPerM3: number;
+  primarySuppliers: string[];
+  lastDealDate: string;
+}
+
+export interface BrokerStats {
+  totalBrokers: number;
+  activeCount: number;
+  totalCommissionYtdIDR: number;
+  totalVolumeFacilitatedYtdM3: number;
+}
+
+export interface BrokerFormInput {
+  id?: string;
+  code?: string;
+  name: string;
+  contactPerson?: string;
+  phone?: string;
+  address?: string;
+  taxId?: string;
+  defaultCommissionPerM3?: number;
+  status?: 'ACTIVE' | 'INACTIVE';
+  notes?: string;
+}
+
+/**
  * Audit trail event action categories
  */
 export type ActivityActionType =
@@ -634,6 +691,10 @@ export type ActivityActionType =
   | 'SUPPLIER_UPDATED'
   | 'SUPPLIER_DELETED'
   | 'SUPPLIER_RESTORED'
+  | 'BROKER_CREATED'
+  | 'BROKER_UPDATED'
+  | 'BROKER_DELETED'
+  | 'BROKER_RESTORED'
   | 'SALE_CREATED'
   | 'SALE_UPDATED'
   | 'SALE_DELETED'

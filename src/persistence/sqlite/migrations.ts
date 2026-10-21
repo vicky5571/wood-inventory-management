@@ -69,6 +69,25 @@ export function runMigrations(db: DatabaseSync): void {
     );
     CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(tenant_id, name);
 
+    CREATE TABLE IF NOT EXISTS brokers (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      contact_person TEXT,
+      phone TEXT,
+      address TEXT,
+      tax_id TEXT,
+      default_commission_per_m3 REAL CHECK (default_commission_per_m3 IS NULL OR default_commission_per_m3 >= 0),
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','INACTIVE')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(tenant_id, code)
+    );
+    CREATE INDEX IF NOT EXISTS idx_brokers_tenant_status ON brokers(tenant_id, status);
+    CREATE INDEX IF NOT EXISTS idx_brokers_name ON brokers(tenant_id, name);
+
     CREATE TABLE IF NOT EXISTS receiving_manifests (
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -80,6 +99,7 @@ export function runMigrations(db: DatabaseSync): void {
       receipt_number TEXT NOT NULL,
       contract_number TEXT NOT NULL,
       supplier_id TEXT NOT NULL REFERENCES suppliers(id) ON DELETE RESTRICT,
+      broker_id TEXT REFERENCES brokers(id) ON DELETE SET NULL,
       freight_rate_per_m3 REAL NOT NULL DEFAULT 0.0 CHECK (freight_rate_per_m3 >= 0),
       freight_pph_rate REAL NOT NULL DEFAULT 2.0 CHECK (freight_pph_rate >= 0),
       broker_fee REAL NOT NULL DEFAULT 0.0 CHECK (broker_fee >= 0),
@@ -151,6 +171,10 @@ export function runMigrations(db: DatabaseSync): void {
   } catch {}
   try {
     db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0);`);
+  } catch {}
+
+  try {
+    db.exec(`ALTER TABLE receiving_manifests ADD COLUMN broker_id TEXT REFERENCES brokers(id) ON DELETE SET NULL;`);
   } catch {}
 
   db.exec(SQLITE_VIEWS_DDL);

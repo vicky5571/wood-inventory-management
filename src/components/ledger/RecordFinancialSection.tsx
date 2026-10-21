@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { WoodReceivingRecord } from '@/src/types';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, AlertTriangle } from 'lucide-react';
 
 export interface RecordFinancialSectionProps {
   form: Partial<WoodReceivingRecord>;
@@ -117,6 +117,12 @@ export const RecordFinancialSection = React.memo(function RecordFinancialSection
             }
             className="w-full text-xs px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908] focus:border-transparent transition shadow-2xs font-mono tabular-nums"
           />
+          {((form.brokerFee ?? 0) > 0 && !form.brokerId) && (
+            <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200/80 rounded-lg p-1.5 mt-1 font-medium leading-tight flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>Komisi diisi tanpa broker terpilih. Pilih broker atau kosongkan komisi.</span>
+            </p>
+          )}
         </div>
       </div>
 

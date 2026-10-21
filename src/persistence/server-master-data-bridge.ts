@@ -11,8 +11,14 @@ import {
   fetchSupabaseActivityLogs,
   appendSupabaseActivityLog,
 } from './supabase/master-data-supabase.ts';
+import {
+  fetchSupabaseBrokers,
+  saveSupabaseBroker,
+  deleteSupabaseBroker,
+} from './supabase/supabase-broker-store.ts';
 import type {
   Supplier,
+  Broker,
   WoodSpecies,
   AppSettings,
   ActivityLogEntry,
@@ -128,6 +134,39 @@ export class ServerMasterDataBridge {
       }
     }
     return this.getSqliteStore().deleteSupplier(id);
+  }
+
+  async getBrokers(): Promise<Broker[]> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await fetchSupabaseBrokers();
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getBrokers failed, falling back to SQLite:', err);
+      }
+    }
+    return this.getSqliteStore().getBrokers();
+  }
+
+  async saveBroker(data: Partial<Broker> & { name: string }): Promise<Broker> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await saveSupabaseBroker(data);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase saveBroker failed, falling back to SQLite:', err);
+      }
+    }
+    return this.getSqliteStore().saveBroker(data);
+  }
+
+  async deleteBroker(id: string): Promise<boolean> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await deleteSupabaseBroker(id);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase deleteBroker failed, falling back to SQLite:', err);
+      }
+    }
+    return this.getSqliteStore().deleteBroker(id);
   }
 
   async getSpecies(): Promise<WoodSpecies[]> {

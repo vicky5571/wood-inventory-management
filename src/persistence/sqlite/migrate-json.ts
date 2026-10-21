@@ -120,25 +120,25 @@ function saveManifestCore(
   db.prepare(`
     INSERT INTO receiving_manifests (
       id, tenant_id, manifest_number, receipt_date, doc_date, truck_plate_number,
-      forestry_doc_number, receipt_number, contract_number, supplier_id,
+      forestry_doc_number, receipt_number, contract_number, supplier_id, broker_id,
       freight_rate_per_m3, freight_pph_rate, broker_fee, payment_status,
       invoice_number, payment_date, payment_notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       tenant_id = excluded.tenant_id, manifest_number = excluded.manifest_number,
       receipt_date = excluded.receipt_date, doc_date = excluded.doc_date,
       truck_plate_number = excluded.truck_plate_number, forestry_doc_number = excluded.forestry_doc_number,
       receipt_number = excluded.receipt_number, contract_number = excluded.contract_number,
-      supplier_id = excluded.supplier_id, freight_rate_per_m3 = excluded.freight_rate_per_m3,
-      freight_pph_rate = excluded.freight_pph_rate, broker_fee = excluded.broker_fee,
-      payment_status = excluded.payment_status, invoice_number = excluded.invoice_number,
-      payment_date = excluded.payment_date, payment_notes = excluded.payment_notes,
-      updated_at = excluded.updated_at;
+      supplier_id = excluded.supplier_id, broker_id = excluded.broker_id,
+      freight_rate_per_m3 = excluded.freight_rate_per_m3, freight_pph_rate = excluded.freight_pph_rate,
+      broker_fee = excluded.broker_fee, payment_status = excluded.payment_status,
+      invoice_number = excluded.invoice_number, payment_date = excluded.payment_date,
+      payment_notes = excluded.payment_notes, updated_at = excluded.updated_at;
   `).run(
     manifestId, tenantId, manifestNumber, manifest.receiptDate || now.split('T')[0], manifest.docDate || null,
     manifest.truckPlateNumber || '-', manifest.forestryDocNumber || '-', manifest.receiptNumber || manifestNumber,
-    manifest.contractNumber || '-', supplierId, manifest.freightRatePerM3 || 0, freightPphRate,
-    manifest.brokerFee || 0, manifest.paymentStatus || 'UNPAID', manifest.invoiceNumber || null,
+    manifest.contractNumber || '-', supplierId, (manifest as any).brokerId || null, manifest.freightRatePerM3 || 0,
+    freightPphRate, manifest.brokerFee || 0, manifest.paymentStatus || 'UNPAID', manifest.invoiceNumber || null,
     manifest.paymentDate || null, manifest.paymentNotes || null, cAt, uAt
   );
 

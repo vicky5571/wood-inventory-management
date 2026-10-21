@@ -15,8 +15,8 @@ import {
 import { SEED_WOOD_RECORDS } from '../src/persistence/seed-data.ts';
 
 test('Records CSV Export Suite — All Excel Columns', async (t) => {
-  await t.test('CSV_HEADERS contains all 26 comprehensive Excel columns', () => {
-    assert.strictEqual(CSV_HEADERS.length, 26);
+  await t.test('CSV_HEADERS contains all 27 comprehensive Excel columns', () => {
+    assert.strictEqual(CSV_HEADERS.length, 27);
     
     // Check key header columns from Excel
     assert.strictEqual(CSV_HEADERS[0], 'Penerimaan (到货日期)');
@@ -42,12 +42,13 @@ test('Records CSV Export Suite — All Excel Columns', async (t) => {
     assert.strictEqual(CSV_HEADERS[20], 'Total Ongkir Kotor (货物价格)');
     assert.strictEqual(CSV_HEADERS[21], 'PPh Ongkir (税)');
     assert.strictEqual(CSV_HEADERS[22], 'Net Ongkir (应付金额)');
-    assert.strictEqual(CSV_HEADERS[23], 'Broker (中介费)');
-    assert.strictEqual(CSV_HEADERS[24], 'Total Bayar (总应付)');
-    assert.strictEqual(CSV_HEADERS[25], 'Status Bayar (付款状态)');
+    assert.strictEqual(CSV_HEADERS[23], 'Nama Broker (经纪人)');
+    assert.strictEqual(CSV_HEADERS[24], 'Broker (中介费)');
+    assert.strictEqual(CSV_HEADERS[25], 'Total Bayar (总应付)');
+    assert.strictEqual(CSV_HEADERS[26], 'Status Bayar (付款状态)');
   });
 
-  await t.test('generateRecordsCsvContent accurately maps each record to 26 columns', () => {
+  await t.test('generateRecordsCsvContent accurately maps each record to 27 columns', () => {
     const record = SEED_WOOD_RECORDS[0];
     const csv = generateRecordsCsvContent([record]);
     const lines = csv.split('\n');

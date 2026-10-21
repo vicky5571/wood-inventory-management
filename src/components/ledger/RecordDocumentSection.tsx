@@ -5,6 +5,7 @@ import type { WoodReceivingRecord } from '@/src/types';
 import { SpeciesCombobox } from './SpeciesCombobox';
 import { SupplierCombobox } from './SupplierCombobox';
 import { ContractCombobox } from '../contracts/ContractCombobox';
+import { BrokerCombobox } from '../brokers/BrokerCombobox';
 import { FileText, Boxes } from 'lucide-react';
 
 export interface RecordDocumentSectionProps {
@@ -112,7 +113,7 @@ export const RecordDocumentSection = React.memo(function RecordDocumentSection({
               }}
             />
           </div>
-          <div className="sm:col-span-2 md:col-span-3">
+          <div className="sm:col-span-2 md:col-span-2">
             <label className="block text-[11px] font-semibold text-gray-700 mb-1">
               Supplier / Pemilik Kayu (供应商) <span className="text-[#ed1c24]">*</span>
             </label>
@@ -120,6 +121,24 @@ export const RecordDocumentSection = React.memo(function RecordDocumentSection({
               value={form.supplierName || ''}
               onChange={(val) => setForm((prev) => ({ ...prev, supplierName: val }))}
               required
+            />
+          </div>
+          <div className="sm:col-span-2 md:col-span-1">
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+              Broker / Perantara (木材经纪人)
+            </label>
+            <BrokerCombobox
+              value={form.brokerId}
+              onChange={(brokerId, broker) => {
+                setForm((prev) => {
+                  let nextFee = prev.brokerFee;
+                  if (broker?.defaultCommissionPerM3 && (!prev.brokerFee || prev.brokerFee === 0)) {
+                    const vol = prev.tallyVolumeM3 || 0;
+                    nextFee = Math.round((broker.defaultCommissionPerM3 * vol) / 1000) * 1000;
+                  }
+                  return { ...prev, brokerId, brokerFee: nextFee };
+                });
+              }}
             />
           </div>
         </div>

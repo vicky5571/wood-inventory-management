@@ -5,7 +5,7 @@
  * Typed according to the Single Source of Truth (SSOT) WoodReceivingRecord contract.
  */
 
-import type { WoodReceivingRecord, Supplier } from '../types/index.ts';
+import type { WoodReceivingRecord, Supplier, Broker } from '../types/index.ts';
 
 export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
   {
@@ -186,6 +186,49 @@ export const SEED_SUPPLIERS: Supplier[] = [
     status: 'ACTIVE',
     createdAt: '2026-09-15T11:00:00Z',
     updatedAt: '2026-10-04T11:00:00Z',
+  },
+];
+
+export const SEED_BROKERS: Broker[] = [
+  {
+    id: 'brk-001',
+    code: 'BRK-001',
+    name: 'Pak Agus Santoso',
+    contactPerson: 'Agus Santoso',
+    phone: '0812-3456-7890',
+    address: 'Jl. Raya Sentani No. 12, Jayapura',
+    taxId: '05.123.456.7-951.000',
+    defaultCommissionPerM3: 50000,
+    notes: 'Perantara khusus konsesi Nabire & Keerom.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-01T08:00:00Z',
+  },
+  {
+    id: 'brk-002',
+    code: 'BRK-002',
+    name: 'Ibu Rina Wijaya',
+    contactPerson: 'Rina Wijaya',
+    phone: '0813-7788-9900',
+    address: 'Kawasan Perdagangan Hamadi, Jayapura',
+    defaultCommissionPerM3: 75000,
+    notes: 'Broker rekanan kayu keras Teak dan Merbau.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-05T09:00:00Z',
+    updatedAt: '2026-10-02T09:00:00Z',
+  },
+  {
+    id: 'brk-003',
+    code: 'BRK-003',
+    name: 'Pak Joko Sudarmo',
+    contactPerson: 'Joko Sudarmo',
+    phone: '0822-1122-3344',
+    address: 'Jl. Abepura No. 88, Jayapura',
+    defaultCommissionPerM3: 40000,
+    notes: 'Broker kayu sengon & hutan rakyat.',
+    status: 'ACTIVE',
+    createdAt: '2026-09-10T10:00:00Z',
+    updatedAt: '2026-10-03T10:00:00Z',
   },
 ];
 

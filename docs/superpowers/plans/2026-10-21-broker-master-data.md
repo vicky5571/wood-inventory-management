@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P1
-**Status:** DRAFT
+**Status:** COMPLETED
 **Related Client Feedback:** Item #6
 
 ---
@@ -178,72 +178,72 @@ Add nav entry after `suppliers` in `src/components/layout/nav-config.ts`:
 ## 4. Implementation Checklist
 
 ### Phase 1: SSOT Types
-- [ ] Add `Broker`, `BrokerFilterCriteria`, `BrokerWithMetrics`, `BrokerStats`, `BrokerFormInput` to `src/types/index.ts`
-- [ ] Add optional `brokerId?: string` to `WoodReceivingRecord`
-- [ ] Add `BROKER_CREATED`, `BROKER_UPDATED`, `BROKER_DELETED`, `BROKER_RESTORED` to `ActivityActionType`
+- [x] Add `Broker`, `BrokerFilterCriteria`, `BrokerWithMetrics`, `BrokerStats`, `BrokerFormInput` to `src/types/index.ts`
+- [x] Add optional `brokerId?: string` to `WoodReceivingRecord`
+- [x] Add `BROKER_CREATED`, `BROKER_UPDATED`, `BROKER_DELETED`, `BROKER_RESTORED` to `ActivityActionType`
 
 ### Phase 2: Metrics Calculator (Test-First)
-- [ ] Create `test/broker-metrics.test.ts`:
-  - [ ] Empty brokers + records → empty metrics array, zero stats
-  - [ ] Broker with no linked records → all zeros, status unchanged
-  - [ ] Broker with multiple records → correct totals (commission, volume, deal count)
-  - [ ] `averageCommissionPerM3` guards against division by zero
-  - [ ] `primarySuppliers` ranks top 3 by deal count, breaks ties alphabetically
-  - [ ] `lastDealDate` returns max receiptDate
-  - [ ] YTD stats filter correctly on current calendar year
-- [ ] Implement `src/utils/broker-metrics.ts`
-- [ ] Run `node --test test/broker-metrics.test.ts` → 0 failures
+- [x] Create `test/broker-metrics.test.ts`:
+  - [x] Empty brokers + records → empty metrics array, zero stats
+  - [x] Broker with no linked records → all zeros, status unchanged
+  - [x] Broker with multiple records → correct totals (commission, volume, deal count)
+  - [x] `averageCommissionPerM3` guards against division by zero
+  - [x] `primarySuppliers` ranks top 3 by deal count, breaks ties alphabetically
+  - [x] `lastDealDate` returns max receiptDate
+  - [x] YTD stats filter correctly on current calendar year
+- [x] Implement `src/utils/broker-metrics.ts`
+- [x] Run `node --test test/broker-metrics.test.ts` → 0 failures
 
 ### Phase 3: Persistence Layer
-- [ ] SQLite migration: create `brokers` table + add `broker_id` column to `receiving_manifests`
-- [ ] Supabase migration SQL in `supabase/migrations/XXXX_brokers.sql`
-- [ ] Implement `src/persistence/sqlite/broker-queries.ts`
-- [ ] Implement `src/persistence/supabase/supabase-broker-store.ts`
-- [ ] Update `receiving_items_calc_view` to include `broker_id` passthrough (no logic change)
-- [ ] Add broker adapter to persistence facade
+- [x] SQLite migration: create `brokers` table + add `broker_id` column to `receiving_manifests`
+- [x] Supabase migration SQL in `supabase/migrations/XXXX_brokers.sql`
+- [x] Implement `src/persistence/sqlite/broker-queries.ts`
+- [x] Implement `src/persistence/supabase/supabase-broker-store.ts`
+- [x] Update `receiving_items_calc_view` to include `broker_id` passthrough (no logic change)
+- [x] Add broker adapter to persistence facade
 
 ### Phase 4: API Routes
-- [ ] `app/api/brokers/route.ts` — GET (list with filter), POST (create)
-- [ ] `app/api/brokers/[id]/route.ts` — GET, PUT, DELETE (soft)
-- [ ] Input validation: unique code per tenant, non-empty name
-- [ ] Tenant scoping enforcement
+- [x] `app/api/brokers/route.ts` — GET (list with filter), POST (create)
+- [x] `app/api/brokers/[id]/route.ts` — GET, PUT, DELETE (soft)
+- [x] Input validation: unique code per tenant, non-empty name
+- [x] Tenant scoping enforcement
 
 ### Phase 5: Hook & State
-- [ ] Create `src/hooks/useBrokers.ts` (mirror `useSuppliers.ts`)
+- [x] Create `src/hooks/useBrokers.ts` (mirror `useSuppliers.ts`)
   - Optimistic local-first
   - Soft-delete with undo toast
   - Activity log wiring
-- [ ] Add LocalStorage cache keys
+- [x] Add LocalStorage cache keys
 
 ### Phase 6: Directory UI
-- [ ] Create `src/components/brokers/BrokerCard.tsx` (mirror `SupplierCard.tsx`)
-- [ ] Create `src/components/brokers/BrokerTable.tsx` (mirror `SupplierTable.tsx`)
-- [ ] Create `src/components/brokers/BrokerStatsGrid.tsx` (4 KPIs: total brokers, active count, YTD commission, YTD volume facilitated)
-- [ ] Create `src/components/brokers/BrokerModal.tsx` (create/edit form)
-- [ ] Create `src/components/brokers/BrokerDirectoryView.tsx` — coordinator (<250 lines)
-- [ ] Create `app/brokers/page.tsx` — route shell
+- [x] Create `src/components/brokers/BrokerCard.tsx` (mirror `SupplierCard.tsx`)
+- [x] Create `src/components/brokers/BrokerTable.tsx` (mirror `SupplierTable.tsx`)
+- [x] Create `src/components/brokers/BrokerStatsGrid.tsx` (4 KPIs: total brokers, active count, YTD commission, YTD volume facilitated)
+- [x] Create `src/components/brokers/BrokerModal.tsx` (create/edit form)
+- [x] Create `src/components/brokers/BrokerDirectoryView.tsx` — coordinator (<250 lines)
+- [x] Create `app/brokers/page.tsx` — route shell
 
 ### Phase 7: Receiving Form Integration
-- [ ] Create `src/components/brokers/BrokerCombobox.tsx` (dropdown with "no broker" option + prefill commission)
-- [ ] Wire into existing receiving form (likely `RecordDocumentSection.tsx` or new `RecordBrokerSection.tsx`)
-- [ ] Add advisory warning when `brokerFee > 0` and no `brokerId` selected
-- [ ] Update `useWoodRecords.ts` to serialize/deserialize `brokerId`
-- [ ] Update CSV export to include broker name column
+- [x] Create `src/components/brokers/BrokerCombobox.tsx` (dropdown with "no broker" option + prefill commission)
+- [x] Wire into existing receiving form (likely `RecordDocumentSection.tsx` or new `RecordBrokerSection.tsx`)
+- [x] Add advisory warning when `brokerFee > 0` and no `brokerId` selected
+- [x] Update `useWoodRecords.ts` to serialize/deserialize `brokerId`
+- [x] Update CSV export to include broker name column
 
 ### Phase 8: Nav & Verification
-- [ ] Add `brokers` entry to `src/components/layout/nav-config.ts`
-- [ ] Run `npm run test` → 0 failures
-- [ ] Run `npm run build:check` → 0 TS/build errors
-- [ ] Confirm all coordinator files <250 lines
-- [ ] Manual smoke test:
-  - [ ] Create broker "Pak Agus" with default commission Rp 50,000/m³
-  - [ ] Create receiving record, select broker from dropdown → commission auto-fills
-  - [ ] Override commission manually → saves correctly
-  - [ ] Visit `/brokers` → "Pak Agus" shows 1 deal, correct totals
-  - [ ] Create 2nd record for Pak Agus with different supplier → primarySuppliers list has 2 entries
-  - [ ] Soft-delete Pak Agus → undo via toast works
-  - [ ] Hard-delete after undo window → existing records retain `brokerFee` but `brokerId` nullified; "unassigned" warning shown in receiving modal
-  - [ ] Create record with brokerFee=100000 but no broker selected → advisory warning shows, save still works
+- [x] Add `brokers` entry to `src/components/layout/nav-config.ts`
+- [x] Run `npm run test` → 0 failures
+- [x] Run `npm run build:check` → 0 TS/build errors
+- [x] Confirm all coordinator files <250 lines
+- [x] Manual smoke test:
+  - [x] Create broker "Pak Agus" with default commission Rp 50,000/m³
+  - [x] Create receiving record, select broker from dropdown → commission auto-fills
+  - [x] Override commission manually → saves correctly
+  - [x] Visit `/brokers` → "Pak Agus" shows 1 deal, correct totals
+  - [x] Create 2nd record for Pak Agus with different supplier → primarySuppliers list has 2 entries
+  - [x] Soft-delete Pak Agus → undo via toast works
+  - [x] Hard-delete after undo window → existing records retain `brokerFee` but `brokerId` nullified; "unassigned" warning shown in receiving modal
+  - [x] Create record with brokerFee=100000 but no broker selected → advisory warning shows, save still works
 
 ---
 

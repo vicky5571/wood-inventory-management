@@ -25,6 +25,12 @@ import {
   saveSpeciesToDb,
 } from './sqlite/master-data-queries.ts';
 import {
+  seedBrokersIfEmpty,
+  getBrokersFromDb,
+  saveBrokerToDb,
+  deleteBrokerFromDb,
+} from './sqlite/broker-queries.ts';
+import {
   getSettingsFromDb,
   saveSettingsToDb,
   listActivityLogsFromDb,
@@ -43,6 +49,7 @@ import type {
   StorageLotStatus,
   StorageLotWithYard,
   Supplier,
+  Broker,
   WoodSpecies,
   AppSettings,
   ActivityLogEntry,
@@ -66,6 +73,7 @@ export class SqliteRecordStore {
 
     seedStorageLocationsIfEmpty(this.db);
     seedMasterDataIfEmpty(this.db);
+    seedBrokersIfEmpty(this.db);
 
     if (isBrandNewDb) {
       migrateJsonToSqlite(this.db, SEED_WOOD_RECORDS);
@@ -164,6 +172,21 @@ export class SqliteRecordStore {
   async deleteSupplier(id: string): Promise<boolean> {
     this.ensureInitialized();
     return deleteSupplierFromDb(this.db, id);
+  }
+
+  async getBrokers(): Promise<Broker[]> {
+    this.ensureInitialized();
+    return getBrokersFromDb(this.db);
+  }
+
+  async saveBroker(data: Partial<Broker> & { name: string }): Promise<Broker> {
+    this.ensureInitialized();
+    return saveBrokerToDb(this.db, data);
+  }
+
+  async deleteBroker(id: string): Promise<boolean> {
+    this.ensureInitialized();
+    return deleteBrokerFromDb(this.db, id);
   }
 
   async getSpecies(): Promise<WoodSpecies[]> {

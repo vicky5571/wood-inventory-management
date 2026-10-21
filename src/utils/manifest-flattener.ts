@@ -64,6 +64,7 @@ export function flattenManifest(
       receiptNumber: manifest.receiptNumber || `MAN-${manifestId}`,
       contractNumber: manifest.contractNumber || '-',
       supplierName: manifest.supplierName || 'Unknown Supplier',
+      brokerId: manifest.brokerId,
       woodSpecies: item.woodSpecies || 'General Timber',
       woodLengthM: item.woodLengthM || 4.0,
       kavlingNumber: item.kavlingNumber || '',

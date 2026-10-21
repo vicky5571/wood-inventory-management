@@ -49,6 +49,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     href: '/suppliers',
   },
   {
+    id: 'brokers',
+    labelId: 'Broker',
+    labelZh: '中间人',
+    href: '/brokers',
+  },
+  {
     id: 'activity',
     labelId: 'Aktivitas',
     labelZh: '审计日志',
