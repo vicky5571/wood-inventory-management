@@ -203,3 +203,73 @@ test/
 2. **Build gate:** `npm run build:check` → 0 TS errors, 0 build errors.
 3. **Smoke test:** Manual verification per Section 6 acceptance criteria.
 4. **Zero regression:** Existing `/ledger`, `/sales`, `/suppliers` continue to function.
+
+---
+
+## 9. Contract Verification Checklist (Grep-Able Audit)
+
+Every AI session or developer auditing this spec against the codebase MUST execute these commands. All MUST pass before claiming implementation complete.
+
+### 9.1 SSOT Types
+```bash
+# LotStockBalance interface present in SSOT (not duplicated elsewhere)
+grep -c "export interface LotStockBalance" src/types/index.ts
+# EXPECT: 1
+```
+
+### 9.2 Pure Logic
+```bash
+# Aggregator function exists with correct signature
+grep -n "export function aggregateAllLotBalances" src/utils/stock-balance.ts
+# EXPECT: 1 match, signature accepts WoodReceivingRecord[], WoodSalesRecord[], and optional production/sorting arrays
+
+# Existing calculateLotStockBalance preserved
+grep -c "export function calculateLotStockBalance" src/utils/stock-balance.ts
+# EXPECT: 1
+```
+
+### 9.3 Component Files
+```bash
+# All 5 inventory components exist
+ls src/components/inventory/InventoryView.tsx \
+   src/components/inventory/InventoryKpiStrip.tsx \
+   src/components/inventory/InventoryToolbar.tsx \
+   src/components/inventory/InventoryTable.tsx \
+   src/components/inventory/InventoryEmptyState.tsx
+# EXPECT: all 5 files found
+
+# Coordinator <250 LOC
+wc -l src/components/inventory/InventoryView.tsx | awk '{if ($1 > 250) exit 1}'
+# EXPECT: exit code 0
+```
+
+### 9.4 Route
+```bash
+# Route page exists
+ls app/inventory/page.tsx
+# EXPECT: file found
+```
+
+### 9.5 Nav Integration
+```bash
+# Nav entry registered
+grep -c "id: 'inventory'" src/components/layout/nav-config.ts
+# EXPECT: 1
+```
+
+### 9.6 Tests
+```bash
+# Test file exists
+ls test/stock-balance-aggregate.test.ts
+# EXPECT: file found
+
+# Tests pass
+node --test test/stock-balance-aggregate.test.ts 2>&1 | grep "fail 0"
+# EXPECT: 1 match
+```
+
+### 9.7 Overall Gate
+```bash
+npm run drift:check && npm test
+# EXPECT: both exit 0
+```

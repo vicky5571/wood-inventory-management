@@ -378,3 +378,82 @@ New Page:
 
 - **Blocks:** Spec #6 (Weekly Payment Form) — must skip PENDING records.
 - **Related:** Spec #3 (Discrepancy Alarm) — both modify `DashboardMetrics`. Coordinate type additions.
+
+---
+
+## 12. Contract Verification Checklist (Grep-Able Audit)
+
+### 12.1 SSOT Type Nullability
+```bash
+# timberPricePerM3 must be nullable in WoodReceivingRecord, ReceivingItem, ManifestItemInput, RecordCalculationInput
+grep -A1 "timberPricePerM3" src/types/index.ts | grep -c "number | null"
+# EXPECT: >= 4 (all 4 interfaces have nullable price)
+
+# PricingStatus type exists
+grep -c "export type PricingStatus" src/types/index.ts
+# EXPECT: 1
+
+# Dashboard metrics have pending fields
+grep -c "pendingPricingCount\|pendingPricingVolumeM3\|pendingPricingValueExposureIDR" src/types/index.ts
+# EXPECT: >= 3
+```
+
+### 12.2 Pure Logic — Null Propagation
+```bash
+grep -c "export function derivePricingStatus" src/utils/pricing-status.ts
+# EXPECT: 1
+
+# calculateTimberPayment handles null price
+grep -A5 "export function calculateTimberPayment" src/utils/timber-calc.ts | grep -c "null"
+# EXPECT: >= 1 (null guard present)
+```
+
+### 12.3 Persistence Null Handling
+```bash
+# SQL schema permits NULL on price
+grep -c "timber_price_per_m3.*IS NULL" supabase/migrations/*nullable_pricing*.sql \
+       supabase/migrations/*pending*pricing*.sql 2>/dev/null
+# EXPECT: >= 1
+
+# SQLite migration drops NOT NULL
+grep -c "DROP NOT NULL\|DROP CONSTRAINT" src/persistence/sqlite/migrations.ts
+# EXPECT: >= 1
+```
+
+### 12.4 API Endpoint
+```bash
+ls app/api/records/\[id\]/price/route.ts
+# EXPECT: file found
+
+grep -c "RECORD_PRICED" src/types/index.ts
+# EXPECT: 1 (new activity action registered)
+```
+
+### 12.5 Pending Pricing Page
+```bash
+ls app/pending-pricing/page.tsx \
+   src/components/pricing/PendingPricingView.tsx \
+   src/components/pricing/PendingPricingKpiStrip.tsx \
+   src/components/pricing/PendingPricingToolbar.tsx \
+   src/components/pricing/PendingPricingTable.tsx \
+   src/components/pricing/PendingPricingEmptyState.tsx
+# EXPECT: all 6 files found
+
+grep -c "id: 'pending-pricing'" src/components/layout/nav-config.ts
+# EXPECT: 1
+```
+
+### 12.6 UI Null Display
+```bash
+# RecordTable or compact view handles null price gracefully (shows "—" or similar)
+grep -rn "PENDING\|pricingStatus" src/components/ledger/
+# EXPECT: >= 1 match (badge or conditional rendering)
+```
+
+### 12.7 Tests & Overall Gate
+```bash
+ls test/pricing-null.test.ts
+node --test test/pricing-null.test.ts 2>&1 | grep "fail 0"
+npm run drift:check && npm test
+# EXPECT: all green
+```

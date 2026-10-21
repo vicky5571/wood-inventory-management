@@ -494,3 +494,102 @@ Modified:
   - Spec #2 (Perhutani Contract) — contract linkage enriches grouping context.
   - Spec #4 (Broker) — commission tracking per form (future enhancement).
 - **Related:** Settings — reuses `AppSettings.yardName/yardCode` for print header.
+
+---
+
+## 12. Contract Verification Checklist (Grep-Able Audit)
+
+### 12.1 SSOT Types
+```bash
+grep -c "export type PaymentFormStatus" src/types/index.ts
+for name in PaymentForm PaymentFormLineItem PaymentFormWithLines \
+            PaymentFormFilterCriteria PaymentFormGenerationResult; do
+  grep -c "export interface $name" src/types/index.ts
+done
+# EXPECT: each 1
+
+# FK fields on records
+grep -c "paymentFormId" src/types/index.ts
+# EXPECT: >= 2 (WoodReceivingRecord + ReceivingItem)
+```
+
+### 12.2 Pure Logic — Week Window
+```bash
+grep -c "export function getWeekWindow\|export function formatWeekLabel" src/utils/week-window.ts
+# EXPECT: >= 2
+```
+
+### 12.3 Pure Logic — Grouping & Numbering
+```bash
+grep -c "export function groupRecordsForPayment\|export function computeFormTotals" src/utils/payment-form-grouping.ts
+grep -c "export function generateFormNumber" src/utils/payment-form-number.ts
+# EXPECT: >= 2 in grouping, 1 in numbering
+```
+
+### 12.4 Persistence
+```bash
+ls src/persistence/sqlite/payment-form-queries.ts \
+   src/persistence/supabase/supabase-payment-form-store.ts \
+   supabase/migrations/*payment_forms*.sql
+# EXPECT: all found
+
+grep -c "CREATE TABLE.*payment_forms" supabase/migrations/*payment_forms*.sql
+grep -c "payment_form_id" supabase/migrations/*payment_forms*.sql
+# EXPECT: >= 1 each (table + FK column on receiving_items/manifests)
+```
+
+### 12.5 API Routes
+```bash
+ls app/api/payment-forms/route.ts \
+   app/api/payment-forms/\[id\]/route.ts \
+   app/api/payment-forms/generate/route.ts \
+   app/api/payment-forms/\[id\]/status/route.ts
+# EXPECT: all 4 files found
+```
+
+### 12.6 Component Files
+```bash
+# Core 15 components present
+ls src/components/payment-forms/PaymentFormListView.tsx \
+   src/components/payment-forms/PaymentFormKpiStrip.tsx \
+   src/components/payment-forms/PaymentFormToolbar.tsx \
+   src/components/payment-forms/PaymentFormTable.tsx \
+   src/components/payment-forms/PaymentFormEmptyState.tsx \
+   src/components/payment-forms/PaymentFormDetailView.tsx \
+   src/components/payment-forms/PaymentFormHeaderCard.tsx \
+   src/components/payment-forms/PaymentFormLinesTable.tsx \
+   src/components/payment-forms/PaymentFormTotalsFooter.tsx \
+   src/components/payment-forms/GenerateFormsModal.tsx \
+   src/components/payment-forms/IssueFormModal.tsx \
+   src/components/payment-forms/MarkPaidModal.tsx \
+   src/components/payment-forms/VoidFormModal.tsx \
+   src/components/payment-forms/PrintPaymentFormModal.tsx
+
+# Print layout uses @media print
+grep -c "@media print" src/components/payment-forms/PrintPaymentFormModal.tsx
+# EXPECT: >= 1
+```
+
+### 12.7 Routes & Nav
+```bash
+ls app/payment-forms/page.tsx app/payment-forms/\[id\]/page.tsx
+grep -c "id: 'payment-forms'" src/components/layout/nav-config.ts
+# EXPECT: both pages found, nav entry = 1
+```
+
+### 12.8 Edit Guard Integration
+```bash
+# RecordModal or RecordTable must check paymentFormId for edit guard
+grep -rn "paymentFormId" src/components/ledger/
+# EXPECT: >= 1 (edit guard logic present)
+```
+
+### 12.9 Tests & Overall Gate
+```bash
+ls test/week-window.test.ts \
+   test/payment-form-grouping.test.ts \
+   test/payment-form-numbering.test.ts
+node --test test/week-window.test.ts test/payment-form-grouping.test.ts test/payment-form-numbering.test.ts 2>&1 | grep "fail 0"
+npm run drift:check && npm test
+# EXPECT: all green
+```

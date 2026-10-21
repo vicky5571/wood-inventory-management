@@ -374,3 +374,107 @@ Modify `src/components/ledger/RecordDocumentSection.tsx`:
 2. **Build gate:** `npm run build:check` → 0 errors.
 3. **Smoke test:** Section 9 acceptance criteria.
 4. **Zero regression:** Existing receiving flow continues; records without matching contracts display identically.
+
+---
+
+## 12. Contract Verification Checklist (Grep-Able Audit)
+
+### 12.1 SSOT Types
+```bash
+# Use word-boundary pattern to avoid false positives (e.g. ContractReceipt vs ContractReceiptFormInput)
+for name in PerhutaniContract ContractSortimentItem ContractReceipt \
+            ContractFulfillmentSummary ContractWithDetails ContractFilterCriteria \
+            ContractSortimentInput ContractReceiptFormInput; do
+  # Match: "export interface Name {" or "export interface Name extends ..." or "export type Name ="
+  count=$(grep -cE "export interface ${name}(\$|[[:space:]])|export type ${name}[[:space:]]*=" src/types/index.ts)
+  echo "$name: $count"
+done
+grep -cE "export type ContractStatus =" src/types/index.ts
+# EXPECT: each type appears exactly 1 time
+```
+
+### 12.2 Pure Logic
+```bash
+# All 4 calculator functions present
+for fn in computeContractTotals calculateDaysDifference deriveContractStatus computeFulfillmentSummary; do
+  grep -c "export function $fn" src/utils/contract-calc.ts
+done
+# EXPECT: each returns 1
+```
+
+### 12.3 Component Files
+```bash
+# All 15 contract components exist
+ls src/components/contracts/ContractListView.tsx \
+   src/components/contracts/ContractKpiStrip.tsx \
+   src/components/contracts/ContractToolbar.tsx \
+   src/components/contracts/ContractTable.tsx \
+   src/components/contracts/ContractEmptyState.tsx \
+   src/components/contracts/ContractDetailView.tsx \
+   src/components/contracts/ContractHeaderCard.tsx \
+   src/components/contracts/ContractSortimentTable.tsx \
+   src/components/contracts/ContractReceiptsPanel.tsx \
+   src/components/contracts/ContractFulfillmentCard.tsx \
+   src/components/contracts/LinkedReceivingList.tsx \
+   src/components/contracts/ContractFormModal.tsx \
+   src/components/contracts/ContractHeaderFields.tsx \
+   src/components/contracts/SortimentItemRow.tsx \
+   src/components/contracts/ReceiptFormModal.tsx \
+   src/components/contracts/ContractCombobox.tsx
+
+# All coordinator files <250 LOC
+for f in src/components/contracts/ContractListView.tsx \
+         src/components/contracts/ContractDetailView.tsx \
+         src/components/contracts/ContractFormModal.tsx \
+         src/components/contracts/ReceiptFormModal.tsx; do
+  wc -l "$f" | awk -v f="$f" '{if ($1 > 250) {print f " EXCEEDS " $1 " LOC"; exit 1}}'
+done
+```
+
+### 12.4 Routes & API
+```bash
+ls app/contracts/page.tsx \
+   app/contracts/\[id\]/page.tsx \
+   app/api/contracts/route.ts \
+   app/api/contracts/\[id\]/route.ts \
+   app/api/contracts/\[id\]/receipts/route.ts \
+   app/api/contracts/\[id\]/receipts/\[receiptId\]/route.ts
+# EXPECT: all 6 files found
+```
+
+### 12.5 Persistence
+```bash
+ls src/persistence/sqlite/contract-queries.ts \
+   src/persistence/supabase/supabase-contract-store.ts \
+   supabase/migrations/*perhutani_contracts*.sql
+# EXPECT: all found
+
+# SQL tables defined
+grep -c "CREATE TABLE.*perhutani_contracts\|CREATE TABLE.*contract_sortiment_items\|CREATE TABLE.*contract_receipts" \
+  supabase/migrations/*perhutani_contracts*.sql
+# EXPECT: 3
+```
+
+### 12.6 Hook & Nav
+```bash
+ls src/hooks/useContracts.ts
+grep -c "id: 'contracts'" src/components/layout/nav-config.ts
+# EXPECT: file found, nav entry = 1
+```
+
+### 12.7 Receiving Form Integration
+```bash
+grep -c "ContractCombobox" src/components/ledger/RecordDocumentSection.tsx
+# EXPECT: >= 1 (import + usage)
+
+grep -c "onSelectContract" src/components/ledger/RecordDocumentSection.tsx
+# EXPECT: >= 1 (auto-fill supplierName logic present)
+```
+
+### 12.8 Tests & Overall Gate
+```bash
+ls test/contract-calc.test.ts
+node --test test/contract-calc.test.ts 2>&1 | grep "fail 0"
+npm run drift:check && npm test
+# EXPECT: all green
+```

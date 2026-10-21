@@ -10,6 +10,8 @@
     "start": "next start",
     "test": "node --test",
     "test:smoke": "node --test test/smoke.test.ts",
+    "pretest": "node scripts/drift-check.ts",
+    "drift:check": "node scripts/drift-check.ts",
     "db:seed": "node scripts/seed-db.ts",
     "db:seed:supabase": "node scripts/seed-supabase.ts"
   },

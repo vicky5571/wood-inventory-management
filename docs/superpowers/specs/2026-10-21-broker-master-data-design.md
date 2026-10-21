@@ -333,3 +333,83 @@ When `brokerFee > 0` AND `brokerId` empty:
 2. **Build gate:** `npm run build:check` → 0 errors.
 3. **Smoke test:** Section 9 acceptance criteria.
 4. **Zero regression:** Supplier module untouched; existing records with `brokerFee > 0` continue to display.
+
+---
+
+## 12. Contract Verification Checklist (Grep-Able Audit)
+
+### 12.1 SSOT Types
+```bash
+# Use word-boundary pattern (prevents Broker matching BrokerFilterCriteria etc)
+for name in Broker BrokerFilterCriteria BrokerWithMetrics BrokerStats BrokerFormInput; do
+  # Match: "export interface Name {" or "export interface Name extends ..."
+  count=$(grep -cE "export interface ${name}(\$|[[:space:]])" src/types/index.ts)
+  echo "$name: $count"
+done
+# EXPECT: each 1
+
+# brokerId FK field on WoodReceivingRecord
+grep -c "brokerId" src/types/index.ts
+# EXPECT: >= 1
+```
+
+### 12.2 Pure Logic
+```bash
+grep -c "export function aggregateBrokerMetrics" src/utils/broker-metrics.ts
+grep -c "export function computeBrokerStats" src/utils/broker-metrics.ts
+# EXPECT: each 1
+```
+
+### 12.3 Component Files
+```bash
+ls src/components/brokers/BrokerDirectoryView.tsx \
+   src/components/brokers/BrokerStatsGrid.tsx \
+   src/components/brokers/BrokerCard.tsx \
+   src/components/brokers/BrokerTable.tsx \
+   src/components/brokers/BrokerModal.tsx \
+   src/components/brokers/BrokerCombobox.tsx
+# EXPECT: all 6 files found
+```
+
+### 12.4 Routes & API
+```bash
+ls app/brokers/page.tsx \
+   app/api/brokers/route.ts \
+   app/api/brokers/\[id\]/route.ts
+# EXPECT: all 3 files found
+```
+
+### 12.5 Persistence
+```bash
+ls src/persistence/sqlite/broker-queries.ts \
+   src/persistence/supabase/supabase-broker-store.ts \
+   supabase/migrations/*brokers*.sql
+# EXPECT: all found
+
+# brokers table + broker_id FK column
+grep -c "CREATE TABLE.*brokers" supabase/migrations/*brokers*.sql
+grep -c "broker_id" supabase/migrations/*brokers*.sql
+# EXPECT: >= 1 each
+```
+
+### 12.6 Hook & Nav & Receiving Form Integration
+```bash
+ls src/hooks/useBrokers.ts
+grep -c "id: 'brokers'" src/components/layout/nav-config.ts
+grep -c "BrokerCombobox" src/components/ledger/RecordDocumentSection.tsx
+# EXPECT: file found, nav entry = 1, combobox integrated
+```
+
+### 12.7 Activity Log
+```bash
+grep -c "BROKER_CREATED\|BROKER_UPDATED\|BROKER_DELETED\|BROKER_RESTORED" src/types/index.ts
+# EXPECT: >= 4 (all 4 action types registered)
+```
+
+### 12.8 Tests & Overall Gate
+```bash
+ls test/broker-metrics.test.ts
+node --test test/broker-metrics.test.ts 2>&1 | grep "fail 0"
+npm run drift:check && npm test
+# EXPECT: all green
+```

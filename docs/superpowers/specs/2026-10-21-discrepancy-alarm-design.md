@@ -309,3 +309,75 @@ Modified (settings):
 2. **Build gate:** `npm run build:check` → 0 errors.
 3. **Smoke test:** Section 8 acceptance criteria.
 4. **Zero regression:** Legacy badge renderings continue; `classifyDiscrepancy()` output unchanged.
+
+---
+
+## 11. Contract Verification Checklist (Grep-Able Audit)
+
+### 11.1 SSOT Types
+```bash
+grep -c "export type DiscrepancySeverity" src/types/index.ts
+grep -c "export interface DiscrepancyEvaluation" src/types/index.ts
+# EXPECT: each 1
+
+grep -c "discrepancyAlarmVolumeM3\|discrepancyAlarmPercent" src/types/index.ts
+# EXPECT: >= 2 (both fields present in AppSettings)
+```
+
+### 11.2 Pure Logic
+```bash
+grep -c "export function evaluateDiscrepancy" src/utils/discrepancy.ts
+# EXPECT: 1
+
+grep -c "export function validateDiscrepancyInputs" src/utils/discrepancy-validation.ts
+# EXPECT: 1
+
+# Legacy wrapper preserved
+grep -c "export function classifyDiscrepancy" src/utils/timber-calc.ts
+# EXPECT: 1
+```
+
+### 11.3 UI Badge Component
+```bash
+ls src/components/ui/DiscrepancyBadge.tsx
+grep -c "SURPLUS\|WITHIN_TOLERANCE\|ALARM\|MATCH" src/components/ui/DiscrepancyBadge.tsx
+# EXPECT: >= 4 (all severity variants rendered)
+```
+
+### 11.4 Validation Wiring
+```bash
+# Client-side validation
+grep -rn "validateDiscrepancyInputs" src/components/ledger/
+# EXPECT: >= 1 match in RecordModal or similar
+
+# Server-side validation
+grep -rn "validateDiscrepancyInputs" app/api/records/
+# EXPECT: >= 1 match in POST/PUT routes
+```
+
+### 11.5 Settings Migration
+```bash
+grep -c "discrepancyAlarmVolumeM3\|discrepancyAlarmPercent" src/hooks/useSettings.ts
+# EXPECT: >= 2 (defaults set)
+
+grep -c "discrepancyAlarmVolumeM3\|discrepancyAlarmPercent" src/persistence/sqlite/activity-queries.ts
+grep -c "discrepancyAlarmVolumeM3\|discrepancyAlarmPercent" src/persistence/supabase/master-data-supabase.ts
+# EXPECT: both schemas carry new fields
+```
+
+### 11.6 Dashboard KPI
+```bash
+grep -c "recordsWithAlarmCount" src/types/index.ts
+# EXPECT: 1 (in DashboardMetrics)
+
+grep -c "recordsWithAlarmCount" src/utils/timber-calc.ts
+# EXPECT: >= 1 (aggregator computes it)
+```
+
+### 11.7 Tests & Overall Gate
+```bash
+ls test/discrepancy-eval.test.ts test/discrepancy-validation.test.ts
+node --test test/discrepancy-eval.test.ts test/discrepancy-validation.test.ts 2>&1 | grep "fail 0"
+npm run drift:check && npm test
+# EXPECT: all green
+```

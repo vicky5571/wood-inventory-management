@@ -547,3 +547,108 @@ Modified (Spec #1 integration):
 - **Benefits from:** Spec #1 (Inventory View) — Section 6 integration requires inventory UI to display new flows.
 - **Blocked by:** None technically. Can ship standalone; inventory integration deferred if Spec #1 not yet live.
 - **Related:** None other.
+
+---
+
+## 12. Contract Verification Checklist (Grep-Able Audit)
+
+### 12.1 SSOT Types
+```bash
+grep -cE "export type ProductionShift =" src/types/index.ts
+for name in SawmillProductionRecord StockSortingRecord \
+            SawmillProductionFormInput StockSortingFormInput; do
+  # Match: "export interface Name {" or "export interface Name extends ..."
+  count=$(grep -cE "export interface ${name}(\$|[[:space:]])" src/types/index.ts)
+  echo "$name: $count"
+done
+# EXPECT: each 1
+
+# LotStockBalance extended with 6 new fields
+grep -c "consumedPieces\|consumedVolumeM3\|transferredInPieces\|transferredInVolumeM3\|transferredOutPieces\|transferredOutVolumeM3" src/types/index.ts
+# EXPECT: >= 6
+```
+
+### 12.2 Pure Logic — Backward Compat
+```bash
+# calculateLotStockBalance signature extended with optional args
+grep -A5 "export function calculateLotStockBalance" src/utils/stock-balance.ts | grep -c "productionRecords\?.*SawmillProductionRecord\|sortingRecords\?.*StockSortingRecord"
+# EXPECT: >= 1 (both optional args present)
+
+grep -c "export function computeProductionYield\|export function aggregateProductionMetrics" src/utils/production-calc.ts
+# EXPECT: >= 2
+```
+
+### 12.3 Persistence
+```bash
+ls src/persistence/sqlite/production-queries.ts \
+   src/persistence/sqlite/sorting-queries.ts \
+   src/persistence/supabase/supabase-production-store.ts \
+   src/persistence/supabase/supabase-sorting-store.ts \
+   supabase/migrations/*production*.sql
+# EXPECT: all found
+
+grep -c "CREATE TABLE.*sawmill_production_records\|CREATE TABLE.*stock_sorting_records" supabase/migrations/*production*.sql
+# EXPECT: 2
+
+# Self-transfer CHECK constraint
+grep -c "source_storage_yard = target_storage_yard" supabase/migrations/*production*.sql
+# EXPECT: >= 1
+```
+
+### 12.4 API Routes
+```bash
+ls app/api/production/route.ts \
+   app/api/production/\[id\]/route.ts \
+   app/api/sorting/route.ts \
+   app/api/sorting/\[id\]/route.ts
+# EXPECT: all 4 files found
+```
+
+### 12.5 Component Files
+```bash
+# Production module
+ls src/components/production/ProductionView.tsx \
+   src/components/production/ProductionKpiStrip.tsx \
+   src/components/production/ProductionToolbar.tsx \
+   src/components/production/ProductionTable.tsx \
+   src/components/production/ProductionEmptyState.tsx \
+   src/components/production/ProductSuggestionCombobox.tsx \
+   src/components/production/ProductionYieldPreview.tsx \
+   src/components/production/ProductionFormModal.tsx
+
+# Sorting module
+ls src/components/sorting/SortingView.tsx \
+   src/components/sorting/SortingKpiStrip.tsx \
+   src/components/sorting/SortingToolbar.tsx \
+   src/components/sorting/SortingTable.tsx \
+   src/components/sorting/SortingEmptyState.tsx \
+   src/components/sorting/KavlingPickerDual.tsx \
+   src/components/sorting/SortingReasonCombobox.tsx \
+   src/components/sorting/SortingFormModal.tsx
+```
+
+### 12.6 Hooks & Nav
+```bash
+ls src/hooks/useProductionRecords.ts src/hooks/useSortingRecords.ts
+grep -c "id: 'production'\|id: 'sorting'" src/components/layout/nav-config.ts
+# EXPECT: both files, nav entries >= 2
+```
+
+### 12.7 Inventory Integration (Section 7 of Plan #1)
+```bash
+# InventoryView passes production + sorting arrays to aggregator
+grep -c "productionRecords\|sortingRecords" src/components/inventory/InventoryView.tsx
+# EXPECT: >= 2
+```
+
+### 12.8 Tests & Overall Gate
+```bash
+ls test/stock-balance-production.test.ts \
+   test/stock-balance-sorting.test.ts \
+   test/production-calc.test.ts 2>/dev/null || \
+   ls test/*production*.test.ts test/*sorting*.test.ts
+# EXPECT: at least production + sorting + yield test files present
+
+npm run drift:check && npm test
+# EXPECT: all green
+```
