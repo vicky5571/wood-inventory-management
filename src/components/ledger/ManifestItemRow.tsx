@@ -71,11 +71,11 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
           {/* Volume Discrepancy Badge */}
           <span
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-              isSurplusOrMatch ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+              isSurplusOrMatch ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
             }`}
             title="Selisih Volume Tally vs Surat Jalan"
           >
-            {isSurplusOrMatch ? <TrendingUp className="w-2.5 h-2.5 text-emerald-600" /> : <TrendingDown className="w-2.5 h-2.5 text-rose-600" />}
+            {isSurplusOrMatch ? <TrendingUp className="w-2.5 h-2.5 text-blue-600" /> : <TrendingDown className="w-2.5 h-2.5 text-rose-600" />}
             <span>Δ Vol: {isSurplusOrMatch ? '+' : ''}{volDiff.toFixed(2)} m³</span>
           </span>
 
@@ -83,7 +83,7 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
           {pcsDiff !== 0 && (
             <span
               className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium font-mono ${
-                pcsDiff > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                pcsDiff > 0 ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-rose-700'
               }`}
               title="Selisih Batang Tally vs Surat Jalan"
             >

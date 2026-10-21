@@ -86,11 +86,14 @@ export function renderRecordTable(
 
   const rows = records.map((r) => {
     const volDiff = Number((r.tallyVolumeM3 - r.deliveredVolumeM3).toFixed(2));
-    const volText = Math.abs(volDiff) < 0.001
+    const isMatch = Math.abs(volDiff) < 0.001;
+    const volText = isMatch
       ? '0.00'
       : (volDiff > 0 ? `+${volDiff.toFixed(2)}` : volDiff.toFixed(2));
-    const volBadge = volDiff >= 0
+    const volBadge = isMatch
       ? `<span class="badge badge-match">${volText}</span>`
+      : volDiff > 0
+      ? `<span class="badge badge-surplus">${volText}</span>`
       : `<span class="badge badge-alert">${volText}</span>`;
 
     return `

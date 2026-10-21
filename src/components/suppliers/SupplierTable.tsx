@@ -149,8 +149,16 @@ export function SupplierTable({ suppliers, onEdit, onDelete, canWrite = true }: 
                     {s.totalTallyVolumeM3.toFixed(2)}
                   </td>
                   <td className="p-3.5 whitespace-nowrap text-right font-mono font-bold">
-                    <span className={s.discrepancyRatePercent >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
-                      {s.discrepancyRatePercent >= 0 ? '+' : ''}{s.discrepancyRatePercent}%
+                    <span className={
+                      s.discrepancyRatePercent > 0
+                        ? 'text-blue-700'
+                        : s.discrepancyRatePercent < -2.0
+                        ? 'text-rose-700'
+                        : s.discrepancyRatePercent < 0
+                        ? 'text-amber-700'
+                        : 'text-gray-700'
+                    }>
+                      {s.discrepancyRatePercent > 0 ? '+' : ''}{s.discrepancyRatePercent}%
                     </span>
                   </td>
                   <td className="p-3.5 whitespace-nowrap text-right font-mono font-bold text-gray-900">

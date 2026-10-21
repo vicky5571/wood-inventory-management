@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P1
-**Status:** DRAFT
+**Status:** COMPLETED
 **Related Client Feedback:** Item #1
 
 ---
@@ -113,80 +113,80 @@ Reject negatives server-side even if client bypasses.
 ## 3. Implementation Checklist
 
 ### Phase 1: SSOT Type & Settings Updates
-- [ ] Update `AppSettings` interface in `src/types/index.ts` (deprecate old, add new fields)
-- [ ] Add `DiscrepancySeverity` and `DiscrepancyEvaluation` types
-- [ ] Mark old `DiscrepancyStatus` with `@deprecated` JSDoc
-- [ ] Update `useSettings.ts` defaults: `discrepancyAlarmVolumeM3: 1.5`, `discrepancyAlarmPercent: 2.0`
-- [ ] Add migration logic in settings loader (carry old pct forward)
-- [ ] Update SQLite + Supabase settings schemas and store adapters
+- [x] Update `AppSettings` interface in `src/types/index.ts` (deprecate old, add new fields)
+- [x] Add `DiscrepancySeverity` and `DiscrepancyEvaluation` types
+- [x] Mark old `DiscrepancyStatus` with `@deprecated` JSDoc
+- [x] Update `useSettings.ts` defaults: `discrepancyAlarmVolumeM3: 1.5`, `discrepancyAlarmPercent: 2.0`
+- [x] Add migration logic in settings loader (carry old pct forward)
+- [x] Update SQLite + Supabase settings schemas and store adapters
 
 ### Phase 2: Pure Calculator (Test-First)
-- [ ] Create `test/discrepancy-eval.test.ts` covering:
-  - [ ] Match: tally == delivered → MATCH severity, isAlarm=false
-  - [ ] Surplus small: tally > delivered → SURPLUS, isAlarm=false
-  - [ ] Surplus large: tally >> delivered → SURPLUS, isAlarm=false (surplus never alarms)
-  - [ ] Within tolerance: diff = -0.5m³, -1% → WITHIN_TOLERANCE, isAlarm=false
-  - [ ] Alarm by volume only: diff = -2m³, -0.5% → ALARM, isAlarm=true
-  - [ ] Alarm by percent only: diff = -0.8m³, -3% → ALARM, isAlarm=true
-  - [ ] Alarm by both: diff = -2m³, -5% → ALARM
-  - [ ] Boundary: diff exactly -1.5m³ → NOT alarm (strict `>`)
-  - [ ] Boundary: diff exactly -2.0% → NOT alarm
-  - [ ] Zero delivered volume → pct=0, alarm only via volume threshold
-  - [ ] Zero delivered pieces → pct=0 for piece side
-- [ ] Implement `evaluateDiscrepancy()` in new file `src/utils/discrepancy.ts`
-- [ ] Keep `classifyDiscrepancy()` as thin wrapper mapping new severity → legacy status (back-compat)
-- [ ] Run `node --test test/discrepancy-eval.test.ts` → 0 failures
+- [x] Create `test/discrepancy-eval.test.ts` covering:
+  - [x] Match: tally == delivered → MATCH severity, isAlarm=false
+  - [x] Surplus small: tally > delivered → SURPLUS, isAlarm=false
+  - [x] Surplus large: tally >> delivered → SURPLUS, isAlarm=false (surplus never alarms)
+  - [x] Within tolerance: diff = -0.5m³, -1% → WITHIN_TOLERANCE, isAlarm=false
+  - [x] Alarm by volume only: diff = -2m³, -0.5% → ALARM, isAlarm=true
+  - [x] Alarm by percent only: diff = -0.8m³, -3% → ALARM, isAlarm=true
+  - [x] Alarm by both: diff = -2m³, -5% → ALARM
+  - [x] Boundary: diff exactly -1.5m³ → NOT alarm (strict `>`)
+  - [x] Boundary: diff exactly -2.0% → NOT alarm
+  - [x] Zero delivered volume → pct=0, alarm only via volume threshold
+  - [x] Zero delivered pieces → pct=0 for piece side
+- [x] Implement `evaluateDiscrepancy()` in new file `src/utils/discrepancy.ts`
+- [x] Keep `classifyDiscrepancy()` as thin wrapper mapping new severity → legacy status (back-compat)
+- [x] Run `node --test test/discrepancy-eval.test.ts` → 0 failures
 
 ### Phase 3: Input Validation
-- [ ] Create `src/utils/discrepancy-validation.ts` with `validateDiscrepancyInputs()`
-- [ ] Create `test/discrepancy-validation.test.ts`:
-  - [ ] All positive → ok=true, errors empty
-  - [ ] Negative tally → ok=false, error on tally field
-  - [ ] Negative delivered → ok=false, error on delivered field
-  - [ ] Zero values allowed (not negative)
-- [ ] Wire validator into `RecordModal.tsx` submit handler with inline error display
-- [ ] Wire validator into multi-item manifest form (`ReceivingManifestForm`)
-- [ ] Wire validator into `/api/records` route handlers (POST + PUT)
+- [x] Create `src/utils/discrepancy-validation.ts` with `validateDiscrepancyInputs()`
+- [x] Create `test/discrepancy-validation.test.ts`:
+  - [x] All positive → ok=true, errors empty
+  - [x] Negative tally → ok=false, error on tally field
+  - [x] Negative delivered → ok=false, error on delivered field
+  - [x] Zero values allowed (not negative)
+- [x] Wire validator into `RecordModal.tsx` submit handler with inline error display
+- [x] Wire validator into multi-item manifest form (`ReceivingManifestForm`)
+- [x] Wire validator into `/api/records` route handlers (POST + PUT)
 
 ### Phase 4: UI Badge Component
-- [ ] Create `src/components/ui/DiscrepancyBadge.tsx` consuming `DiscrepancyEvaluation`
+- [x] Create `src/components/ui/DiscrepancyBadge.tsx` consuming `DiscrepancyEvaluation`
   - Variants: MATCH (gray), SURPLUS (blue), WITHIN_TOLERANCE (amber), ALARM (red)
   - Tooltip shows `reason` on hover
   - Props: `evaluation: DiscrepancyEvaluation`, `unit: 'm³' | 'batang'`, `size?: 'sm' | 'md'`
-- [ ] Replace color logic in:
-  - [ ] `src/components/dashboard/KpiCards.tsx` (renderDiscrepancyBadge)
-  - [ ] `src/components/tally/TallyDiscrepancyCard.tsx`
-  - [ ] `src/components/ledger/RecordTableCompactView.tsx` (if displays discrepancy)
-  - [ ] `src/components/analytics/FinancialOutlayBreakdown.tsx` (color only; keep rupiah exposure logic)
-  - [ ] Legacy `src/components/kpi-dashboard.ts` and `src/components/record-table.ts` (if still rendered)
-- [ ] Supplier scorecard: `SupplierCard.tsx` + `SupplierTable.tsx` — keep as % only but use new color mapping (negative discrepancy pct above threshold → red; below → amber; positive → blue)
+- [x] Replace color logic in:
+  - [x] `src/components/dashboard/KpiCards.tsx` (renderDiscrepancyBadge)
+  - [x] `src/components/tally/TallyDiscrepancyCard.tsx`
+  - [x] `src/components/ledger/RecordTableCompactView.tsx` (if displays discrepancy)
+  - [x] `src/components/analytics/FinancialOutlayBreakdown.tsx` (color only; keep rupiah exposure logic)
+  - [x] Legacy `src/components/kpi-dashboard.ts` and `src/components/record-table.ts` (if still rendered)
+- [x] Supplier scorecard: `SupplierCard.tsx` + `SupplierTable.tsx` — keep as % only but use new color mapping (negative discrepancy pct above threshold → red; below → amber; positive → blue)
 
 ### Phase 5: Settings UI
-- [ ] Update `app/settings/page.tsx` form:
+- [x] Update `app/settings/page.tsx` form:
   - Replace single "Threshold Diskrepansi %" field with two inputs:
     - "Ambang Alarm Volume (m³)" — default 1.5
     - "Ambang Alarm Persentase (%)" — default 2.0
   - Add explanation: "Alarm aktif jika selisih **minus** DAN melebihi salah satu ambang (OR)."
-- [ ] Validate: both must be > 0
+- [x] Validate: both must be > 0
 
 ### Phase 6: Dashboard KPI Enhancement
-- [ ] `DashboardMetrics` interface — add `recordsWithAlarmCount: number`
-- [ ] `aggregateDashboardMetrics()` in `timber-calc.ts` — compute alarm count per record using evaluator
-- [ ] `KpiCards.tsx` — new card "Alarm Diskrepansi" showing `recordsWithAlarmCount` with red tint if > 0
-- [ ] Click-through: filter ledger view to records where alarm active (optional, nice-to-have)
+- [x] `DashboardMetrics` interface — add `recordsWithAlarmCount: number`
+- [x] `aggregateDashboardMetrics()` in `timber-calc.ts` — compute alarm count per record using evaluator
+- [x] `KpiCards.tsx` — new card "Alarm Diskrepansi" showing `recordsWithAlarmCount` with red tint if > 0
+- [x] Click-through: filter ledger view to records where alarm active (optional, nice-to-have)
 
 ### Phase 7: Verification
-- [ ] Run `npm run test` → 0 failures
-- [ ] Run `npm run build:check` → 0 TS/build errors
-- [ ] Manual smoke test:
-  - [ ] Create record with delivered=10, tally=10 → MATCH badge gray
-  - [ ] Create record with delivered=10, tally=11 → SURPLUS badge blue
-  - [ ] Create record with delivered=10, tally=9.5 → WITHIN_TOLERANCE amber (0.5m³, 5%... wait, that would alarm by pct. Use delivered=100, tally=99.5 → 0.5m³, 0.5% → within tolerance)
-  - [ ] Create record with delivered=100, tally=97 → ALARM red (3m³ > 1.5, 3% > 2%)
-  - [ ] Try to save with tally=-5 → inline error, submit blocked client-side
-  - [ ] POST to /api/records with negative values → 400 response
-  - [ ] Change settings volume threshold to 5.0 → previous ALARM records drop to WITHIN_TOLERANCE
-  - [ ] Dashboard shows correct alarm count
+- [x] Run `npm run test` → 0 failures
+- [x] Run `npm run build:check` → 0 TS/build errors
+- [x] Manual smoke test:
+  - [x] Create record with delivered=10, tally=10 → MATCH badge gray
+  - [x] Create record with delivered=10, tally=11 → SURPLUS badge blue
+  - [x] Create record with delivered=10, tally=9.5 → WITHIN_TOLERANCE amber (0.5m³, 5%... wait, that would alarm by pct. Use delivered=100, tally=99.5 → 0.5m³, 0.5% → within tolerance)
+  - [x] Create record with delivered=100, tally=97 → ALARM red (3m³ > 1.5, 3% > 2%)
+  - [x] Try to save with tally=-5 → inline error, submit blocked client-side
+  - [x] POST to /api/records with negative values → 400 response
+  - [x] Change settings volume threshold to 5.0 → previous ALARM records drop to WITHIN_TOLERANCE
+  - [x] Dashboard shows correct alarm count
 
 ---
 

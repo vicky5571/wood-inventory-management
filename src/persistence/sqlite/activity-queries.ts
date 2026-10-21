@@ -6,6 +6,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultFreightPphRate: 2.0,
   defaultBrokerFee: 250000,
   acceptableDiscrepancyThresholdPct: 2.0,
+  discrepancyAlarmVolumeM3: 1.5,
+  discrepancyAlarmPercent: 2.0,
   yardName: 'TPK-01 Utama (Central Yard)',
   yardCode: 'TPK-01',
 };
@@ -28,6 +30,8 @@ interface SqliteAppSettingsRow {
   default_freight_pph_rate: number;
   default_broker_fee: number;
   acceptable_discrepancy_threshold_pct: number;
+  discrepancy_alarm_volume_m3?: number | null;
+  discrepancy_alarm_percent?: number | null;
   yard_name: string;
   yard_code: string;
   updated_at: string;
@@ -136,11 +140,18 @@ export function getSettingsFromDb(db: DatabaseSync): AppSettings {
     return { ...DEFAULT_APP_SETTINGS };
   }
 
+  const rawAlarmPct = row.discrepancy_alarm_percent != null ? Number(row.discrepancy_alarm_percent) : undefined;
+  const legacyPct = row.acceptable_discrepancy_threshold_pct != null ? Number(row.acceptable_discrepancy_threshold_pct) : 2.0;
+  const alarmPercent = rawAlarmPct ?? legacyPct;
+  const alarmVolumeM3 = row.discrepancy_alarm_volume_m3 != null ? Number(row.discrepancy_alarm_volume_m3) : 1.5;
+
   return {
     defaultTimberPphRate: Number(row.default_timber_pph_rate),
     defaultFreightPphRate: Number(row.default_freight_pph_rate),
     defaultBrokerFee: Number(row.default_broker_fee),
-    acceptableDiscrepancyThresholdPct: Number(row.acceptable_discrepancy_threshold_pct),
+    acceptableDiscrepancyThresholdPct: legacyPct,
+    discrepancyAlarmVolumeM3: alarmVolumeM3,
+    discrepancyAlarmPercent: alarmPercent,
     yardName: String(row.yard_name),
     yardCode: String(row.yard_code),
   };
@@ -152,7 +163,9 @@ export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>):
     defaultTimberPphRate: patch.defaultTimberPphRate ?? current.defaultTimberPphRate,
     defaultFreightPphRate: patch.defaultFreightPphRate ?? current.defaultFreightPphRate,
     defaultBrokerFee: patch.defaultBrokerFee ?? current.defaultBrokerFee,
-    acceptableDiscrepancyThresholdPct: patch.acceptableDiscrepancyThresholdPct ?? current.acceptableDiscrepancyThresholdPct,
+    acceptableDiscrepancyThresholdPct: patch.acceptableDiscrepancyThresholdPct ?? patch.discrepancyAlarmPercent ?? current.acceptableDiscrepancyThresholdPct,
+    discrepancyAlarmVolumeM3: patch.discrepancyAlarmVolumeM3 ?? current.discrepancyAlarmVolumeM3,
+    discrepancyAlarmPercent: patch.discrepancyAlarmPercent ?? patch.acceptableDiscrepancyThresholdPct ?? current.discrepancyAlarmPercent,
     yardName: patch.yardName ?? current.yardName,
     yardCode: patch.yardCode ?? current.yardCode,
   };
@@ -163,6 +176,8 @@ export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>):
       default_freight_pph_rate = ?,
       default_broker_fee = ?,
       acceptable_discrepancy_threshold_pct = ?,
+      discrepancy_alarm_volume_m3 = ?,
+      discrepancy_alarm_percent = ?,
       yard_name = ?,
       yard_code = ?,
       updated_at = datetime('now')
@@ -171,7 +186,9 @@ export function saveSettingsToDb(db: DatabaseSync, patch: Partial<AppSettings>):
     updated.defaultTimberPphRate,
     updated.defaultFreightPphRate,
     updated.defaultBrokerFee,
-    updated.acceptableDiscrepancyThresholdPct,
+    updated.acceptableDiscrepancyThresholdPct ?? updated.discrepancyAlarmPercent,
+    updated.discrepancyAlarmVolumeM3,
+    updated.discrepancyAlarmPercent,
     updated.yardName,
     updated.yardCode
   );

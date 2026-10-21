@@ -18,14 +18,20 @@ test('SQLite Activity Logs & App Settings Persistence Suite', async (t) => {
     const initial = getSettingsFromDb(db);
     assert.equal(initial.defaultTimberPphRate, 0.5);
     assert.equal(initial.acceptableDiscrepancyThresholdPct, 2.0);
+    assert.equal(initial.discrepancyAlarmVolumeM3, 1.5);
+    assert.equal(initial.discrepancyAlarmPercent, 2.0);
 
     const updated = saveSettingsToDb(db, {
       defaultTimberPphRate: 1.5,
       yardName: 'TPK-02 Selatan',
+      discrepancyAlarmVolumeM3: 2.5,
+      discrepancyAlarmPercent: 3.5,
     });
     assert.equal(updated.defaultTimberPphRate, 1.5);
     assert.equal(updated.yardName, 'TPK-02 Selatan');
     assert.equal(updated.defaultFreightPphRate, 2.0);
+    assert.equal(updated.discrepancyAlarmVolumeM3, 2.5);
+    assert.equal(updated.discrepancyAlarmPercent, 3.5);
   });
 
   await t.test('appends immutable activity logs and filters by action', () => {

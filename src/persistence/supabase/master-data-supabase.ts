@@ -122,16 +122,24 @@ export async function fetchSupabaseSettings(): Promise<AppSettings> {
       defaultFreightPphRate: 2.0,
       defaultBrokerFee: 250000,
       acceptableDiscrepancyThresholdPct: 2.0,
+      discrepancyAlarmVolumeM3: 1.5,
+      discrepancyAlarmPercent: 2.0,
       yardName: 'TPK-01 Utama (Central Yard)',
       yardCode: 'TPK-01',
     };
   }
   const r = rows[0];
+  const legacyPct = r.acceptable_discrepancy_threshold_pct != null ? Number(r.acceptable_discrepancy_threshold_pct) : 2.0;
+  const alarmPercent = r.discrepancy_alarm_percent != null ? Number(r.discrepancy_alarm_percent) : legacyPct;
+  const alarmVolumeM3 = r.discrepancy_alarm_volume_m3 != null ? Number(r.discrepancy_alarm_volume_m3) : 1.5;
+
   return {
     defaultTimberPphRate: Number(r.default_timber_pph_rate),
     defaultFreightPphRate: Number(r.default_freight_pph_rate),
     defaultBrokerFee: Number(r.default_broker_fee),
-    acceptableDiscrepancyThresholdPct: Number(r.acceptable_discrepancy_threshold_pct),
+    acceptableDiscrepancyThresholdPct: legacyPct,
+    discrepancyAlarmVolumeM3: alarmVolumeM3,
+    discrepancyAlarmPercent: alarmPercent,
     yardName: String(r.yard_name),
     yardCode: String(r.yard_code),
   };
@@ -143,7 +151,9 @@ export async function saveSupabaseSettings(patch: Partial<AppSettings>): Promise
     defaultTimberPphRate: patch.defaultTimberPphRate ?? current.defaultTimberPphRate,
     defaultFreightPphRate: patch.defaultFreightPphRate ?? current.defaultFreightPphRate,
     defaultBrokerFee: patch.defaultBrokerFee ?? current.defaultBrokerFee,
-    acceptableDiscrepancyThresholdPct: patch.acceptableDiscrepancyThresholdPct ?? current.acceptableDiscrepancyThresholdPct,
+    acceptableDiscrepancyThresholdPct: patch.acceptableDiscrepancyThresholdPct ?? patch.discrepancyAlarmPercent ?? current.acceptableDiscrepancyThresholdPct,
+    discrepancyAlarmVolumeM3: patch.discrepancyAlarmVolumeM3 ?? current.discrepancyAlarmVolumeM3,
+    discrepancyAlarmPercent: patch.discrepancyAlarmPercent ?? patch.acceptableDiscrepancyThresholdPct ?? current.discrepancyAlarmPercent,
     yardName: patch.yardName ?? current.yardName,
     yardCode: patch.yardCode ?? current.yardCode,
   };
@@ -152,7 +162,9 @@ export async function saveSupabaseSettings(patch: Partial<AppSettings>): Promise
     default_timber_pph_rate: updated.defaultTimberPphRate,
     default_freight_pph_rate: updated.defaultFreightPphRate,
     default_broker_fee: updated.defaultBrokerFee,
-    acceptable_discrepancy_threshold_pct: updated.acceptableDiscrepancyThresholdPct,
+    acceptable_discrepancy_threshold_pct: updated.acceptableDiscrepancyThresholdPct ?? updated.discrepancyAlarmPercent,
+    discrepancy_alarm_volume_m3: updated.discrepancyAlarmVolumeM3,
+    discrepancy_alarm_percent: updated.discrepancyAlarmPercent,
     yard_name: updated.yardName,
     yard_code: updated.yardCode,
     updated_at: new Date().toISOString(),

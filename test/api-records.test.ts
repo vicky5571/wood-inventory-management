@@ -177,16 +177,49 @@ test('Records API Multi-Item Manifest & Persistence Suite', async (t) => {
     assert.match(body.error, /Hanya Level 1/);
   });
 
-  await t.test('DELETE /api/records with roleLevel 2 returns 403 (Level 2 is View-Only)', async () => {
-    const req = new Request('http://localhost:3000/api/records?id=rec-test-1', {
-      method: 'DELETE',
-      headers: { cookie: `${COOKIE_NAME}=${level2Token}` },
+  await t.test('POST /api/records rejects payload with negative tallyVolumeM3 with 400', async () => {
+    const req = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({
+        woodSpecies: 'Teak / Jati (柚木)',
+        tallyVolumeM3: -2.5,
+      }),
     });
 
-    const res = await DELETE(req);
-    assert.strictEqual(res.status, 403);
+    const res = await POST(req);
+    assert.strictEqual(res.status, 400);
     const body = await res.json();
     assert.strictEqual(body.success, false);
-    assert.match(body.error, /Hanya Level 1/);
+    assert.match(body.error, /tidak boleh negatif/);
+  });
+
+  await t.test('POST /api/records rejects manifest containing negative measurements with 400', async () => {
+    const req = new Request('http://localhost:3000/api/records', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({
+        manifest: {
+          id: 'man-neg-test',
+          items: [{
+            id: 'item-neg',
+            woodSpecies: 'Jati',
+            tallyVolumeM3: -1.0,
+          }],
+        },
+      }),
+    });
+
+    const res = await POST(req);
+    assert.strictEqual(res.status, 400);
+    const body = await res.json();
+    assert.strictEqual(body.success, false);
+    assert.match(body.error, /tidak boleh negatif/);
   });
 });

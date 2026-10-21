@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS } from '../src/hooks/useSettings.ts';
+import { DEFAULT_SETTINGS, normalizeSettings } from '../src/hooks/useSettings.ts';
 import { TIMBER_SPECIES_CATALOGUE } from '../src/utils/timber-species.ts';
 
 test('App Settings & Master Data Suite', async (t) => {
@@ -9,8 +9,27 @@ test('App Settings & Master Data Suite', async (t) => {
     assert.equal(DEFAULT_SETTINGS.defaultFreightPphRate, 2.0);
     assert.ok(DEFAULT_SETTINGS.defaultBrokerFee >= 0);
     assert.ok(DEFAULT_SETTINGS.acceptableDiscrepancyThresholdPct > 0);
+    assert.equal(DEFAULT_SETTINGS.discrepancyAlarmVolumeM3, 1.5);
+    assert.equal(DEFAULT_SETTINGS.discrepancyAlarmPercent, 2.0);
     assert.ok(DEFAULT_SETTINGS.yardCode.length > 0);
     assert.ok(DEFAULT_SETTINGS.yardName.length > 0);
+  });
+
+  await t.test('normalizeSettings migrates legacy settings and fills defaults', () => {
+    // Legacy setting with only acceptableDiscrepancyThresholdPct: 3.5
+    const migrated = normalizeSettings({
+      acceptableDiscrepancyThresholdPct: 3.5,
+    } as any);
+    assert.equal(migrated.discrepancyAlarmPercent, 3.5);
+    assert.equal(migrated.discrepancyAlarmVolumeM3, 1.5);
+
+    // Custom alarm thresholds preserved
+    const custom = normalizeSettings({
+      discrepancyAlarmVolumeM3: 2.2,
+      discrepancyAlarmPercent: 4.0,
+    });
+    assert.equal(custom.discrepancyAlarmVolumeM3, 2.2);
+    assert.equal(custom.discrepancyAlarmPercent, 4.0);
   });
 
   await t.test('timber species master data contains required tropical hardwood varieties', () => {

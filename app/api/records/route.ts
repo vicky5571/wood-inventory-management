@@ -10,6 +10,7 @@ import type {
 } from '../../../src/types/index.ts';
 
 import { parseRecordQueryParams } from '../../../src/utils/record-query-params.ts';
+import { validateDiscrepancyInputs } from '../../../src/utils/discrepancy-validation.ts';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,35 +51,18 @@ export async function GET(request?: Request): Promise<NextResponse> {
 export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized: Sesi tidak ditemukan atau kadaluarsa' },
-        { status: 401 }
-      );
-    }
-
-    if (user.roleLevel !== 1) {
-      return NextResponse.json(
-        { success: false, error: 'Akses ditolak: Hanya Level 1 yang dapat membuat atau mengubah data' },
-        { status: 403 }
-      );
-    }
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized: Sesi tidak ditemukan atau kadaluarsa' }, { status: 401 });
+    if (user.roleLevel !== 1) return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya Level 1 yang dapat membuat atau mengubah data' }, { status: 403 });
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { success: false, error: 'Invalid JSON payload' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Invalid JSON payload' }, { status: 400 });
     }
 
     if (!body || typeof body !== 'object') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid payload' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
     }
 
     const raw = body as Record<string, any>;
@@ -110,6 +94,18 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      for (const it of manifestInput.items) {
+        const v = validateDiscrepancyInputs({
+          tallyVolumeM3: it.tallyVolumeM3, deliveredVolumeM3: it.deliveredVolumeM3,
+          tallyPieces: it.tallyPieces, deliveredPieces: it.deliveredPieces,
+        });
+        if (!v.ok) {
+          return NextResponse.json(
+            { success: false, error: 'Validation error: Nilai pengukuran tidak boleh negatif', errors: v.errors },
+            { status: 400 }
+          );
+        }
+      }
       const saved = await serverRecordStore.saveManifest(manifestInput);
       await serverRecordStore.appendActivityLog({
         action: 'RECORD_CREATED',
@@ -118,13 +114,20 @@ export async function POST(request: Request) {
         operatorName: user.name,
         operatorRole: user.title || `Level ${user.roleLevel}`,
       });
-      return NextResponse.json({
-        success: true,
-        data: saved,
-      });
+      return NextResponse.json({ success: true, data: saved });
     }
 
     const candidate = body as Partial<WoodReceivingRecord>;
+    const discValidation = validateDiscrepancyInputs({
+      tallyVolumeM3: candidate.tallyVolumeM3, deliveredVolumeM3: candidate.deliveredVolumeM3,
+      tallyPieces: candidate.tallyPieces, deliveredPieces: candidate.deliveredPieces,
+    });
+    if (!discValidation.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Validation error: Nilai pengukuran tidak boleh negatif', errors: discValidation.errors },
+        { status: 400 }
+      );
+    }
     if (
       !candidate.woodSpecies ||
       typeof candidate.woodSpecies !== 'string' ||

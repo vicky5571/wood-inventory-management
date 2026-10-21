@@ -10,9 +10,41 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultFreightPphRate: 2.0,
   defaultBrokerFee: 250000,
   acceptableDiscrepancyThresholdPct: 2.0,
+  discrepancyAlarmVolumeM3: 1.5,
+  discrepancyAlarmPercent: 2.0,
   yardName: 'TPK-01 Utama (Central Yard)',
   yardCode: 'TPK-01',
 };
+
+export function normalizeSettings(data: unknown): AppSettings {
+  if (!data || typeof data !== 'object') {
+    return { ...DEFAULT_SETTINGS };
+  }
+  const parsed = data as Record<string, unknown>;
+  const merged: AppSettings = {
+    ...DEFAULT_SETTINGS,
+    ...parsed,
+  };
+
+  // Migration: carry old acceptableDiscrepancyThresholdPct forward if discrepancyAlarmPercent is absent
+  if (typeof parsed.discrepancyAlarmPercent !== 'number' || isNaN(parsed.discrepancyAlarmPercent)) {
+    if (typeof parsed.acceptableDiscrepancyThresholdPct === 'number' && !isNaN(parsed.acceptableDiscrepancyThresholdPct) && parsed.acceptableDiscrepancyThresholdPct > 0) {
+      merged.discrepancyAlarmPercent = Math.max(0.1, parsed.acceptableDiscrepancyThresholdPct);
+    } else {
+      merged.discrepancyAlarmPercent = DEFAULT_SETTINGS.discrepancyAlarmPercent;
+    }
+  }
+
+  if (typeof parsed.discrepancyAlarmVolumeM3 !== 'number' || isNaN(parsed.discrepancyAlarmVolumeM3)) {
+    merged.discrepancyAlarmVolumeM3 = DEFAULT_SETTINGS.discrepancyAlarmVolumeM3;
+  }
+
+  if (merged.acceptableDiscrepancyThresholdPct === undefined) {
+    merged.acceptableDiscrepancyThresholdPct = merged.discrepancyAlarmPercent;
+  }
+
+  return merged;
+}
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -23,9 +55,7 @@ export function useSettings() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          setSettings({ ...DEFAULT_SETTINGS, ...parsed });
-        }
+        setSettings(normalizeSettings(parsed));
       }
     } catch (e) {
       console.warn('Failed to parse settings:', e);
@@ -37,9 +67,10 @@ export function useSettings() {
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (!isMounted || !json?.success || !json.data) return;
-        setSettings(json.data);
+        const normalized = normalizeSettings(json.data);
+        setSettings(normalized);
         try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(json.data));
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
         } catch {}
       })
       .catch((err) => {

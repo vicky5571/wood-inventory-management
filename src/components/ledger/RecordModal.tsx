@@ -21,6 +21,7 @@ import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { useSettings } from '@/src/hooks/useSettings';
 import { X, Scale, CheckCircle2, Zap } from 'lucide-react';
 import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
+import { validateDiscrepancyInputs } from '@/src/utils/discrepancy-validation';
 
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
 export const MANIFEST_DRAFT_KEY = 'wood_manifest_form_draft_v1';
@@ -142,6 +143,18 @@ export function RecordModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    for (const it of items) {
+      const val = validateDiscrepancyInputs({
+        tallyVolumeM3: it.tallyVolumeM3, deliveredVolumeM3: it.deliveredVolumeM3,
+        tallyPieces: it.tallyPieces, deliveredPieces: it.deliveredPieces,
+      });
+      if (!val.ok) {
+        toast.error('Validasi Gagal (输入验证失败)', Object.values(val.errors)[0] || 'Nilai tidak boleh negatif');
+        return;
+      }
+    }
+
     const submitPreview = computeManifestCalculations(manifestPayload);
     const primary = items[0] || createItem(form, settings.defaultTimberPphRate);
     const savedRecord: WoodReceivingRecord = {

@@ -110,7 +110,7 @@ export function RecordTableMobileView({
                 <span
                   className={`text-xs font-mono font-black ${
                     Math.abs(diffVol) <= 0.05
-                      ? 'text-emerald-600'
+                      ? 'text-gray-600'
                       : diffVol > 0
                       ? 'text-blue-600'
                       : 'text-rose-600'

@@ -17,7 +17,8 @@ export function TaxSettings({
   const [timberTax, setTimberTax] = useState(settings.defaultTimberPphRate);
   const [freightTax, setFreightTax] = useState(settings.defaultFreightPphRate);
   const [brokerFee, setBrokerFee] = useState(settings.defaultBrokerFee);
-  const [tolerancePct, setTolerancePct] = useState(settings.acceptableDiscrepancyThresholdPct);
+  const [alarmVolumeM3, setAlarmVolumeM3] = useState(settings.discrepancyAlarmVolumeM3 ?? 1.5);
+  const [alarmPercent, setAlarmPercent] = useState(settings.discrepancyAlarmPercent ?? settings.acceptableDiscrepancyThresholdPct ?? 2.0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +28,14 @@ export function TaxSettings({
       defaultTimberPphRate: Number(timberTax),
       defaultFreightPphRate: Number(freightTax),
       defaultBrokerFee: Number(brokerFee),
-      acceptableDiscrepancyThresholdPct: Number(tolerancePct),
+      discrepancyAlarmVolumeM3: Number(alarmVolumeM3),
+      discrepancyAlarmPercent: Number(alarmPercent),
+      acceptableDiscrepancyThresholdPct: Number(alarmPercent),
     });
 
     toast.success(
-      'Pengaturan Pajak Disimpan (税务配置已更新)',
-      `PPh 22: ${timberTax}% • PPh 23: ${freightTax}% • Toleransi: ${tolerancePct}%`
+      'Pengaturan Pajak & Alarm Disimpan (税务与告警配置已更新)',
+      `PPh 22: ${timberTax}% • PPh 23: ${freightTax}% • Alarm: >${alarmVolumeM3} m³ atau >${alarmPercent}%`
     );
   };
 
@@ -128,28 +131,68 @@ export function TaxSettings({
           </span>
         </div>
 
-        {/* Discrepancy Tolerance Pct */}
+        {/* Ambang Alarm Volume m³ */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-            <span>Ambang Toleransi Selisih Fisik (%)</span>
-            <span className="text-[10px] text-gray-400 font-normal">(合理检尺收缩公差)</span>
+            <span>Ambang Alarm Volume (m³)</span>
+            <span className="text-[10px] text-gray-400 font-normal">(亏损体积告警阈值)</span>
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              step="0.1"
+              min="0.1"
+              max="50"
+              disabled={!canWrite}
+              value={alarmVolumeM3}
+              onChange={(e) => setAlarmVolumeM3(Number(e.target.value))}
+              className="w-full text-xs font-mono font-bold border border-gray-200 rounded-xl px-3 py-2 text-gray-900 bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition disabled:opacity-60"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400">m³</span>
+          </div>
+          <span className="text-[10px] text-gray-500">
+            Alarm aktif jika selisih minus dan defisit fisik melebihi nilai ini (default: 1.5 m³).
+          </span>
+        </div>
+
+        {/* Ambang Alarm Persentase % */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+            <span>Ambang Alarm Persentase (%)</span>
+            <span className="text-[10px] text-gray-400 font-normal">(亏损比例告警阈值)</span>
           </label>
           <div className="relative">
             <input
               type="number"
               step="0.5"
               min="0.5"
-              max="10"
+              max="50"
               disabled={!canWrite}
-              value={tolerancePct}
-              onChange={(e) => setTolerancePct(Number(e.target.value))}
+              value={alarmPercent}
+              onChange={(e) => setAlarmPercent(Number(e.target.value))}
               className="w-full text-xs font-mono font-bold border border-gray-200 rounded-xl px-3 py-2 text-gray-900 bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition disabled:opacity-60"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400">%</span>
           </div>
           <span className="text-[10px] text-gray-500">
-            Persentase deviasi fisik di bawah nilai ini dikategorikan wajar (natural shrinkage).
+            Alarm aktif jika selisih minus dan defisit persentase melebihi nilai ini (default: 2.0%).
           </span>
+        </div>
+      </div>
+
+      {/* Explanatory OR threshold note */}
+      <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+        <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+        <div className="space-y-0.5 text-[11px]">
+          <p className="font-semibold text-amber-950">
+            Aturan Alarm Diskrepansi (OR Gate / 告警触发逻辑):
+          </p>
+          <p className="text-amber-800">
+            Alarm merah menyala <strong>hanya jika</strong> selisih bernilai <strong>negatif</strong> (penyusutan fisik) <strong>DAN</strong> melebihi salah satu batas: <code>|Δ vol| &gt; {alarmVolumeM3} m³</code> <em>atau</em> <code>|% susut| &gt; {alarmPercent}%</code>.
+          </p>
+          <p className="text-amber-700/90 text-[10px]">
+            Surplus fisik (tally &gt; surat jalan) ditampilkan dengan warna biru netral dan tidak pernah memicu alarm.
+          </p>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { DashboardMetrics } from '@/src/types';
 import { classifyDiscrepancy } from '@/src/utils/timber-calc';
-import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown, CheckCircle2 } from 'lucide-react';
+import { Layers, Box, Wallet, Building2, TrendingUp, TrendingDown, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 function formatRupiah(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -26,8 +26,8 @@ function renderDiscrepancyBadge(diff: number, unit: string, isInteger: boolean =
 
   const isSurplus = diff > 0;
   return (
-    <span className={`inline-flex items-center gap-1 font-bold font-mono tabular-nums text-xs mt-0.5 ${isSurplus ? 'text-[#00bb7f]' : 'text-[#ed1c24]'}`}>
-      {isSurplus ? <TrendingUp className="w-3.5 h-3.5 shrink-0" /> : <TrendingDown className="w-3.5 h-3.5 shrink-0" />}
+    <span className={`inline-flex items-center gap-1 font-bold font-mono tabular-nums text-xs mt-0.5 ${isSurplus ? 'text-blue-600' : 'text-[#ed1c24]'}`}>
+      {isSurplus ? <TrendingUp className="w-3.5 h-3.5 shrink-0 text-blue-600" /> : <TrendingDown className="w-3.5 h-3.5 shrink-0 text-[#ed1c24]" />}
       {isSurplus ? '+' : '-'}{absVal} {unit}
     </span>
   );
@@ -46,7 +46,7 @@ function SubMetricBox({ title, children, isRose = false }: { title: string; chil
 
 export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       {/* 1. Total Volume Hero Card */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group">
         <div className="h-1 w-full bg-[#ffc908]" />
@@ -173,6 +173,58 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00bb7f] mt-0.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#00bb7f]" />
               Aktif TPK
+            </span>
+          </SubMetricBox>
+        </div>
+      </div>
+
+      {/* 5. Alarm Diskrepansi */}
+      <div className={`bg-white rounded-2xl border transition-all flex flex-col overflow-hidden group shadow-xs hover:shadow-md ${
+        (metrics.recordsWithAlarmCount ?? 0) > 0 ? 'border-rose-300 ring-1 ring-rose-200' : 'border-gray-200/80'
+      }`}>
+        <div className={`h-1 w-full ${(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+        <div className={`flex items-center justify-between border-b px-4 py-3 ${
+          (metrics.recordsWithAlarmCount ?? 0) > 0
+            ? 'border-rose-100 bg-gradient-to-br from-rose-50/70 to-white'
+            : 'border-gray-100 bg-gradient-to-br from-emerald-50/40 to-white'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+              (metrics.recordsWithAlarmCount ?? 0) > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-50 text-emerald-600'
+            }`}>
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#101828] uppercase tracking-wide">
+              Alarm Diskrepansi <span className="text-[11px] font-normal normal-case text-gray-500 tracking-normal">(超差警报)</span>
+            </span>
+          </div>
+          {(metrics.recordsWithAlarmCount ?? 0) > 0 ? (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+              Kritis
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Aman
+            </span>
+          )}
+        </div>
+        <div className="px-4 pt-3.5 pb-2.5">
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold font-mono tracking-tight ${
+              (metrics.recordsWithAlarmCount ?? 0) > 0 ? 'text-rose-600' : 'text-[#101828]'
+            }`}>
+              {metrics.recordsWithAlarmCount ?? 0}
+            </span>
+            <span className="text-xs font-semibold text-gray-500">Rit Terindikasi</span>
+          </div>
+        </div>
+        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+          <SubMetricBox title="Ambang Batas">
+            <span className="text-[11px] font-bold font-mono tabular-nums text-gray-700 mt-0.5">1.5m³ / 2.0%</span>
+          </SubMetricBox>
+          <SubMetricBox title="Status Evaluasi" isRose={(metrics.recordsWithAlarmCount ?? 0) > 0}>
+            <span className={`text-[11px] font-bold mt-0.5 ${(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+              {(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'Perlu Investigasi' : 'Toleransi Wajar'}
             </span>
           </SubMetricBox>
         </div>

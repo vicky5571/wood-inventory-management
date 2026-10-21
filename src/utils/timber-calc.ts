@@ -14,6 +14,7 @@ import type {
   ManifestFormInput,
   ManifestCalculationOutput,
 } from '../types/index.ts';
+import { evaluateDiscrepancy } from './discrepancy.ts';
 
 /**
  * Calculates gross, PPh tax, and net payable for timber material.
@@ -81,13 +82,18 @@ export function computeRecordCalculations(
  * Aggregates high-level executive dashboard metrics across wood receiving records.
  */
 export function aggregateDashboardMetrics(
-  records: WoodReceivingRecord[]
+  records: WoodReceivingRecord[],
+  thresholds?: { volumeThresholdM3?: number; percentThreshold?: number }
 ): DashboardMetrics {
+  const volThresh = thresholds?.volumeThresholdM3 ?? 1.5;
+  const pctThresh = thresholds?.percentThreshold ?? 2.0;
+
   let totalDeliveredVolumeM3 = 0, totalTallyVolumeM3 = 0;
   let totalDeliveredPieces = 0, totalTallyPieces = 0;
   let totalNetTimberPayable = 0, totalNetFreightPayable = 0;
   let totalGrandExpenditure = 0, totalOutstandingPayable = 0;
   let unpaidRecordsCount = 0;
+  let recordsWithAlarmCount = 0;
 
   const kavlingSet = new Set<string>();
   const speciesVolumeBreakdown: Record<string, number> = {};
@@ -100,6 +106,18 @@ export function aggregateDashboardMetrics(
     totalNetTimberPayable += r.timberNetPayable;
     totalNetFreightPayable += r.freightNetPayable;
     totalGrandExpenditure += r.grandNetPayable;
+
+    const evalRes = evaluateDiscrepancy({
+      tallyVolumeM3: r.tallyVolumeM3,
+      deliveredVolumeM3: r.deliveredVolumeM3,
+      tallyPieces: r.tallyPieces,
+      deliveredPieces: r.deliveredPieces,
+      volumeThresholdM3: volThresh,
+      percentThreshold: pctThresh,
+    });
+    if (evalRes.isAlarm) {
+      recordsWithAlarmCount += 1;
+    }
 
     const status = r.paymentStatus || 'UNPAID';
     if (status !== 'PAID') {
@@ -131,6 +149,7 @@ export function aggregateDashboardMetrics(
     unpaidRecordsCount,
     totalRecordsCount: records.length,
     activeKavlingCount: kavlingSet.size,
+    recordsWithAlarmCount,
     speciesVolumeBreakdown,
   };
 }

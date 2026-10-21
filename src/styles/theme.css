@@ -139,8 +139,8 @@ body {
 }
 .col-header-subtitle { display: block; font-size: 0.7rem; color: #94a3b8; font-weight: 400; }
 
-.badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.7rem; }
-.badge-match { background: var(--wood-success-bg); color: var(--wood-success-text); }
+.badge-match { background: #f1f5f9; color: #475569; }
+.badge-surplus { background: #eff6ff; color: #1d4ed8; }
 .badge-alert { background: var(--wood-danger-bg); color: var(--wood-danger-text); }
 
 /* Modal */

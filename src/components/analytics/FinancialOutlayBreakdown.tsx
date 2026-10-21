@@ -124,7 +124,7 @@ export function FinancialOutlayBreakdown({
             </span>
           </div>
         </div>
-        <span className={`font-mono font-bold ${discrepancyValueExposure >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+        <span className={`font-mono font-bold ${discrepancyValueExposure >= 0 ? 'text-blue-700' : 'text-rose-700'}`}>
           {discrepancyValueExposure >= 0 ? '+' : ''}{formatRupiah(discrepancyValueExposure)}
         </span>
       </div>

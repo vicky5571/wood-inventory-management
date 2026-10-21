@@ -116,8 +116,16 @@ export function SupplierCard({ supplier, onEdit, onDelete, canWrite = true }: Su
           <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
             Deviasi Rata-rata
           </span>
-          <span className={`text-sm font-bold font-mono mt-1 ${supplier.discrepancyRatePercent >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-            {supplier.discrepancyRatePercent >= 0 ? '+' : ''}{supplier.discrepancyRatePercent}%
+          <span className={`text-sm font-bold font-mono mt-1 ${
+            supplier.discrepancyRatePercent > 0
+              ? 'text-blue-700'
+              : supplier.discrepancyRatePercent < -2.0
+              ? 'text-rose-700'
+              : supplier.discrepancyRatePercent < 0
+              ? 'text-amber-700'
+              : 'text-gray-700'
+          }`}>
+            {supplier.discrepancyRatePercent > 0 ? '+' : ''}{supplier.discrepancyRatePercent}%
           </span>
         </div>
       </div>

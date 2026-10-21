@@ -177,7 +177,7 @@ export function RecordTableCompactView({
                       isMatch
                         ? 'bg-gray-100 text-gray-700'
                         : isSurplus
-                        ? 'bg-emerald-50 text-[#00bb7f] border border-emerald-200/80'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200/80'
                         : 'bg-rose-50 text-[#ed1c24] border border-rose-200/80'
                     }`}
                   >

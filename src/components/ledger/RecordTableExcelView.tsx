@@ -185,7 +185,7 @@ export function RecordTableExcelView({
                 <td className="p-2 font-mono tabular-nums text-center font-bold text-gray-900 border-r border-gray-100">{r.tallyPieces}</td>
                 <td className="p-2 font-mono tabular-nums text-center font-bold text-gray-900 border-r border-gray-100">{r.tallyVolumeM3.toFixed(2)}</td>
                 <td className="p-2 whitespace-nowrap border-r border-gray-100">
-                  <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold font-mono tabular-nums ${isMatch ? 'bg-gray-100 text-gray-600' : isSurplus ? 'bg-emerald-50 text-[#00bb7f]' : 'bg-rose-50 text-[#ed1c24]'}`}>
+                  <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold font-mono tabular-nums ${isMatch ? 'bg-gray-100 text-gray-600' : isSurplus ? 'bg-blue-50 text-blue-700' : 'bg-rose-50 text-[#ed1c24]'}`}>
                     {isMatch ? '0.00' : isSurplus ? `+${volDiff.toFixed(2)}` : volDiff.toFixed(2)}
                   </span>
                 </td>

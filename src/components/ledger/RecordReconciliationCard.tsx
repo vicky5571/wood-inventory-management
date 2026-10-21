@@ -36,12 +36,12 @@ export const RecordReconciliationCard = React.memo(function RecordReconciliation
             <span
               className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                 isSurplusOrMatch
-                  ? 'bg-emerald-500/20 text-[#00bb7f] border border-emerald-500/30'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                   : 'bg-rose-500/20 text-[#ed1c24] border border-rose-500/30'
               }`}
             >
               {isSurplusOrMatch ? (
-                <TrendingUp className="w-3 h-3 text-[#00bb7f]" />
+                <TrendingUp className="w-3 h-3 text-blue-400" />
               ) : (
                 <TrendingDown className="w-3 h-3 text-[#ed1c24]" />
               )}

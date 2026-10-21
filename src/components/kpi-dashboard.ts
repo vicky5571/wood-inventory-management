@@ -27,9 +27,11 @@ function escapeHtml(str: unknown): string {
 }
 
 export function renderKpiDashboard(container: HTMLElement, metrics: DashboardMetrics): void {
-  const discrepancyBadge = metrics.volumeDiscrepancyM3 >= 0
-    ? `<span class="badge badge-match">+${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Surplus/Match)</span>`
-    : `<span class="badge badge-alert">${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Shortage)</span>`;
+  const discrepancyBadge = metrics.volumeDiscrepancyM3 > 0
+    ? `<span class="badge badge-surplus">+${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Surplus)</span>`
+    : metrics.volumeDiscrepancyM3 < 0
+    ? `<span class="badge badge-alert">${metrics.volumeDiscrepancyM3.toFixed(2)} m³ (Shortage)</span>`
+    : `<span class="badge badge-match">0.00 m³ (Cocok)</span>`;
 
   container.innerHTML = `
     <div class="kpi-grid">

@@ -123,7 +123,9 @@ export function runMigrations(db: DatabaseSync): void {
       default_timber_pph_rate REAL NOT NULL DEFAULT 0.5 CHECK (default_timber_pph_rate >= 0),
       default_freight_pph_rate REAL NOT NULL DEFAULT 2.0 CHECK (default_freight_pph_rate >= 0),
       default_broker_fee REAL NOT NULL DEFAULT 250000 CHECK (default_broker_fee >= 0),
-      acceptable_discrepancy_threshold_pct REAL NOT NULL DEFAULT 2.0 CHECK (acceptable_discrepancy_threshold_pct >= 0),
+      acceptable_discrepancy_threshold_pct REAL DEFAULT 2.0 CHECK (acceptable_discrepancy_threshold_pct >= 0),
+      discrepancy_alarm_volume_m3 REAL NOT NULL DEFAULT 1.5 CHECK (discrepancy_alarm_volume_m3 > 0),
+      discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0),
       yard_name TEXT NOT NULL DEFAULT 'TPK-01 Utama (Central Yard)',
       yard_code TEXT NOT NULL DEFAULT 'TPK-01',
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -143,6 +145,13 @@ export function runMigrations(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON activity_logs(tenant_id, timestamp DESC);
     CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(tenant_id, action);
   `);
+
+  try {
+    db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_volume_m3 REAL NOT NULL DEFAULT 1.5 CHECK (discrepancy_alarm_volume_m3 > 0);`);
+  } catch {}
+  try {
+    db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0);`);
+  } catch {}
 
   db.exec(SQLITE_VIEWS_DDL);
 }

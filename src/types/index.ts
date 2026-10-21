@@ -459,6 +459,7 @@ export interface DashboardMetrics {
   unpaidRecordsCount: number;
   totalRecordsCount: number;
   activeKavlingCount: number;
+  recordsWithAlarmCount: number;
   speciesVolumeBreakdown: Record<string, number>;
 }
 
@@ -661,13 +662,45 @@ export interface ActivityLogEntry {
 }
 
 /**
+ * 4-level discrepancy severity classification
+ */
+export type DiscrepancySeverity =
+  | 'MATCH'              // |diff| < epsilon
+  | 'SURPLUS'            // diff > 0 (neutral, informational)
+  | 'WITHIN_TOLERANCE'   // diff < 0 but within both volume and percent thresholds
+  | 'ALARM';             // diff < 0 AND (|volume| > vThresh OR |pct| > pThresh)
+
+/**
+ * Result of pure discrepancy evaluation
+ */
+export interface DiscrepancyEvaluation {
+  severity: DiscrepancySeverity;
+  volumeDiscrepancyM3: number;
+  volumeDiscrepancyPct: number;        // (tally - delivered) / delivered * 100
+  pieceDiscrepancy: number;
+  pieceDiscrepancyPct: number;
+  isAlarm: boolean;
+  reason?: string;                     // Tooltip / human-readable reason
+}
+
+/**
+ * @deprecated Use DiscrepancySeverity instead. Kept for backward compatibility.
+ */
+export type DiscrepancyStatus = 'match' | 'surplus' | 'shortage';
+
+/**
  * Global warehouse configuration and tax rate settings
  */
 export interface AppSettings {
   defaultTimberPphRate: number;
   defaultFreightPphRate: number;
   defaultBrokerFee: number;
-  acceptableDiscrepancyThresholdPct: number;
+  /**
+   * @deprecated Use discrepancyAlarmPercent and discrepancyAlarmVolumeM3 instead.
+   */
+  acceptableDiscrepancyThresholdPct?: number;
+  discrepancyAlarmVolumeM3: number;
+  discrepancyAlarmPercent: number;
   yardName: string;
   yardCode: string;
 }
