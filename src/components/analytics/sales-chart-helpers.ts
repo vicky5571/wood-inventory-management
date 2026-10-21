@@ -7,14 +7,14 @@
 
 import type { WoodReceivingRecord, WoodSalesRecord } from '@/src/types/index';
 
-export interface InventoryFlowData {
+export interface InventoryFlowChartData {
   labels: string[];
   inboundVolumes: number[];
   outboundVolumes: number[];
   netVolumes: number[];
 }
 
-export interface CustomerSalesData {
+export interface CustomerSalesChartData {
   labels: string[];
   volumes: number[];
   revenues: number[];
@@ -27,7 +27,7 @@ export interface CustomerSalesData {
 export function prepareInventoryFlowData(
   inbounds: WoodReceivingRecord[],
   sales: WoodSalesRecord[]
-): InventoryFlowData {
+): InventoryFlowChartData {
   if ((!inbounds || inbounds.length === 0) && (!sales || sales.length === 0)) {
     return { labels: [], inboundVolumes: [], outboundVolumes: [], netVolumes: [] };
   }
@@ -79,7 +79,7 @@ export function prepareInventoryFlowData(
 export function prepareCustomerSalesData(
   sales: WoodSalesRecord[],
   topN = 5
-): CustomerSalesData {
+): CustomerSalesChartData {
   if (!sales || sales.length === 0) {
     return { labels: [], volumes: [], revenues: [] };
   }

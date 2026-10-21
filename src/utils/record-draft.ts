@@ -12,12 +12,12 @@ import type { ManifestFormInput, WoodReceivingRecord } from '../types/index.ts';
 export const DRAFT_KEY = 'wood_record_form_draft_v1';
 export const MANIFEST_DRAFT_KEY = 'wood_manifest_form_draft_v1';
 
-export interface RecordDraftData {
+export interface RecordDraftState {
   draft: Partial<WoodReceivingRecord>;
   timestamp: number;
 }
 
-export interface ManifestDraftData {
+export interface ManifestDraftState {
   draft: Partial<ManifestFormInput>;
   timestamp: number;
 }
@@ -83,7 +83,7 @@ export function loadRecordDraft(storage?: Storage): Partial<WoodReceivingRecord>
     const parsed = JSON.parse(raw);
     const draft =
       parsed && typeof parsed === 'object' && 'draft' in parsed
-        ? (parsed as RecordDraftData).draft
+        ? (parsed as RecordDraftState).draft
         : (parsed as Partial<WoodReceivingRecord>);
 
     if (draft && typeof draft === 'object' && hasMeaningfulDraftData(draft)) {
@@ -108,7 +108,7 @@ export function saveRecordDraft(
 
     if (!hasMeaningfulDraftData(data)) return false;
 
-    const payload: RecordDraftData = {
+    const payload: RecordDraftState = {
       draft: data,
       timestamp: Date.now(),
     };
@@ -192,7 +192,7 @@ export function saveManifestDraft(
 
     if (!hasMeaningfulManifestDraft(draft)) return;
 
-    const payload: ManifestDraftData = {
+    const payload: ManifestDraftState = {
       draft,
       timestamp: Date.now(),
     };
@@ -219,7 +219,7 @@ export function loadManifestDraft(
     const parsed = JSON.parse(raw);
     const draft =
       parsed && typeof parsed === 'object' && 'draft' in parsed
-        ? (parsed as ManifestDraftData).draft
+        ? (parsed as ManifestDraftState).draft
         : (parsed as Partial<ManifestFormInput>);
 
     if (draft && typeof draft === 'object' && hasMeaningfulManifestDraft(draft)) {

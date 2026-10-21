@@ -1,11 +1,11 @@
-export interface NavItem {
+export interface NavItemConfig {
   id: string;
   labelId: string;
   labelZh: string;
   href: string;
 }
 
-export const NAV_ITEMS: readonly NavItem[] = [
+export const NAV_ITEMS: readonly NavItemConfig[] = [
   {
     id: 'analytics',
     labelId: 'Ringkasan',

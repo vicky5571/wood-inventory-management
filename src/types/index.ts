@@ -1095,6 +1095,17 @@ export interface PaymentFormWithLines extends PaymentForm {
   lines: PaymentFormLineItem[];
 }
 
+export interface PaymentFormGroup {
+  key: string;
+  supplierName: string;
+  supplierId?: string;
+  woodSpecies: string;
+  contractNumber: string;
+  lines: PaymentFormLineItem[];
+  recordIds: string[];
+  itemIds: string[];
+}
+
 export interface PaymentFormFilterCriteria {
   weekStartDate?: string;
   status?: PaymentFormStatus | 'ALL';

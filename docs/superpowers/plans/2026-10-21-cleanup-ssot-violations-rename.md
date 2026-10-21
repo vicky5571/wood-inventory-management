@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-21
 **Priority:** P3 (Technical Debt)
-**Status:** DRAFT
+**Status:** COMPLETED
 **Type:** Rename refactor + minimal SSOT exemption pattern expansion
 
 > **Spec Requirement:** None. This is a mechanical rename refactor following drift-check conventions. Plans with prefix `cleanup-` are exempt from Spec-Plan pairing per `scripts/drift-check.ts` convention.
@@ -65,7 +65,7 @@ This resolves all 21 violations without forcing premature abstraction.
 ## 2. Implementation Checklist
 
 ### Phase 1: Expand SSOT Exemption List
-- [ ] Edit `scripts/drift-check.ts`:
+- [x] Edit `scripts/drift-check.ts`:
   - Add to `SSOT_EXEMPT_SUFFIXES`:
     - `Input` (function input bags)
     - `Row` (DB row shapes in persistence adapters)
@@ -74,50 +74,50 @@ This resolves all 21 violations without forcing premature abstraction.
     - `Shape` (type shape documentation)
     - `Value` (context value types)
     - `Action` (reducer action types)
-- [ ] Verify: `node scripts/drift-check.ts` should show fewer violations
+- [x] Verify: `node scripts/drift-check.ts` should show fewer violations
 
 ### Phase 2: Move Truly Shared Types to SSOT
-- [ ] Move `PaymentFormGroup` from `src/utils/payment-form-grouping.ts` to `src/types/index.ts`:
+- [x] Move `PaymentFormGroup` from `src/utils/payment-form-grouping.ts` to `src/types/index.ts`:
   - Add import where used
   - Remove `export interface` from source file
-- [ ] Move `DiscrepancyStatus` from `src/utils/timber-calc.ts` to `src/types/index.ts`:
+- [x] Move `DiscrepancyStatus` from `src/utils/timber-calc.ts` to `src/types/index.ts`:
   - Add `@deprecated` JSDoc preserving existing deprecation note
   - Remove `export type` from source file
-- [ ] Run `npm run build:check` → 0 errors (imports resolve)
+- [x] Run `npm run build:check` → 0 errors (imports resolve)
 
 ### Phase 3: Rename Local Types (Category A — chart data)
-- [ ] `src/components/analytics/chart-helpers.ts`:
+- [x] `src/components/analytics/chart-helpers.ts`:
   - `VolumeTrendData` → `VolumeTrendChartData`
   - `SpeciesDonutData` → `SpeciesDonutChartData`
   - `SupplierBarData` → `SupplierBarChartData`
   - Update all consumers (grep `grep -rn "VolumeTrendData\|SpeciesDonutData\|SupplierBarData" src/ app/`)
-- [ ] `src/components/analytics/sales-chart-helpers.ts`:
+- [x] `src/components/analytics/sales-chart-helpers.ts`:
   - `CustomerSalesData` → `CustomerSalesChartData`
   - `InventoryFlowData` → `InventoryFlowChartData`
   - Update consumers
 
 ### Phase 4: Rename Local Types (Category A — misc)
-- [ ] `src/components/ledger/RecordTableCompactView.tsx`:
+- [x] `src/components/ledger/RecordTableCompactView.tsx`:
   - `SortField` → `RecordTableSortField`
   - `SortDirection` → `RecordTableSortDirection`
-- [ ] `src/components/ledger/SupplierCombobox.tsx`:
+- [x] `src/components/ledger/SupplierCombobox.tsx`:
   - `SupplierOption` → `SupplierComboboxOption` (OR keep as-is since `Options` suffix is already exempt — verify)
-- [ ] `src/context/navigation-state.ts`:
+- [x] `src/context/navigation-state.ts`:
   - `RouteResolution` → `RouteResolutionResult`
   - `NavigationAction` → `NavigationActionConfig` (OR add `Action` to exemption, which Phase 1 already does — then no rename needed)
 
 ### Phase 5: Rename Local Types (Category A — draft shapes)
-- [ ] `src/utils/record-draft.ts`:
+- [x] `src/utils/record-draft.ts`:
   - `RecordDraftData` → `RecordDraftState`
   - `ManifestDraftData` → `ManifestDraftState`
   - Update consumers
 
 ### Phase 6: Verification
-- [ ] `npm run build:check` → 0 errors (all type renames resolve correctly)
-- [ ] `npm test` → 0 failures
-- [ ] `node scripts/drift-check.ts` → verify `SSOT_VIOLATION` count = 0
-- [ ] Regenerate baseline: `node scripts/drift-check.ts --write-baseline`
-- [ ] Verify `drift-baseline.json` shows `SSOT_VIOLATION: 0`
+- [x] `npm run build:check` → 0 errors (all type renames resolve correctly)
+- [x] `npm test` → 0 failures
+- [x] `node scripts/drift-check.ts` → verify `SSOT_VIOLATION` count = 0
+- [x] Regenerate baseline: `node scripts/drift-check.ts --write-baseline`
+- [x] Verify `drift-baseline.json` shows `SSOT_VIOLATION: 0`
 
 ---
 

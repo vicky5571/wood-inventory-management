@@ -3,7 +3,7 @@ export type NavigationAction =
   | { type: 'NAVIGATE'; targetHref: string }
   | { type: 'CANCEL' };
 
-export interface RouteResolution {
+export interface RouteResolutionResult {
   isTargetReached: boolean;
   targetHref: string | null;
 }
@@ -70,7 +70,7 @@ export function resolveNavigationIntent(
 export function resolvePathnameChange(
   newPathname: string,
   currentTarget: string | null
-): RouteResolution {
+): RouteResolutionResult {
   if (!currentTarget) {
     return { isTargetReached: false, targetHref: null };
   }

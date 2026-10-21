@@ -15,7 +15,7 @@ import {
   loadRecordDraft,
   saveRecordDraft,
   clearRecordDraft,
-  type RecordDraftData,
+  type RecordDraftState,
 } from '../src/utils/record-draft.ts';
 import type { WoodReceivingRecord } from '../src/types/index.ts';
 
@@ -111,7 +111,7 @@ test('Auto-Draft Persistence Test Suite for RecordModal', async (t) => {
     const raw = mockStorage.getItem(DRAFT_KEY);
     assert.ok(raw !== null, 'Item should be present in localStorage');
 
-    const parsed = JSON.parse(raw!) as RecordDraftData;
+    const parsed = JSON.parse(raw!) as RecordDraftState;
     assert.ok(parsed.timestamp > 0);
     assert.strictEqual(parsed.draft.truckPlateNumber, 'DK 9876 AB');
     assert.strictEqual(parsed.draft.woodSpecies, 'Merbau (菠萝格)');

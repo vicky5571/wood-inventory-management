@@ -238,5 +238,9 @@ export function runMigrations(db: DatabaseSync): void {
   ensurePaymentFormTables(db);
   ensureProductionTables(db);
   ensureSortingTables(db);
-  db.exec(SQLITE_VIEWS_DDL);
+
+  const viewRow = db.prepare(`SELECT count(*) AS c FROM sqlite_master WHERE type='view' AND name='v_buku_besar_flat';`).get() as { c: number } | undefined;
+  if (!viewRow || viewRow.c === 0) {
+    db.exec(SQLITE_VIEWS_DDL);
+  }
 }

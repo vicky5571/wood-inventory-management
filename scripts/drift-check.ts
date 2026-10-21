@@ -46,9 +46,19 @@ const SSOT_EXEMPT_SUFFIXES = [
   'State',           // Local component state
   'Config',          // Local configuration shapes
   'Options',         // Local option bags
+  'Option',          // Combobox or select item options
   'Context',         // React context types
   'Params',          // Function parameter bags
   'Result',          // Local function result shapes (if clearly local)
+  'Input',           // Function input bags
+  'Row',             // Database row shapes in persistence adapters
+  'Adapter',         // Adapter pattern interfaces
+  'ChartData',       // Chart.js data payload shapes
+  'Shape',           // Type shape documentation
+  'Value',           // Context value types
+  'Action',          // Reducer action types
+  'Field',           // Table or form field union types
+  'Direction',       // Sort or layout direction union types
 ];
 
 // ============================================================================

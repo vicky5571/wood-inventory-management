@@ -10,21 +10,13 @@ import type {
   ReceivingItem,
   PaymentForm,
   PaymentFormLineItem,
+  PaymentFormGroup,
   PaymentFormGenerationResult,
 } from '../types/index.ts';
 
 import { calculateTimberPayment } from './timber-calc.ts';
 
-export interface PaymentFormGroup {
-  key: string;
-  supplierName: string;
-  supplierId?: string;
-  woodSpecies: string;
-  contractNumber: string;
-  lines: PaymentFormLineItem[];
-  recordIds: string[];
-  itemIds: string[];
-}
+export type { PaymentFormGroup };
 
 export function buildGroupingKey(
   supplierName: string,

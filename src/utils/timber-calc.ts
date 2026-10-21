@@ -13,6 +13,7 @@ import type {
   RecordCalculationOutput,
   ManifestFormInput,
   ManifestCalculationOutput,
+  DiscrepancyStatus,
 } from '../types/index.ts';
 import { evaluateDiscrepancy } from './discrepancy.ts';
 
@@ -196,7 +197,7 @@ export function calculateCubicFromCentimeters(
   return Number(total.toFixed(4));
 }
 
-export type DiscrepancyStatus = 'match' | 'surplus' | 'shortage';
+export type { DiscrepancyStatus };
 
 /**
  * Classifies volumetric or piece discrepancy into semantic status: match, surplus, or shortage.

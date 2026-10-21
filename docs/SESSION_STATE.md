@@ -54,7 +54,7 @@ All 7 client feedback items from October 2026 have been implemented, tested, and
 - ✅ **Debt Cleanup Round 1**:
   - ✅ 15 retrospective specs for historical plans — `MISSING_SPEC` baseline count 15 → 0
   - ✅ Plan + implementation for login page God File refactor (`refactor-login-page-god-file.md`): `app/login/page.tsx` reduced from 269 LOC to 85 LOC (`GOD_FILE: 0`)
-  - ✅ Plan for SSOT violations cleanup via rename (`cleanup-ssot-violations-rename.md`)
+  - ✅ Plan + implementation for SSOT violations cleanup via rename (`cleanup-ssot-violations-rename.md`): all 21 SSOT violations resolved (`SSOT_VIOLATION: 0`)
   - ✅ Spec + Plan for unjustified `any` replacement (`type-safety-replace-any-design.md` + `type-safety-replace-any.md`)
 - ✅ Drift-check `refactor-` / `cleanup-` / `chore-` exemption pattern added
 
@@ -65,8 +65,9 @@ All 7 client feedback items from October 2026 have been implemented, tested, and
 | Initial (session start) | 84 | 1 | 15 | 1 | 21 | 46 |
 | After anti-drift infra | 83 | 0 | 15 | 1 | 21 | 46 |
 | After 15 retro specs | 68 | 0 | 0 | 1 | 21 | 46 |
-| **After Login Refactor** | **67** | **0** | **0** | **0** | **21** | **46** |
-| Target (after remaining 2 cleanups) | 0 | 0 | 0 | 0 | 0 | 0 |
+| After Login Refactor | 67 | 0 | 0 | 0 | 21 | 46 |
+| **After SSOT Cleanup** | **46** | **0** | **0** | **0** | **0** | **46** |
+| Target (after final `any` cleanup) | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ---
 

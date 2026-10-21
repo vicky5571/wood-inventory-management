@@ -1,18 +1,18 @@
 import type { WoodReceivingRecord } from '../../types/index.ts';
 
-export interface VolumeTrendData {
+export interface VolumeTrendChartData {
   labels: string[];
   deliveredVolumes: number[];
   tallyVolumes: number[];
 }
 
-export interface SpeciesDonutData {
+export interface SpeciesDonutChartData {
   labels: string[];
   values: number[];
   colors: string[];
 }
 
-export interface SupplierBarData {
+export interface SupplierBarChartData {
   labels: string[];
   delivered: number[];
   tally: number[];
@@ -32,7 +32,7 @@ export const CHART_PALETTE = [
 /**
  * Prepares chronological timeline data of delivered vs measured tally cubic meters
  */
-export function prepareVolumeTrendData(records: WoodReceivingRecord[]): VolumeTrendData {
+export function prepareVolumeTrendData(records: WoodReceivingRecord[]): VolumeTrendChartData {
   if (!records || records.length === 0) {
     return { labels: [], deliveredVolumes: [], tallyVolumes: [] };
   }
@@ -61,7 +61,7 @@ export function prepareVolumeTrendData(records: WoodReceivingRecord[]): VolumeTr
 /**
  * Prepares breakdown by timber species for doughnut charts
  */
-export function prepareSpeciesDonutData(records: WoodReceivingRecord[]): SpeciesDonutData {
+export function prepareSpeciesDonutData(records: WoodReceivingRecord[]): SpeciesDonutChartData {
   if (!records || records.length === 0) {
     return { labels: [], values: [], colors: [] };
   }
@@ -88,7 +88,7 @@ export function prepareSpeciesDonutData(records: WoodReceivingRecord[]): Species
 /**
  * Prepares supplier volume comparison data for horizontal or vertical bar charts
  */
-export function prepareSupplierBarData(records: WoodReceivingRecord[]): SupplierBarData {
+export function prepareSupplierBarData(records: WoodReceivingRecord[]): SupplierBarChartData {
   if (!records || records.length === 0) {
     return { labels: [], delivered: [], tally: [] };
   }
