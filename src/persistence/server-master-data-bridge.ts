@@ -9,6 +9,7 @@ import {
   fetchSupabaseSettings,
   saveSupabaseSettings,
   fetchSupabaseActivityLogs,
+  fetchSupabaseUserActivityLogs,
   appendSupabaseActivityLog,
 } from './supabase/master-data-supabase.ts';
 import {
@@ -246,6 +247,17 @@ export class ServerMasterDataBridge {
       }
     }
     return this.getSqliteStore().getActivityLogs(actionFilter, limit);
+  }
+
+  async getUserActivityLogs(userId: string, limit: number = 100): Promise<ActivityLogEntry[]> {
+    if (this.isSupabaseMode()) {
+      try {
+        return await fetchSupabaseUserActivityLogs(userId, limit);
+      } catch (err) {
+        console.warn('[ServerRecordStore] Supabase getUserActivityLogs failed, falling back to SQLite:', err);
+      }
+    }
+    return this.getSqliteStore().getUserActivityLogs(userId, limit);
   }
 
   async appendActivityLog(

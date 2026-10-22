@@ -252,6 +252,21 @@ export async function fetchSupabaseActivityLogs(actionFilter?: string, limit: nu
   }));
 }
 
+export async function fetchSupabaseUserActivityLogs(userId: string, limit: number = 100): Promise<ActivityLogEntry[]> {
+  const url = `/activity_logs?tenant_id=eq.default-tenant&entity_id=eq.${encodeURIComponent(userId)}&action=like.USER_*&order=timestamp.desc&limit=${Math.min(limit, 500)}`;
+  const rows = await supabaseFetch<SupabaseActivityLogRow[]>(url);
+  return rows.map((r) => ({
+    id: r.id,
+    action: r.action as ActivityActionType,
+    entityId: r.entity_id || undefined,
+    entitySummary: r.entity_summary,
+    operatorName: r.operator_name,
+    operatorRole: r.operator_role,
+    timestamp: r.timestamp,
+    metadata: r.metadata_json ? JSON.parse(r.metadata_json) : undefined,
+  }));
+}
+
 export async function appendSupabaseActivityLog(
   entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
 ): Promise<ActivityLogEntry> {

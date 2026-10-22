@@ -34,6 +34,7 @@ import {
   getSettingsFromDb,
   saveSettingsToDb,
   listActivityLogsFromDb,
+  listUserActivityLogsFromDb,
   appendActivityLogToDb,
 } from './sqlite/activity-queries.ts';
 import { SEED_WOOD_RECORDS } from './seed/fixtures.ts';
@@ -212,6 +213,11 @@ export class SqliteRecordStore {
   async getActivityLogs(actionFilter?: string, limit?: number): Promise<ActivityLogEntry[]> {
     this.ensureInitialized();
     return listActivityLogsFromDb(this.db, actionFilter, limit);
+  }
+
+  async getUserActivityLogs(userId: string, limit?: number): Promise<ActivityLogEntry[]> {
+    this.ensureInitialized();
+    return listUserActivityLogsFromDb(this.db, userId, limit);
   }
 
   async appendActivityLog(

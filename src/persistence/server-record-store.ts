@@ -223,6 +223,10 @@ export class ServerRecordStore {
     return this.masterDataBridge.getActivityLogs(actionFilter, limit);
   }
 
+  getUserActivityLogs(userId: string, limit?: number): Promise<ActivityLogEntry[]> {
+    return this.masterDataBridge.getUserActivityLogs(userId, limit);
+  }
+
   appendActivityLog(
     entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
   ): Promise<ActivityLogEntry> {

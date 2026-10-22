@@ -86,6 +86,23 @@ export function listActivityLogsFromDb(
   return rows.map(mapActivityRow);
 }
 
+export function listUserActivityLogsFromDb(
+  db: DatabaseSync,
+  userId: string,
+  limit: number = 100
+): ActivityLogEntry[] {
+  const safeLimit = Math.max(1, Math.min(limit, 500));
+  const rows = db.prepare(`
+    SELECT * FROM activity_logs
+    WHERE tenant_id = 'default-tenant'
+      AND entity_id = ?
+      AND action LIKE 'USER_%'
+    ORDER BY timestamp DESC
+    LIMIT ?
+  `).all(userId, safeLimit) as unknown as SqliteActivityLogRow[];
+  return rows.map(mapActivityRow);
+}
+
 export function appendActivityLogToDb(
   db: DatabaseSync,
   entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
