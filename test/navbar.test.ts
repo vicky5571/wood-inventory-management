@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { NAV_ITEMS, resolveActiveNavSection, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Navbar Navigation & Layout Config Suite', async (t) => {
-  await t.test('NAV_ITEMS contains bilingual configuration for all 14 required operational routes', () => {
-    assert.equal(NAV_ITEMS.length, 14);
+  await t.test('NAV_ITEMS contains bilingual configuration for all 15 required operational routes', () => {
+    assert.equal(NAV_ITEMS.length, 15);
 
     const ids = NAV_ITEMS.map((item) => item.id);
     assert.deepEqual(ids, [
@@ -21,6 +21,7 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
       'suppliers',
       'brokers',
       'activity',
+      'users',
       'settings',
     ]);
 

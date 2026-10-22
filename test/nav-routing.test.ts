@@ -19,6 +19,7 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
       '/suppliers',
       '/brokers',
       '/activity',
+      '/users',
       '/settings',
     ]);
 
@@ -37,6 +38,7 @@ test('Multi-Route Navigation Configuration Suite', async (t) => {
       'suppliers',
       'brokers',
       'activity',
+      'users',
       'settings',
     ]);
   });
