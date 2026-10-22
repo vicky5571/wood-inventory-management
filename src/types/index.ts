@@ -554,6 +554,53 @@ export interface AuthApiResponse {
   reason?: AuthFailureReason;
 }
 
+export interface ManagedUser extends AuthUser {
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserPayload {
+  email: string;
+  name: string;
+  title: string;
+  roleLevel: UserRoleLevel;
+  password: string;
+  permissions?: UserPermissions;
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  title?: string;
+  roleLevel?: UserRoleLevel;
+  permissions?: UserPermissions;
+}
+
+export interface ResetPasswordPayload {
+  newPassword: string;
+}
+
+export interface DeactivateUserPayload {
+  reason?: string;
+}
+
+export interface ReactivateUserPayload {
+  reason?: string;
+}
+
+export interface UsersApiResponse {
+  success: boolean;
+  data?: ManagedUser[];
+  error?: string;
+}
+
+export interface UserApiResponse {
+  success: boolean;
+  data?: ManagedUser;
+  error?: string;
+}
+
 /**
  * Toast notification category
  */
