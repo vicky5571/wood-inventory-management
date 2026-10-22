@@ -185,7 +185,22 @@ None. All 10 phases of `2026-10-22-session-invalidation.md` (Spec B) are complet
 **Strategy:** All technical debt resolved. No grandfathered violations.
 
 **Technical debt backlog (optional cleanup):**
-- None. Codebase is 100% compliant with all architectural invariants.
+
+### TD-001: UserRepository.update patch semantics undocumented
+- **Context:** `src/persistence/user-repository-sqlite.ts` (and Supabase impl) use shallow-patch semantic where `undefined` = no-op, `null` (or `{}` for permissions) = clear. Pattern is consistent across all fields (`name`, `email`, `roleLevel`, `title`, `permissions`, `isActive`, `passwordHash`) using `patch.X ?? existing.X` idiom. Standard PATCH REST pattern (Prisma/TypeORM-style).
+- **Issue:** No JSDoc on `UserRepository.update` interface documenting this. Developer may intuitively use `{ permissions: undefined }` to clear permissions and silently get a no-op instead. Latent trap for Spec D admin UI.
+- **Fix:** Add JSDoc to `UserRepository.update` abstract method in `src/persistence/user-repository.ts` explaining: `undefined` = no-op; `null` (or `{}` for object fields) = explicit clear.
+- **Scope:** ~5 LOC (JSDoc only). No behavior change.
+- **Priority:** Resolve before Spec D (admin UI) implementation to prevent latent bug.
+- **Discovered:** 2026-10-22 during Spec B implementation QA (false-alarm "bug" revealed documentation gap).
+
+### TD-002: Session failure-reason disambiguation uses O(N) scan
+- **Context:** `src/auth/session.ts` lines 171-174 inside `getAuthenticatedUserDetailed`. When `findById` returns null, implementation calls `listAll({ includeInactive: true })` and scans to distinguish `USER_INACTIVE` vs `USER_NOT_FOUND`.
+- **Issue:** O(N) scan per request where N = total users. Negligible at current scale (4 users) but will degrade when Spec D admin UI accumulates many deactivated users. Scalability smell.
+- **Fix:** Add `findByIdIncludingInactive(id): Promise<UserRecordRow | null>` method to `UserRepository` interface. Both SQLite and Supabase impls add a `SELECT ... WHERE id = ?` without the `is_active = 1` filter. Session layer then checks `isActive` flag on returned row to decide reason.
+- **Scope:** ~15 LOC per DAO impl + session.ts refactor + test. Non-breaking (additive method).
+- **Priority:** Resolve when user count exceeds ~100, OR before Spec D if admin UX includes deactivated-user list. Not blocking today.
+- **Discovered:** 2026-10-22 during Spec B implementation code review.
 
 ---
 
