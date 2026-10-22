@@ -52,6 +52,10 @@ export class AuditedUserRepository extends UserRepository {
     return this.inner.findById(id);
   }
 
+  findByIdIncludingInactive(id: string): Promise<UserRecordRow | null> {
+    return this.inner.findByIdIncludingInactive(id);
+  }
+
   listAll(opts?: { includeInactive?: boolean }): Promise<UserRecordRow[]> {
     return this.inner.listAll(opts);
   }
@@ -76,11 +80,7 @@ export class AuditedUserRepository extends UserRepository {
   }
 
   async update(id: string, patch: Partial<Omit<UserRecordRow, 'id' | 'createdAt'>>): Promise<UserRecordRow> {
-    let existing = await this.inner.findById(id);
-    if (!existing) {
-      const all = await this.inner.listAll({ includeInactive: true });
-      existing = all.find((u) => u.id === id) ?? null;
-    }
+    const existing = await this.inner.findByIdIncludingInactive(id);
     if (!existing) throw new UserNotFoundError(id);
 
     const updated = await this.inner.update(id, patch);
@@ -89,11 +89,7 @@ export class AuditedUserRepository extends UserRepository {
   }
 
   async deactivate(id: string): Promise<void> {
-    let existing = await this.inner.findById(id);
-    if (!existing) {
-      const all = await this.inner.listAll({ includeInactive: true });
-      existing = all.find((u) => u.id === id) ?? null;
-    }
+    const existing = await this.inner.findByIdIncludingInactive(id);
     if (!existing) throw new UserNotFoundError(id);
 
     await this.inner.deactivate(id);

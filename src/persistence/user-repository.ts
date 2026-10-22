@@ -25,6 +25,15 @@ export interface UserRecordRow extends AuthUser {
 export abstract class UserRepository {
   abstract findByEmail(email: string): Promise<UserRecordRow | null>;
   abstract findById(id: string): Promise<UserRecordRow | null>;
+  /**
+   * Looks up a user by id regardless of active state.
+   * Returns the user record even if soft-deleted (`isActive: false`).
+   * Use for admin flows that need to inspect, reactivate, or audit any user.
+   *
+   * For auth lookup (login, session verification) use `findById` instead
+   * (active-only, deactivated users are correctly treated as not-found).
+   */
+  abstract findByIdIncludingInactive(id: string): Promise<UserRecordRow | null>;
   abstract listAll(opts?: { includeInactive?: boolean }): Promise<UserRecordRow[]>;
   abstract create(input: Omit<UserRecordRow, 'createdAt' | 'updatedAt'>): Promise<UserRecordRow>;
   /**

@@ -125,6 +125,45 @@ describe('UserRepository DAO Suite', () => {
     assert.equal(nonExistent, null);
   });
 
+  it('findByIdIncludingInactive returns row with isActive: true for active user', async () => {
+    await repo.create({
+      id: 'usr-inact-test-active',
+      email: 'inact-active@timber.id',
+      name: 'Active Test',
+      roleLevel: 2,
+      title: 'Staff',
+      passwordHash: 'hash1',
+      isActive: true,
+    });
+
+    const user = await repo.findByIdIncludingInactive('usr-inact-test-active');
+    assert.ok(user);
+    assert.equal(user?.id, 'usr-inact-test-active');
+    assert.equal(user?.isActive, true);
+  });
+
+  it('findByIdIncludingInactive returns row with isActive: false for inactive user', async () => {
+    await repo.create({
+      id: 'usr-inact-test-inactive',
+      email: 'inact-inactive@timber.id',
+      name: 'Inactive Test',
+      roleLevel: 2,
+      title: 'Staff',
+      passwordHash: 'hash2',
+      isActive: false,
+    });
+
+    const user = await repo.findByIdIncludingInactive('usr-inact-test-inactive');
+    assert.ok(user);
+    assert.equal(user?.id, 'usr-inact-test-inactive');
+    assert.equal(user?.isActive, false);
+  });
+
+  it('findByIdIncludingInactive returns null for non-existent id', async () => {
+    const user = await repo.findByIdIncludingInactive('usr-404-nonexistent');
+    assert.equal(user, null);
+  });
+
   it('listAll() returns active only and listAll({ includeInactive: true }) returns all', async () => {
     await repo.create({
       id: 'u1',

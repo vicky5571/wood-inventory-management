@@ -169,9 +169,8 @@ export async function getAuthenticatedUserDetailed(request: Request): Promise<Au
   }
 
   try {
-    const allUsers = await repo.listAll({ includeInactive: true });
-    const userExists = allUsers.some((u) => u.id === payload.userId);
-    return { user: null, reason: userExists ? 'USER_INACTIVE' : 'USER_NOT_FOUND' };
+    const anyUser = await repo.findByIdIncludingInactive(payload.userId);
+    return { user: null, reason: anyUser ? 'USER_INACTIVE' : 'USER_NOT_FOUND' };
   } catch {
     return { user: null, reason: 'USER_NOT_FOUND' };
   }

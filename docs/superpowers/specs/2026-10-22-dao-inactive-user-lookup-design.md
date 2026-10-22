@@ -2,8 +2,8 @@
 
 **Document:** `docs/superpowers/specs/2026-10-22-dao-inactive-user-lookup-design.md`
 **Date:** 2026-10-22
-**Status:** Draft — Pending Approval
-**Related Plan:** TBD — `docs/superpowers/plans/2026-10-22-dao-inactive-user-lookup.md`
+**Status:** Accepted — Implemented
+**Related Plan:** `docs/superpowers/plans/2026-10-22-dao-inactive-user-lookup.md`
 **Related ADR:** ADR-0013 (User Management Architecture)
 **Resolves:** TD-002 (session failure-reason disambiguation uses O(N) scan)
 **Architecture:** Add `findByIdIncludingInactive(id): Promise<UserRecordRow | null>` method to `UserRepository` DAO. Refactor 3 existing call-sites that currently work around this gap via `listAll` scan. Zero behavior change externally; replace O(N) with O(1) indexed lookup.

@@ -12,6 +12,10 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 ## [Unreleased]
 
 ### Changed
+- **DAO**: Added `findByIdIncludingInactive(id)` method to UserRepository. Replaces O(N) listAll scan workaround at 3 call-sites (session.ts failure-reason disambiguation + AuditedUserRepository.update + AuditedUserRepository.deactivate). Resolves TD-002. Zero behavior change from caller perspective; indexed PK lookup.
+  - Spec: `docs/superpowers/specs/2026-10-22-dao-inactive-user-lookup-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-dao-inactive-user-lookup.md`
+  - Refs: ADR-0013, TD-002
 - **Auth session**: `getAuthenticatedUser` now performs fresh DAO lookup on every call. User state changes (deactivation, role, permissions) take effect within one request instead of up to 7-day JWT TTL. JWT payload role: identity + session-validity proof only. `/api/auth/me` returns DB-fresh user with new `reason` field on 401. Pre-existing tokens remain compatible.
   - Spec: `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
   - Plan: `docs/superpowers/plans/2026-10-22-session-invalidation.md`

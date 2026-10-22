@@ -73,6 +73,14 @@ export class SqliteUserRepository implements UserRepository {
     return row ? mapRowToUserRecord(row) : null;
   }
 
+  async findByIdIncludingInactive(id: string): Promise<UserRecordRow | null> {
+    const row = this.db.prepare(`
+      SELECT * FROM users WHERE id = ?
+    `).get(id) as unknown as SqliteUserRow | undefined;
+    if (!row) return null;
+    return mapRowToUserRecord(row);
+  }
+
   async listAll(opts?: { includeInactive?: boolean }): Promise<UserRecordRow[]> {
     const sql = opts?.includeInactive
       ? `SELECT * FROM users ORDER BY created_at ASC`

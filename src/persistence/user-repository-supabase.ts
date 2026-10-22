@@ -58,6 +58,14 @@ export class SupabaseUserRepository implements UserRepository {
     return rows.length > 0 ? mapRowToUserRecord(rows[0]) : null;
   }
 
+  async findByIdIncludingInactive(id: string): Promise<UserRecordRow | null> {
+    const encoded = encodeURIComponent(id);
+    const rows = await supabaseFetch<SupabaseUserRow[]>(
+      `users?id=eq.${encoded}&limit=1`
+    );
+    return rows.length > 0 ? mapRowToUserRecord(rows[0]) : null;
+  }
+
   async listAll(opts?: { includeInactive?: boolean }): Promise<UserRecordRow[]> {
     const query = opts?.includeInactive
       ? `users?order=created_at.asc`
