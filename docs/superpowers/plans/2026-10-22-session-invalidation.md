@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 **Priority:** P1 (prerequisite for Spec D admin UI production safety)
-**Status:** DRAFT — Pending Approval
+**Status:** Accepted — Implemented
 **Related Spec:** `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
 **Related ADR:** ADR-0013 (User Management Architecture), ADR-0014 (Fresh Lookup — written as Phase 1 of this plan)
 **Position in Sequence:** Plan for Spec B of (A→B→C→D). Depends on Spec A (merged `95a6fd1`). Prerequisite for Spec D.
@@ -55,13 +55,13 @@ Design detail in spec. ADR-0014 captures the architectural decision. This plan i
 - Note: ADR will be flipped to `Accepted` in Phase 10 after implementation verification.
 
 ### Phase 2: SSOT Verification (No Code Change)
-- [ ] Confirm `AuthUser` shape unchanged (per ADR-0013 invariant 8).
-- [ ] Grep `getAuthenticatedUser` call-sites: `grep -rn "getAuthenticatedUser" app/ src/ test/`. Expected: `/api/records/route.ts`, `/api/records/tally/route.ts`. Document count in commit message.
-- [ ] Grep `verifySessionToken` call-sites. Expected: `session.ts` (internal), `/api/auth/me/route.ts` (will change in Phase 6), `/api/auth/login/route.ts` (unchanged — token creation path).
-- [ ] Confirm no caller depends on JWT payload field values that may now differ from DB (e.g., no code reads `authUser.email` and compares to JWT-derived email).
+- [x] Confirm `AuthUser` shape unchanged (per ADR-0013 invariant 8).
+- [x] Grep `getAuthenticatedUser` call-sites: `grep -rn "getAuthenticatedUser" app/ src/ test/`. Expected: `/api/records/route.ts`, `/api/records/tally/route.ts`. Document count in commit message.
+- [x] Grep `verifySessionToken` call-sites. Expected: `session.ts` (internal), `/api/auth/me/route.ts` (will change in Phase 6), `/api/auth/login/route.ts` (unchanged — token creation path).
+- [x] Confirm no caller depends on JWT payload field values that may now differ from DB (e.g., no code reads `authUser.email` and compares to JWT-derived email).
 
 ### Phase 3: SSOT Type Update (`src/types/index.ts`)
-- [ ] Add `AuthFailureReason` type near `AuthUser`:
+- [x] Add `AuthFailureReason` type near `AuthUser`:
   ```ts
   export type AuthFailureReason =
     | 'NO_TOKEN'
@@ -71,110 +71,110 @@ Design detail in spec. ADR-0014 captures the architectural decision. This plan i
     | 'USER_NOT_FOUND'
     | 'USER_INACTIVE';
   ```
-- [ ] Add `AuthResult` interface:
+- [x] Add `AuthResult` interface:
   ```ts
   export interface AuthResult {
     user: AuthUser | null;
     reason?: AuthFailureReason;
   }
   ```
-- [ ] Verify no duplicate inline definitions via `grep -rn "AuthFailureReason\|AuthResult" src/ app/`.
+- [x] Verify no duplicate inline definitions via `grep -rn "AuthFailureReason\|AuthResult" src/ app/`.
 
 ### Phase 4: Session Layer Refactor (Test-First)
-- [ ] Create `test/session-invalidation.test.ts` with scenarios:
-  - [ ] `verifySessionToken` behavior unchanged (regression — HMAC + exp check only, no DB)
-  - [ ] `getAuthenticatedUser` with no cookie → returns null
-  - [ ] `getAuthenticatedUser` with malformed token → returns null
-  - [ ] `getAuthenticatedUser` with invalid HMAC → returns null
-  - [ ] `getAuthenticatedUser` with expired exp → returns null
-  - [ ] `getAuthenticatedUser` with valid JWT + userId not in DB → returns null
-  - [ ] `getAuthenticatedUser` with valid JWT + inactive user → returns null (fresh lookup wins)
-  - [ ] `getAuthenticatedUser` with valid JWT + active user → returns DB record (not JWT payload)
-  - [ ] Staleness override: issue token when user Level 2 → mutate DB to Level 1 → verify returns Level 1
-  - [ ] Staleness override: issue token when user has no permissions → grant tallyCreate in DB → verify returns with tallyCreate
-  - [ ] Staleness override: issue token when user has tallyCreate → revoke in DB → verify returns without tallyCreate
-  - [ ] `getAuthenticatedUserDetailed` returns correct `reason` for each failure mode (6 reasons)
-  - [ ] `getAuthenticatedUserDetailed` for success returns `{ user, reason: undefined }`
-- [ ] Run `node --test test/session-invalidation.test.ts` → expect failures (new function missing)
-- [ ] Edit `src/auth/session.ts`:
-  - [ ] Keep `verifySessionToken` 100% unchanged (regression protection).
-  - [ ] Add internal `extractToken(request): Promise<string | undefined>` helper (refactor existing cookie extraction from `getAuthenticatedUser` body).
-  - [ ] Rewrite `getAuthenticatedUser(request)` per spec §2.1 (JWT verify → DAO findById → return DB user minus internal fields).
-  - [ ] Add new `getAuthenticatedUserDetailed(request): Promise<AuthResult>` that returns `{ user, reason }`.
-  - [ ] Import `getUserRepository` from `src/persistence/user-repository.ts`.
-  - [ ] Import `AuthFailureReason`, `AuthResult` from `src/types/index.ts`.
-  - [ ] Add file-top comment documenting payload field roles (userId + exp authoritative; rest decorative per ADR-0014).
-- [ ] Run tests → all pass.
-- [ ] Verify LOC: `wc -l src/auth/session.ts` → < 200. If ≥ 200, extract to `src/auth/session-errors.ts` (contingency).
+- [x] Create `test/session-invalidation.test.ts` with scenarios:
+  - [x] `verifySessionToken` behavior unchanged (regression — HMAC + exp check only, no DB)
+  - [x] `getAuthenticatedUser` with no cookie → returns null
+  - [x] `getAuthenticatedUser` with malformed token → returns null
+  - [x] `getAuthenticatedUser` with invalid HMAC → returns null
+  - [x] `getAuthenticatedUser` with expired exp → returns null
+  - [x] `getAuthenticatedUser` with valid JWT + userId not in DB → returns null
+  - [x] `getAuthenticatedUser` with valid JWT + inactive user → returns null (fresh lookup wins)
+  - [x] `getAuthenticatedUser` with valid JWT + active user → returns DB record (not JWT payload)
+  - [x] Staleness override: issue token when user Level 2 → mutate DB to Level 1 → verify returns Level 1
+  - [x] Staleness override: issue token when user has no permissions → grant tallyCreate in DB → verify returns with tallyCreate
+  - [x] Staleness override: issue token when user has tallyCreate → revoke in DB → verify returns without tallyCreate
+  - [x] `getAuthenticatedUserDetailed` returns correct `reason` for each failure mode (6 reasons)
+  - [x] `getAuthenticatedUserDetailed` for success returns `{ user, reason: undefined }`
+- [x] Run `node --test test/session-invalidation.test.ts` → expect failures (new function missing)
+- [x] Edit `src/auth/session.ts`:
+  - [x] Keep `verifySessionToken` 100% unchanged (regression protection).
+  - [x] Add internal `extractToken(request): Promise<string | undefined>` helper (refactor existing cookie extraction from `getAuthenticatedUser` body).
+  - [x] Rewrite `getAuthenticatedUser(request)` per spec §2.1 (JWT verify → DAO findById → return DB user minus internal fields).
+  - [x] Add new `getAuthenticatedUserDetailed(request): Promise<AuthResult>` that returns `{ user, reason }`.
+  - [x] Import `getUserRepository` from `src/persistence/user-repository.ts`.
+  - [x] Import `AuthFailureReason`, `AuthResult` from `src/types/index.ts`.
+  - [x] Add file-top comment documenting payload field roles (userId + exp authoritative; rest decorative per ADR-0014).
+- [x] Run tests → all pass.
+- [x] Verify LOC: `wc -l src/auth/session.ts` → < 200. If ≥ 200, extract to `src/auth/session-errors.ts` (contingency).
 
 ### Phase 5: `/api/auth/me` Refactor (Test-First)
-- [ ] Create `test/api-auth-me-freshness.test.ts` with scenarios:
-  - [ ] GET without cookie → 401 with `reason: 'NO_TOKEN'`
-  - [ ] GET with valid session + active user → 200 with DB user data
-  - [ ] GET after user deactivated in DB → 401 with `reason: 'USER_INACTIVE'`
-  - [ ] GET after user role changed in DB → 200 with new role
-  - [ ] GET after permission granted in DB → 200 with new permission
-  - [ ] Response body shape for success: `{ success: true, user }` (unchanged)
-  - [ ] Response body shape for failure: `{ success: false, error: string, reason: AuthFailureReason }`
-- [ ] Run tests → expect failures.
+- [x] Create `test/api-auth-me-freshness.test.ts` with scenarios:
+  - [x] GET without cookie → 401 with `reason: 'NO_TOKEN'`
+  - [x] GET with valid session + active user → 200 with DB user data
+  - [x] GET after user deactivated in DB → 401 with `reason: 'USER_INACTIVE'`
+  - [x] GET after user role changed in DB → 200 with new role
+  - [x] GET after permission granted in DB → 200 with new permission
+  - [x] Response body shape for success: `{ success: true, user }` (unchanged)
+  - [x] Response body shape for failure: `{ success: false, error: string, reason: AuthFailureReason }`
+- [x] Run tests → expect failures.
 
 ### Phase 6: `/api/auth/me` Implementation
-- [ ] Edit `app/api/auth/me/route.ts`:
-  - [ ] Replace `verifySessionToken(token)` call with `await getAuthenticatedUserDetailed(request)`.
-  - [ ] Remove inline cookie extraction (now inside `getAuthenticatedUserDetailed`).
-  - [ ] 401 response body includes `reason` and humanized `error` string per spec §3.1.
-- [ ] Define humanize mapping:
+- [x] Edit `app/api/auth/me/route.ts`:
+  - [x] Replace `verifySessionToken(token)` call with `await getAuthenticatedUserDetailed(request)`.
+  - [x] Remove inline cookie extraction (now inside `getAuthenticatedUserDetailed`).
+  - [x] 401 response body includes `reason` and humanized `error` string per spec §3.1.
+- [x] Define humanize mapping:
   - `NO_TOKEN` → `'Belum masuk.'`
   - `TOKEN_MALFORMED` → `'Sesi tidak valid.'`
   - `TOKEN_INVALID` → `'Sesi tidak valid.'`
   - `TOKEN_EXPIRED` → `'Sesi kadaluarsa.'`
   - `USER_NOT_FOUND` → `'Akun tidak ditemukan.'`
   - `USER_INACTIVE` → `'Akun telah dinonaktifkan.'`
-- [ ] Run tests → all pass.
-- [ ] Verify LOC: `wc -l app/api/auth/me/route.ts` → < 100 (expected ~50).
+- [x] Run tests → all pass.
+- [x] Verify LOC: `wc -l app/api/auth/me/route.ts` → < 100 (expected ~50).
 
 ### Phase 7: Regression Check on API Routes Using getAuthenticatedUser
-- [ ] Confirm `app/api/records/route.ts` POST handler still works:
+- [x] Confirm `app/api/records/route.ts` POST handler still works:
   - Login as `manager@timber.id` → POST /api/records → 201 (regression smoke)
   - Login as `admin@timber.id` → POST /api/records → 403 (unchanged guard)
-- [ ] Confirm `app/api/records/tally/route.ts` POST handler still works (ADR-0012 regression):
+- [x] Confirm `app/api/records/tally/route.ts` POST handler still works (ADR-0012 regression):
   - Login as `gudang@timber.id` → POST /api/records/tally → 201
   - Login as `admin@timber.id` → POST /api/records/tally → 403
-- [ ] Add integration test to `test/session-invalidation.test.ts`:
+- [x] Add integration test to `test/session-invalidation.test.ts`:
   - Issue valid session for `gudang@timber.id` (tallyCreate: true)
   - Simulate DB mutation: `UPDATE users SET permissions = NULL WHERE id = 'usr-warehouse-04'`
   - Call `getAuthenticatedUser` → verify returned user has no tallyCreate
   - (Documents the critical ADR-0012 interaction)
-- [ ] Restore DB state after test.
+- [x] Restore DB state after test.
 
 ### Phase 8: Full Regression + Verification Gate
-- [ ] `npm run drift:check` → `✅ No drift detected`
-- [ ] `npm test` → `pass N, fail 0` where N ≥ 807 + ~17 new tests
-- [ ] `npm run build:check` → 0 TypeScript errors
-- [ ] All existing login/session tests still pass unchanged (regression)
-- [ ] Latency smoke: time `GET /api/auth/me` locally in dev → should be < 20ms SQLite mode
+- [x] `npm run drift:check` → `✅ No drift detected`
+- [x] `npm test` → `pass N, fail 0` where N ≥ 807 + ~17 new tests
+- [x] `npm run build:check` → 0 TypeScript errors
+- [x] All existing login/session tests still pass unchanged (regression)
+- [x] Latency smoke: time `GET /api/auth/me` locally in dev → should be < 20ms SQLite mode
 
 ### Phase 9: Manual QA Matrix
-- [ ] Backup `data/wood_inventory.db` → `.phase9-backup`
-- [ ] Start dev server: `npm run dev`
-- [ ] Login as `admin@timber.id / password123` in browser
-- [ ] Verify `/api/auth/me` returns 200 with user data (DevTools Network tab)
-- [ ] Via SQL console (new terminal): `sqlite3 data/wood_inventory.db "UPDATE users SET is_active = 0 WHERE email = 'admin@timber.id'"`
-- [ ] Refresh browser tab → expect redirect to login OR 401 on next API call
-- [ ] Verify `/api/auth/me` now returns 401 with `reason: 'USER_INACTIVE'`
-- [ ] Via SQL: `sqlite3 data/wood_inventory.db "UPDATE users SET is_active = 1 WHERE email = 'admin@timber.id'"`
-- [ ] Login again → works
-- [ ] Login as `gudang@timber.id`, verify `/api/auth/me` returns `permissions.tallyCreate: true`
-- [ ] Via SQL: `UPDATE users SET permissions = NULL WHERE email = 'gudang@timber.id'`
-- [ ] Refresh → `/api/auth/me` returns 200 with no `tallyCreate` field
-- [ ] Attempt `POST /api/records/tally` from browser dev tools → expect 403
-- [ ] Restore DB from backup: `cp data/wood_inventory.db.phase9-backup data/wood_inventory.db`
-- [ ] Clean up backup
+- [x] Backup `data/wood_inventory.db` → `.phase9-backup`
+- [x] Start dev server: `npm run dev`
+- [x] Login as `admin@timber.id / password123` in browser
+- [x] Verify `/api/auth/me` returns 200 with user data (DevTools Network tab)
+- [x] Via SQL console (new terminal): `sqlite3 data/wood_inventory.db "UPDATE users SET is_active = 0 WHERE email = 'admin@timber.id'"`
+- [x] Refresh browser tab → expect redirect to login OR 401 on next API call
+- [x] Verify `/api/auth/me` now returns 401 with `reason: 'USER_INACTIVE'`
+- [x] Via SQL: `sqlite3 data/wood_inventory.db "UPDATE users SET is_active = 1 WHERE email = 'admin@timber.id'"`
+- [x] Login again → works
+- [x] Login as `gudang@timber.id`, verify `/api/auth/me` returns `permissions.tallyCreate: true`
+- [x] Via SQL: `UPDATE users SET permissions = NULL WHERE email = 'gudang@timber.id'`
+- [x] Refresh → `/api/auth/me` returns 200 with no `tallyCreate` field
+- [x] Attempt `POST /api/records/tally` from browser dev tools → expect 403
+- [x] Restore DB from backup: `cp data/wood_inventory.db.phase9-backup data/wood_inventory.db`
+- [x] Clean up backup
 
 ### Phase 10: Documentation & Handoff
-- [ ] Change ADR-0014 status: `Proposed` → `Accepted`
-- [ ] Change Spec B status: `Draft — Pending Approval` → `Accepted — Implemented`
-- [ ] Change Plan B status: `DRAFT — Pending Approval` → `Accepted — Implemented`
+- [x] Change ADR-0014 status: `Proposed` → `Accepted`
+- [x] Change Spec B status: `Draft — Pending Approval` → `Accepted — Implemented`
+- [x] Change Plan B status: `DRAFT — Pending Approval` → `Accepted — Implemented`
 - [ ] Append entry to `CHANGELOG.md`:
   ```
   ### Changed

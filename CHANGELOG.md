@@ -12,6 +12,10 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 ## [Unreleased]
 
 ### Changed
+- **Auth session**: `getAuthenticatedUser` now performs fresh DAO lookup on every call. User state changes (deactivation, role, permissions) take effect within one request instead of up to 7-day JWT TTL. JWT payload role: identity + session-validity proof only. `/api/auth/me` returns DB-fresh user with new `reason` field on 401. Pre-existing tokens remain compatible.
+  - Spec: `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-session-invalidation.md`
+  - ADR: `docs/adr/0014-fresh-user-lookup-per-request.md`, `docs/adr/0013-user-management-architecture.md`
 - **Auth storage**: migrated `PRESET_USERS` hardcoded array to persistent `users` table in SQLite + Supabase. Introduces `UserRepository` DAO. `authenticateUser` and `getUserById` now query DAO. `PRESET_USERS` retained as seed source only. `getUserById` signature changed from sync to async.
   - Spec: `docs/superpowers/specs/2026-10-22-user-storage-migration-design.md`
   - Plan: `docs/superpowers/plans/2026-10-22-user-storage-migration.md`

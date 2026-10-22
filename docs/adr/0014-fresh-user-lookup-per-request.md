@@ -1,7 +1,7 @@
 # ADR-0014: Fresh User Lookup Per Authenticated Request
 
 **Date:** 2026-10-22
-**Status:** Proposed
+**Status:** Accepted
 **Deciders:** Owner + AI pair session
 
 ---

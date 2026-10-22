@@ -2,8 +2,8 @@
 
 **Document:** `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
 **Date:** 2026-10-22
-**Status:** Draft — Pending Approval
-**Related Plan:** TBD — `docs/superpowers/plans/YYYY-MM-DD-session-invalidation.md`
+**Status:** Accepted — Implemented
+**Related Plan:** `docs/superpowers/plans/2026-10-22-session-invalidation.md`
 **Related ADR:** ADR-0013 (User Management Architecture) — this is Spec B of 4.
              NEW ADR-0014 (Session Freshness Strategy) — to be written as part of this spec execution.
 **Position in Sequence:** Spec B of (A→B→C→D). Depends on Spec A (merged `95a6fd1`). Prerequisite for Spec D (admin UI).

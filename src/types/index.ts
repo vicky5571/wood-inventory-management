@@ -524,6 +524,19 @@ export interface AuthUser {
   permissions?: UserPermissions;
 }
 
+export type AuthFailureReason =
+  | 'NO_TOKEN'
+  | 'TOKEN_MALFORMED'
+  | 'TOKEN_INVALID'
+  | 'TOKEN_EXPIRED'
+  | 'USER_NOT_FOUND'
+  | 'USER_INACTIVE';
+
+export interface AuthResult {
+  user: AuthUser | null;
+  reason?: AuthFailureReason;
+}
+
 export interface AuthSession {
   user: AuthUser;
   expiresAt: number;
@@ -538,6 +551,7 @@ export interface AuthApiResponse {
   success: boolean;
   user?: AuthUser;
   error?: string;
+  reason?: AuthFailureReason;
 }
 
 /**

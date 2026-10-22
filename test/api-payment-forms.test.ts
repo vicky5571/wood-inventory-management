@@ -6,13 +6,20 @@ import { POST as generateForms } from '../app/api/payment-forms/generate/route.t
 import { PATCH as updateStatus } from '../app/api/payment-forms/[id]/status/route.ts';
 import { createSessionToken, COOKIE_NAME } from '../src/auth/session.ts';
 
+const userProfiles: Record<1 | 2 | 3, { id: string; email: string; name: string; title: string }> = {
+  1: { id: 'usr-manager-01', email: 'manager@timber.id', name: 'Manager', title: 'Manager' },
+  2: { id: 'usr-admin-02', email: 'admin@timber.id', name: 'Admin', title: 'Admin' },
+  3: { id: 'usr-viewer-03', email: 'viewer@timber.id', name: 'Viewer', title: 'Viewer' },
+};
+
 function createMockRequest(url: string, method: string = 'GET', body?: any, roleLevel: 1 | 2 | 3 = 1): Request {
+  const profile = userProfiles[roleLevel];
   const token = createSessionToken({
-    id: 'usr-1',
-    email: 'admin@timber.com',
-    name: 'Admin Test',
+    id: profile.id,
+    email: profile.email,
+    name: profile.name,
     roleLevel,
-    title: 'Superadmin',
+    title: profile.title,
   });
 
   const headers = new Headers({

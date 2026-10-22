@@ -1,27 +1,36 @@
 import { NextResponse } from 'next/server.js';
-import { verifySessionToken, COOKIE_NAME } from '../../../../src/auth/session.ts';
+import { getAuthenticatedUserDetailed } from '../../../../src/auth/session.ts';
+import type { AuthFailureReason } from '../../../../src/types/index.ts';
+
+function humanizeReason(reason?: AuthFailureReason): string {
+  switch (reason) {
+    case 'NO_TOKEN':
+      return 'Belum masuk.';
+    case 'TOKEN_MALFORMED':
+    case 'TOKEN_INVALID':
+      return 'Sesi tidak valid.';
+    case 'TOKEN_EXPIRED':
+      return 'Sesi kadaluarsa.';
+    case 'USER_NOT_FOUND':
+      return 'Akun tidak ditemukan.';
+    case 'USER_INACTIVE':
+      return 'Akun telah dinonaktifkan.';
+    default:
+      return 'Sesi tidak valid.';
+  }
+}
 
 export async function GET(request: Request) {
-  let token: string | undefined;
-
-  // Extract from Request headers first (compatible with unit tests and edge/node runtime)
-  const rawHeader = request.headers.get('cookie') || '';
-  const match = rawHeader.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]+)`));
-  if (match) {
-    token = match[1];
-  } else {
-    try {
-      const { cookies } = await import('next/headers');
-      const cookieStore = await cookies();
-      token = cookieStore.get(COOKIE_NAME)?.value;
-    } catch {
-      token = undefined;
-    }
-  }
-
-  const user = verifySessionToken(token);
+  const { user, reason } = await getAuthenticatedUserDetailed(request);
   if (!user) {
-    return NextResponse.json({ success: false, error: 'Belum masuk.' }, { status: 401 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: humanizeReason(reason),
+        reason,
+      },
+      { status: 401 }
+    );
   }
 
   return NextResponse.json({ success: true, user });

@@ -8,7 +8,7 @@ import type { SalesFormInput } from '../src/types/index.ts';
 
 test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
   const managerToken = createSessionToken({
-    id: 'usr-mgr',
+    id: 'usr-manager-01',
     email: 'manager@timber.id',
     name: 'Manager',
     roleLevel: 1,
@@ -16,15 +16,15 @@ test('Outbound Sales SQLite Queries & REST API Suite', async (t) => {
   });
 
   const level2Token = createSessionToken({
-    id: 'usr-lvl2',
-    email: 'level2@timber.id',
+    id: 'usr-admin-02',
+    email: 'admin@timber.id',
     name: 'Auditor Level 2',
     roleLevel: 2,
     title: 'Level 2 Auditor',
   });
 
   const viewerToken = createSessionToken({
-    id: 'usr-view',
+    id: 'usr-viewer-03',
     email: 'viewer@timber.id',
     name: 'Viewer',
     roleLevel: 3,

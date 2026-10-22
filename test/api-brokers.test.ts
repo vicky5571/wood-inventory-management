@@ -14,9 +14,9 @@ const managerToken = createSessionToken({
 });
 
 const auditorToken = createSessionToken({
-  id: 'usr-auditor-02',
-  email: 'auditor@timber.id',
-  name: 'Siti Aminah',
+  id: 'usr-admin-02',
+  email: 'admin@timber.id',
+  name: 'Siti Rahmawati',
   roleLevel: 2,
   title: 'Level 2',
 });

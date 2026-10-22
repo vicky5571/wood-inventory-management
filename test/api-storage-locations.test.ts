@@ -8,7 +8,7 @@ import type { StorageLotStatus } from '../src/types/index.ts';
 
 test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
   const managerToken = createSessionToken({
-    id: 'usr-mgr',
+    id: 'usr-manager-01',
     email: 'manager@timber.id',
     name: 'Manager',
     roleLevel: 1,
@@ -16,15 +16,15 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
   });
 
   const staffToken = createSessionToken({
-    id: 'usr-staff',
-    email: 'staff@timber.id',
+    id: 'usr-admin-02',
+    email: 'admin@timber.id',
     name: 'Staff',
     roleLevel: 2,
     title: 'Clerk',
   });
 
   const viewerToken = createSessionToken({
-    id: 'usr-view',
+    id: 'usr-viewer-03',
     email: 'viewer@timber.id',
     name: 'Viewer',
     roleLevel: 3,

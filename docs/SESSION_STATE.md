@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (User Storage Migration Spec A complete)
-**Last Session By:** AI pair-programming session (User Storage Migration Spec A)
+**Last Updated:** 2026-10-22 (Session Invalidation Spec B complete)
+**Last Session By:** AI pair-programming session (Session Invalidation Spec B)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -38,9 +38,10 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 9 | Database Seeder Rewrite | `2026-10-22-database-seeder-rewrite-design.md` | `2026-10-22-database-seeder-rewrite.md` | ✅ Completed |
 | 10 | Tally Create Permission Flag | `2026-10-22-tally-create-permission-design.md` | `2026-10-22-tally-create-permission.md` | ✅ Completed |
 | 11 | User Storage Migration (Spec A) | `2026-10-22-user-storage-migration-design.md` | `2026-10-22-user-storage-migration.md` | ✅ Completed |
+| 12 | Session Invalidation (Spec B) | `2026-10-22-session-invalidation-design.md` | `2026-10-22-session-invalidation.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 807 passed, 0 failed
+- `npm test` → 828 passed, 0 failed
 - `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
@@ -49,9 +50,23 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 ## 🚧 In Progress
 
-None. All 11 phases of `2026-10-22-user-storage-migration.md` (Spec A) are complete and verified.
+None. All 10 phases of `2026-10-22-session-invalidation.md` (Spec B) are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **Session Invalidation on User State Changes (Spec B — Fresh User Lookup Per Request)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-session-invalidation.md`
+  - ADR: `docs/adr/0014-fresh-user-lookup-per-request.md` (Accepted), `docs/adr/0013-user-management-architecture.md`
+  - Added `AuthFailureReason` and `AuthResult` to SSOT `src/types/index.ts`.
+  - Refactored `getAuthenticatedUser(request)` in `src/auth/session.ts` to perform a fresh `findById` DAO query per authenticated request, making DB the authority over the JWT snapshot.
+  - Implemented `getAuthenticatedUserDetailed(request)` returning `{ user, reason }` distinguishing `NO_TOKEN`, `TOKEN_MALFORMED`, `TOKEN_INVALID`, `TOKEN_EXPIRED`, `USER_NOT_FOUND`, `USER_INACTIVE`.
+  - Refactored `app/api/auth/me/route.ts` to consume `getAuthenticatedUserDetailed` and return 401 with humanized `error` + machine-readable `reason`.
+  - Kept `src/auth/session.ts` at 183 LOC (< 200 target, < 250 God File invariant) and `verifySessionToken` completely untouched for backward compatibility.
+  - Added test suites `test/session-invalidation.test.ts` (14 tests) and `test/api-auth-me-freshness.test.ts` (5 tests).
+  - Verified ADR-0012 regression: `gudang@timber.id` tally permission revocation reflects immediately.
+  - Latency benchmark in SQLite mode: avg 0.306ms, p95 0.532ms (well under < 20ms target).
+  - All 828 tests passing, clean production Next.js build (22/22 routes), zero drift detected.
 
 - ✅ **User Storage Migration (Spec A — PRESET_USERS → DB Table)**:
   - Spec: `docs/superpowers/specs/2026-10-22-user-storage-migration-design.md`
@@ -204,16 +219,17 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** User Storage Migration (Item #11 / Spec A) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
+**Status:** Session Invalidation (Item #12 / Spec B) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
 
 **Suggested next actions (in priority order):**
 
-1. **Spec B: Session Invalidation** — Next phase in ADR-0013 sequence (A → B → C → D).
-   - Write spec `docs/superpowers/specs/YYYY-MM-DD-session-invalidation-design.md`
-   - Write plan `docs/superpowers/plans/YYYY-MM-DD-session-invalidation.md`
-   - Handle fresh user lookup or short-expiry refresh token pattern to avoid stale role/permission snapshot in JWT.
-2. **Monitor client feedback** on shipped features (Items #1-#11).
-3. **If client clarifies DPB rakyat questions** → start Spec #12:
+1. **Spec C: User Audit Log Extension** — Next phase in ADR-0013 sequence (A → B → C → D).
+   - Write spec `docs/superpowers/specs/YYYY-MM-DD-user-audit-log-design.md`
+   - Write plan `docs/superpowers/plans/YYYY-MM-DD-user-audit-log.md`
+   - Log user lifecycle events (`USER_CREATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`, `USER_PERMISSION_CHANGED`, `USER_PASSWORD_RESET`) to audit trail.
+2. **Spec D: Admin UI** — Depends on A + B + C.
+3. **Monitor client feedback** on shipped features (Items #1-#12).
+4. **If client clarifies DPB rakyat questions** → start Spec #13:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -221,11 +237,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#11) without matching spec update first.
+- Modify shipped modules (Items #1-#12) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 807 passed, 0 failed
+- `npm test` → 828 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms

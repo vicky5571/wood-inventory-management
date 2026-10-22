@@ -7,7 +7,7 @@ import type { WoodReceivingRecord } from '../src/types/index.ts';
 
 test('API PATCH /api/records/[id]/price Suite', async (t) => {
   const managerToken = createSessionToken({
-    id: 'usr-mgr',
+    id: 'usr-manager-01',
     email: 'manager@timber.id',
     name: 'Manager',
     roleLevel: 1,
@@ -15,8 +15,8 @@ test('API PATCH /api/records/[id]/price Suite', async (t) => {
   });
 
   const level2Token = createSessionToken({
-    id: 'usr-lvl2',
-    email: 'level2@timber.id',
+    id: 'usr-admin-02',
+    email: 'admin@timber.id',
     name: 'Auditor Level 2',
     roleLevel: 2,
     title: 'Level 2 Auditor',

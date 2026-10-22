@@ -6,7 +6,7 @@ import type { ManifestFormInput } from '../src/types/index.ts';
 
 test('POST /api/records/tally Authorization & Persistence Suite', async (t) => {
   const managerToken = createSessionToken({
-    id: 'usr-mgr',
+    id: 'usr-manager-01',
     email: 'manager@timber.id',
     name: 'Manager',
     roleLevel: 1,

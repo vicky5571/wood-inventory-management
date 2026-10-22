@@ -215,7 +215,7 @@ test('ServerRecordStore Core Persistence Suite', async (t) => {
 
 test('Records API Route Handlers Suite', async (t) => {
   const managerToken = createSessionToken({
-    id: 'usr-1',
+    id: 'usr-manager-01',
     email: 'manager@timber.id',
     name: 'Manager',
     roleLevel: 1,
@@ -223,15 +223,15 @@ test('Records API Route Handlers Suite', async (t) => {
   });
 
   const staffToken = createSessionToken({
-    id: 'usr-2',
-    email: 'staff@timber.id',
+    id: 'usr-admin-02',
+    email: 'admin@timber.id',
     name: 'Staff',
     roleLevel: 2,
     title: 'Staff',
   });
 
   const viewerToken = createSessionToken({
-    id: 'usr-3',
+    id: 'usr-viewer-03',
     email: 'viewer@timber.id',
     name: 'Viewer',
     roleLevel: 3,

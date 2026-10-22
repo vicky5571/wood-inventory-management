@@ -20,13 +20,20 @@ import {
 } from '../app/api/sorting/[id]/route.ts';
 import { createSessionToken, COOKIE_NAME } from '../src/auth/session.ts';
 
+const userProfiles: Record<1 | 2 | 3, { id: string; email: string; name: string; title: string }> = {
+  1: { id: 'usr-manager-01', email: 'manager@timber.id', name: 'Manager', title: 'Level 1' },
+  2: { id: 'usr-admin-02', email: 'admin@timber.id', name: 'Admin', title: 'Level 2' },
+  3: { id: 'usr-viewer-03', email: 'viewer@timber.id', name: 'Viewer', title: 'Level 3' },
+};
+
 function createMockRequest(url: string, method = 'GET', body?: unknown, roleLevel: 1 | 2 | 3 = 1): Request {
+  const profile = userProfiles[roleLevel];
   const token = createSessionToken({
-    id: `usr-lvl${roleLevel}`,
-    email: `user${roleLevel}@timber.id`,
-    name: `User Level ${roleLevel}`,
+    id: profile.id,
+    email: profile.email,
+    name: profile.name,
     roleLevel,
-    title: `Operator Lvl ${roleLevel}`,
+    title: profile.title,
   });
 
   const headers = new Headers({
