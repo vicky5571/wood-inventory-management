@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (DAO Inactive-User Lookup TD-002 complete)
-**Last Session By:** AI pair-programming session (DAO Inactive-User Lookup TD-002)
+**Last Updated:** 2026-10-22 (Admin User Management UI Spec D complete)
+**Last Session By:** AI pair-programming session (Admin User Management UI Spec D)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -22,7 +22,7 @@
 
 ## ✅ Completed Modules (Shipped & Verified)
 
-All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, Tally Create Permission Flag, User Storage Migration (Spec A), Session Invalidation (Spec B), User Audit Log Extension (Spec C), and DAO Inactive-User Lookup (TD-002) have been implemented, tested, and verified.
+All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, Tally Create Permission Flag, User Storage Migration (Spec A), Session Invalidation (Spec B), User Audit Log Extension (Spec C), DAO Inactive-User Lookup (TD-002), and Admin User Management UI (Spec D) have been implemented, tested, and verified.
 
 | # | Module | Spec | Plan | Status |
 |---|---|---|---|---|
@@ -41,10 +41,11 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 12 | Session Invalidation (Spec B) | `2026-10-22-session-invalidation-design.md` | `2026-10-22-session-invalidation.md` | ✅ Completed |
 | 13 | User Audit Log Extension (Spec C) | `2026-10-22-user-audit-log-extension-design.md` | `2026-10-22-user-audit-log-extension.md` | ✅ Completed |
 | 14 | DAO Inactive-User Lookup (TD-002) | `2026-10-22-dao-inactive-user-lookup-design.md` | `2026-10-22-dao-inactive-user-lookup.md` | ✅ Completed |
+| 15 | Admin User Management UI (Spec D) | `2026-10-22-admin-user-management-ui-design.md` | `2026-10-22-admin-user-management-ui.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 860 passed, 0 failed
-- `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
+- `npm test` → 901 passed, 0 failed
+- `npm run build:check` → 0 errors (Next.js production build clean, 23/23 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
 
@@ -52,9 +53,38 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 ## 🚧 In Progress
 
-None. All 9 phases of `2026-10-22-dao-inactive-user-lookup.md` (TD-002) are complete and verified.
+None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **Admin User Management UI (Spec D — Complete Admin Lifecycle & 7 API Routes)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-admin-user-management-ui-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-admin-user-management-ui.md`
+  - ADRs: ADR-0013 (User Management Architecture), ADR-0014 (Fresh User Lookup Per Request)
+  - Implemented 7 atomic Next.js API routes under `/api/users/*` with Level 1 authorization guards and comprehensive validation:
+    - `GET /api/users`: Lists active/inactive users with role/status filters.
+    - `POST /api/users`: Creates user with SHA-256 hashed password (min 8 chars) and audited record.
+    - `GET /api/users/[id]`: Returns detail for single user.
+    - `PATCH /api/users/[id]`: Updates profile/role/permissions with self-demote guard, last Level 1 guard, and permission auto-reset on role level changes.
+    - `POST /api/users/[id]/password`: Secure password reset with min 8 chars constraint.
+    - `POST /api/users/[id]/deactivate`: Soft-deletes user with self-deactivate guard and last Level 1 guard.
+    - `POST /api/users/[id]/reactivate`: Reactivates previously deactivated user.
+    - `GET /api/users/[id]/activity`: Returns user-scoped audit trail chronologically.
+  - Built user-scoped activity queries across dual-persistence layers: `listUserActivityLogsFromDb` in SQLite, `fetchSupabaseUserActivityLogs` in Supabase, and master data bridge.
+  - Built 7 atomic React components in `src/components/users/` (all < 220 LOC):
+    - `UserListTable.tsx`: Searchable/filterable user table with status/role badges and action buttons.
+    - `UserCreateModal.tsx`: Create user modal with role selection and optional tally permission.
+    - `PromoteToLevel1ConfirmModal.tsx`: Two-step confirmation modal for Level 1 manager promotions.
+    - `UserEditModal.tsx`: User profile and permission editor with role-scoped permission visibility.
+    - `PasswordResetModal.tsx`: Modal for setting a new password.
+    - `DeactivateConfirmModal.tsx`: Safety modal requiring typing "DEACTIVATE".
+    - `UserAuditDrawer.tsx`: Slide-out audit drawer with humanized action badges and actor names.
+  - Implemented `app/users/page.tsx` coordinator (190 LOC, < 250 LOC limit) with `useAuth` Level 1 guard, toast notifications, and modal wiring.
+  - Added `users` navigation item to `admin` section in `src/components/layout/nav-config.ts` (`minRoleLevel: 1`).
+  - Added unit, integration, and component test suites: `test/users-ssot-types.test.ts`, `test/user-activity-queries.test.ts`, `test/api-users-list-create.test.ts`, `test/api-users-detail-patch.test.ts`, `test/api-users-password.test.ts`, `test/api-users-deactivate-reactivate.test.ts`, `test/api-users-activity.test.ts`, `test/user-components.test.ts`, `test/users-page.test.ts`.
+  - Verified all 8 ADR-0013 invariants: ID immutable, soft-delete only, no self-demote, last Level 1 protection, permission auto-reset on role change, role-scoped permission visibility, strict `UserPermissions` schema, hierarchical `UserRoleLevel 1|2|3`.
+  - Zero password/hash leaks verified in API responses and audit logs.
+  - Test suite expanded from 860 to 901 passing tests (0 failures), Next.js 23/23 routes clean, zero drift detected.
 
 - ✅ **DAO Inactive-User Lookup Method (TD-002 Resolution)**:
   - Spec: `docs/superpowers/specs/2026-10-22-dao-inactive-user-lookup-design.md`
@@ -262,29 +292,26 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** DAO Inactive-User Lookup (Item #14 / TD-002) completed and verified. Both TD-001 and TD-002 are resolved. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`. Baseline: 860 passed, 0 failed. Spec D is fully unblocked.
+**Status:** Admin User Management UI (Item #15 / Spec D) completed and verified. All 4 phases of the User Management Roadmap (Specs A, B, C, D + TD-001, TD-002) are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`. Baseline: 901 passed, 0 failed, 23/23 routes compiled clean.
 
 **Suggested next actions (in priority order):**
 
-1. **Spec D: Admin User Management UI** — Final phase in ADR-0013 sequence (A → B → C → D).
-   - Prerequisites A + B + C + TD-002 complete.
-   - Write spec `docs/superpowers/specs/YYYY-MM-DD-user-management-admin-ui-design.md`
-   - Write plan `docs/superpowers/plans/YYYY-MM-DD-user-management-admin-ui.md`
-   - Admin UI page at `/settings/users` or dedicated route with user list, create/edit modal, password reset, deactivate/reactivate, and audit trail link.
-2. **Monitor client feedback** on shipped features (Items #1-#14).
-3. **If client clarifies DPB rakyat questions** → start Spec #15:
+1. **Monitor client feedback** on shipped features (Items #1-#15).
+2. **If client clarifies DPB rakyat questions** → start Spec #16:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
    ```
+3. **Potential enhancements** as documented in open issues:
+   - Nullable `pricePerM3` in contract sortiment (pending client input).
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#14) without matching spec update first.
+- Modify shipped modules (Items #1-#15) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 860 passed, 0 failed
-- `npm run build:check` → 0 errors
+- `npm test` → 901 passed, 0 failed
+- `npm run build:check` → 0 errors (23/23 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms

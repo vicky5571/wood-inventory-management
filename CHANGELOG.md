@@ -26,6 +26,10 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
   - ADR: `docs/adr/0013-user-management-architecture.md`
 
 ### Added
+- **Admin User Management UI (Spec D)**: Complete user lifecycle management for Level 1 managers at `/users` and 7 dedicated `/api/users/*` endpoints. Backed by `AuditedUserRepository` with ADR-0013 invariant enforcement (soft delete only, self-demote guard, last Level 1 protection, promote-to-1 confirmation modal, permission auto-reset). Includes slide-out user audit log drawer.
+  - Spec: `docs/superpowers/specs/2026-10-22-admin-user-management-ui-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-admin-user-management-ui.md`
+  - Refs: ADR-0013, ADR-0014
 - **Auth audit**: Extended ActivityActionType with 7 user-lifecycle actions (USER_CREATED, USER_UPDATED, USER_ROLE_CHANGED, USER_PERMISSION_CHANGED, USER_DEACTIVATED, USER_REACTIVATED, USER_PASSWORD_CHANGED). AuditedUserRepository decorator wraps Spec A DAO to emit structured audit entries on admin mutations. Password values never logged. Zero schema change.
   - Spec: `docs/superpowers/specs/2026-10-22-user-audit-log-extension-design.md`
   - Plan: `docs/superpowers/plans/2026-10-22-user-audit-log-extension.md`

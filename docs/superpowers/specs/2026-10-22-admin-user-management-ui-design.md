@@ -2,8 +2,8 @@
 
 **Document:** `docs/superpowers/specs/2026-10-22-admin-user-management-ui-design.md`
 **Date:** 2026-10-22
-**Status:** Draft — Pending Approval
-**Related Plan:** TBD — `docs/superpowers/plans/YYYY-MM-DD-admin-user-management-ui.md`
+**Status:** Accepted — Implemented
+**Related Plan:** `docs/superpowers/plans/2026-10-22-admin-user-management-ui.md`
 **Related ADR:** ADR-0013 (User Management Architecture) — this is Spec D of 4.
 **Position in Sequence:** Spec D of (A→B→C→D). Depends on Spec A (`95a6fd1`), Spec B (`d890e27`), Spec C (`cd7cc45`), TD-002 fix (`43b1e3e`). Final spec in the sequence.
 **Architecture:** New admin-only page `/users` for Level 1 manager to list, create, edit, deactivate/reactivate, reset password, change role, and grant/revoke permission flags for all users in the system. New admin-only API routes under `/api/users/*` consuming `AuditedUserRepository` from Spec C. Enforces all 8 shared invariants from ADR-0013. Audit log viewer per user via existing `/api/activity` endpoint.
