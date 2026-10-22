@@ -45,11 +45,11 @@ test('User Store & Authentication Suite', async (t) => {
     assert.equal(user, null);
   });
 
-  await t.test('getUserById retrieves correct user profile without password', () => {
-    const user = getUserById('usr-manager-01');
+  await t.test('getUserById retrieves correct user profile without password', async () => {
+    const user = await getUserById('usr-manager-01');
     assert.ok(user);
-    assert.equal(user.email, 'manager@timber.id');
-    assert.equal((user as any).passwordHash, undefined);
+    assert.equal(user?.email, 'manager@timber.id');
+    assert.equal((user as unknown as { passwordHash?: string })?.passwordHash, undefined);
   });
 });
 

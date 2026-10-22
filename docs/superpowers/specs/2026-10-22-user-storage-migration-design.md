@@ -2,8 +2,8 @@
 
 **Document:** `docs/superpowers/specs/2026-10-22-user-storage-migration-design.md`
 **Date:** 2026-10-22
-**Status:** Draft — Pending Approval
-**Related Plan:** TBD — `docs/superpowers/plans/YYYY-MM-DD-user-storage-migration.md`
+**Status:** Accepted — Implemented
+**Related Plan:** `docs/superpowers/plans/2026-10-22-user-storage-migration.md`
 **Related ADR:** ADR-0013 (User Management Architecture) — this is Spec A of 4.
 **Position in Sequence:** Spec A of (A→B→C→D). Prerequisite for Spec B, C, D.
 **Architecture:** Migrate `PRESET_USERS` hardcoded array (`src/auth/users.ts`) to persistent `users` table in dual-mode storage (SQLite + Supabase). Introduce DAO (`UserRepository`) with CRUD + password hash management. Preserve existing `AuthUser` SSOT shape and `authenticateUser`/`getUserById` API surface. Zero behavior change at auth call-sites.

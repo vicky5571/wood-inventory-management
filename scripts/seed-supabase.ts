@@ -30,6 +30,7 @@ export interface SupabaseSeedResult {
   sales: number;
   production: number;
   sorting: number;
+  users: number;
 }
 
 export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
@@ -381,6 +382,17 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     notes: sort.notes || null,
   })));
 
+  await upsert('users', fixtures.SEED_USERS.map((u) => ({
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    role_level: u.roleLevel,
+    title: u.title,
+    permissions: u.permissions ?? null,
+    password_hash: u.passwordHash,
+    is_active: u.isActive,
+  })));
+
   return {
     tenants: fixtures.SEED_TENANTS.length,
     settings: 1,
@@ -389,6 +401,7 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     lots: fixtures.SEED_LOTS.length,
     suppliers: fixtures.SEED_SUPPLIERS.length,
     brokers: fixtures.SEED_BROKERS.length,
+    users: fixtures.SEED_USERS.length,
     contracts: fixtures.SEED_CONTRACTS.length,
     sortimentItems: fixtures.SEED_SORTIMENT_ITEMS.length,
     contractReceipts: fixtures.SEED_CONTRACT_RECEIPTS.length,

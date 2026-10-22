@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (Tally Create Permission Flag complete)
-**Last Session By:** AI pair-programming session (Tally Create Permission Flag feature)
+**Last Updated:** 2026-10-22 (User Storage Migration Spec A complete)
+**Last Session By:** AI pair-programming session (User Storage Migration Spec A)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -22,7 +22,7 @@
 
 ## ✅ Completed Modules (Shipped & Verified)
 
-All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, and Tally Create Permission Flag have been implemented, tested, and verified.
+All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, Tally Create Permission Flag, and User Storage Migration (Spec A) have been implemented, tested, and verified.
 
 | # | Module | Spec | Plan | Status |
 |---|---|---|---|---|
@@ -37,20 +37,33 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 8 | Sidebar Grouping & Role Filter | `2026-10-22-sidebar-grouping-and-role-filter-design.md` | `2026-10-22-sidebar-grouping-and-role-filter.md` | ✅ Completed |
 | 9 | Database Seeder Rewrite | `2026-10-22-database-seeder-rewrite-design.md` | `2026-10-22-database-seeder-rewrite.md` | ✅ Completed |
 | 10 | Tally Create Permission Flag | `2026-10-22-tally-create-permission-design.md` | `2026-10-22-tally-create-permission.md` | ✅ Completed |
+| 11 | User Storage Migration (Spec A) | `2026-10-22-user-storage-migration-design.md` | `2026-10-22-user-storage-migration.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 785 passed, 0 failed
+- `npm test` → 807 passed, 0 failed
 - `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
-- `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
 
 ---
 
 ## 🚧 In Progress
 
-None. All 9 phases of `2026-10-22-tally-create-permission.md` are complete and verified.
+None. All 11 phases of `2026-10-22-user-storage-migration.md` (Spec A) are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **User Storage Migration (Spec A — PRESET_USERS → DB Table)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-user-storage-migration-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-user-storage-migration.md`
+  - ADR: `docs/adr/0013-user-management-architecture.md` (Accepted)
+  - Created `users` table and partial unique index on `LOWER(email) WHERE is_active = 1` in SQLite (`src/persistence/sqlite/user-tables.ts`) and Supabase (`supabase/migrations/20261022000001_add_users_table.sql`).
+  - Implemented `UserRepository` DAO pattern with `UserRecordRow` shape, `SqliteUserRepository`, and `SupabaseUserRepository` in `src/persistence/user-repository.ts` (< 250 LOC per file).
+  - Preserved `PRESET_USERS` as seed source only in `src/persistence/seed/fixtures-users.ts`.
+  - Added idempotent `ensureSeedUsers` auto-bootstrap logic on initialization and in `scripts/seed-db.ts` and `scripts/seed-supabase.ts`.
+  - Updated `authenticateUser` and `getUserById` in `src/auth/users.ts` to query DAO asynchronously.
+  - Added test suites `test/user-repository.test.ts` (17 tests) and `test/user-repository-seed.test.ts` (5 tests).
+  - All 807 tests passing, clean production Next.js build (22/22 routes), zero drift detected.
 
 - ✅ **Tally Create Permission Flag (Orthogonal Capability)**:
   - Spec: `docs/superpowers/specs/2026-10-22-tally-create-permission-design.md`
@@ -191,12 +204,16 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Tally Create Permission Flag (Item #10) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
+**Status:** User Storage Migration (Item #11 / Spec A) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#10).
-2. **If client clarifies DPB rakyat questions** → start Spec #11:
+1. **Spec B: Session Invalidation** — Next phase in ADR-0013 sequence (A → B → C → D).
+   - Write spec `docs/superpowers/specs/YYYY-MM-DD-session-invalidation-design.md`
+   - Write plan `docs/superpowers/plans/YYYY-MM-DD-session-invalidation.md`
+   - Handle fresh user lookup or short-expiry refresh token pattern to avoid stale role/permission snapshot in JWT.
+2. **Monitor client feedback** on shipped features (Items #1-#11).
+3. **If client clarifies DPB rakyat questions** → start Spec #12:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -204,11 +221,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#10) without matching spec update first.
+- Modify shipped modules (Items #1-#11) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 785 passed, 0 failed
+- `npm test` → 807 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)
-- `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms

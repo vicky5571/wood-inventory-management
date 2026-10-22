@@ -4,6 +4,9 @@ import { ensureContractTables } from './contract-queries.ts';
 import { ensurePaymentFormTables } from './payment-form-queries.ts';
 import { ensureProductionTables } from './production-queries.ts';
 import { ensureSortingTables } from './sorting-queries.ts';
+import { createUsersTable } from './user-tables.ts';
+
+export { createUsersTable };
 
 export function runMigrations(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON;');
@@ -170,19 +173,10 @@ export function runMigrations(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(tenant_id, action);
   `);
 
-  try {
-    db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_volume_m3 REAL NOT NULL DEFAULT 1.5 CHECK (discrepancy_alarm_volume_m3 > 0);`);
-  } catch {}
-  try {
-    db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0);`);
-  } catch {}
-  try {
-    db.exec(`ALTER TABLE app_settings ADD COLUMN company_name TEXT NOT NULL DEFAULT 'PT. BRILLIANT JAYA WOOD INDUSTRY';`);
-  } catch {}
-
-  try {
-    db.exec(`ALTER TABLE receiving_manifests ADD COLUMN broker_id TEXT REFERENCES brokers(id) ON DELETE SET NULL;`);
-  } catch {}
+  try { db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_volume_m3 REAL NOT NULL DEFAULT 1.5 CHECK (discrepancy_alarm_volume_m3 > 0);`); } catch {}
+  try { db.exec(`ALTER TABLE app_settings ADD COLUMN discrepancy_alarm_percent REAL NOT NULL DEFAULT 2.0 CHECK (discrepancy_alarm_percent > 0);`); } catch {}
+  try { db.exec(`ALTER TABLE app_settings ADD COLUMN company_name TEXT NOT NULL DEFAULT 'PT. BRILLIANT JAYA WOOD INDUSTRY';`); } catch {}
+  try { db.exec(`ALTER TABLE receiving_manifests ADD COLUMN broker_id TEXT REFERENCES brokers(id) ON DELETE SET NULL;`); } catch {}
 
   try {
     const tableInfo = db.prepare(`PRAGMA table_info(receiving_items);`).all() as { name: string; notnull: number }[];
@@ -242,6 +236,7 @@ export function runMigrations(db: DatabaseSync): void {
   ensurePaymentFormTables(db);
   ensureProductionTables(db);
   ensureSortingTables(db);
+  createUsersTable(db);
 
   const viewRow = db.prepare(`SELECT count(*) AS c FROM sqlite_master WHERE type='view' AND name='v_buku_besar_flat';`).get() as { c: number } | undefined;
   if (!viewRow || viewRow.c === 0) {

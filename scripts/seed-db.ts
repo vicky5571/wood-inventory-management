@@ -33,6 +33,7 @@ export interface SeedResult {
   sales: number;
   production: number;
   sorting: number;
+  users: number;
   items: number; // Backward compat alias for receivingItems
 }
 
@@ -79,6 +80,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     upsertSales(db);
     upsertProduction(db);
     upsertSorting(db);
+    upsertUsers(db);
 
     db.exec('COMMIT;');
   } catch (err) {
@@ -117,6 +119,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     sales: count('sales_records'),
     production: count('sawmill_production_records'),
     sorting: count('stock_sorting_records'),
+    users: count('users'),
     items: count('receiving_items'),
   };
 
@@ -460,6 +463,35 @@ function upsertSorting(db: DatabaseSync) {
   }
 }
 
+function upsertUsers(db: DatabaseSync) {
+  const stmt = db.prepare(`
+    INSERT INTO users (id, email, name, role_level, title, permissions, password_hash, is_active, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    ON CONFLICT(id) DO UPDATE SET
+      email = excluded.email,
+      name = excluded.name,
+      role_level = excluded.role_level,
+      title = excluded.title,
+      permissions = excluded.permissions,
+      password_hash = excluded.password_hash,
+      is_active = excluded.is_active,
+      updated_at = datetime('now');
+  `);
+  for (const u of fixtures.SEED_USERS) {
+    const permissionsJson = u.permissions ? JSON.stringify(u.permissions) : null;
+    stmt.run(
+      u.id,
+      u.email,
+      u.name,
+      u.roleLevel,
+      u.title,
+      permissionsJson,
+      u.passwordHash,
+      u.isActive ? 1 : 0
+    );
+  }
+}
+
 // Direct CLI invocation
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   console.log('🌱 Seeding Wood Inventory Database (SQLite)...');
@@ -475,6 +507,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   console.log(`   - Wood Species:             ${stats.species}`);
   console.log(`   - Suppliers:                ${stats.suppliers}`);
   console.log(`   - Brokers:                  ${stats.brokers}`);
+  console.log(`   - Users:                    ${stats.users}`);
   console.log(`   - Perhutani Contracts:      ${stats.contracts}`);
   console.log(`   - Contract Sortiment Items: ${stats.sortimentItems}`);
   console.log(`   - Contract Receipts:        ${stats.contractReceipts}`);

@@ -11,6 +11,12 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 
 ## [Unreleased]
 
+### Changed
+- **Auth storage**: migrated `PRESET_USERS` hardcoded array to persistent `users` table in SQLite + Supabase. Introduces `UserRepository` DAO. `authenticateUser` and `getUserById` now query DAO. `PRESET_USERS` retained as seed source only. `getUserById` signature changed from sync to async.
+  - Spec: `docs/superpowers/specs/2026-10-22-user-storage-migration-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-user-storage-migration.md`
+  - ADR: `docs/adr/0013-user-management-architecture.md`
+
 ### Added
 - **Tally Create Permission Flag** — introduces optional `AuthUser.permissions.tallyCreate` capability flag orthogonal to the `roleLevel` hierarchy. Allows designated Level 2 warehouse operators (`gudang@timber.id`) to submit Tally Lapangan manifests at `/tally` while keeping all financial and write restrictions intact. Dedicated endpoint `POST /api/records/tally` with relaxed guard isolates access.
   - Spec: `docs/superpowers/specs/2026-10-22-tally-create-permission-design.md`

@@ -20,6 +20,10 @@ import {
   SEED_BROKERS,
 } from './fixtures-master-data.ts';
 import {
+  SEED_USERS,
+  type UserSeedRow,
+} from './fixtures-users.ts';
+import {
   SEED_CONTRACTS,
   SEED_SORTIMENT_ITEMS,
   SEED_CONTRACT_RECEIPTS,
@@ -57,6 +61,8 @@ export {
   SEED_LOTS,
   SEED_SUPPLIERS,
   SEED_BROKERS,
+  SEED_USERS,
+  type UserSeedRow,
 };
 
 // Contracts
