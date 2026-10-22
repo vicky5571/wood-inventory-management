@@ -63,12 +63,12 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     assert.equal(NAV_SECTIONS[4].labelZh, '系统管理');
     assert.deepEqual(
       NAV_SECTIONS[4].items.map((i) => i.id),
-      ['activity', 'settings']
+      ['activity', 'users', 'settings']
     );
   });
 
-  await t.test('NAV_ITEMS backward-compatibility export contains all 14 items derived from NAV_SECTIONS', () => {
-    assert.equal(NAV_ITEMS.length, 14);
+  await t.test('NAV_ITEMS backward-compatibility export contains all 15 items derived from NAV_SECTIONS', () => {
+    assert.equal(NAV_ITEMS.length, 15);
     const expectedIds = [
       'analytics',
       'ledger',
@@ -83,12 +83,17 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
       'suppliers',
       'brokers',
       'activity',
+      'users',
       'settings',
     ];
     assert.deepEqual(
       NAV_ITEMS.map((item) => item.id),
       expectedIds
     );
+
+    const usersItem = NAV_ITEMS.find((item) => item.id === 'users');
+    assert.ok(usersItem, 'Users item must exist');
+    assert.equal(usersItem.minRoleLevel, 1, 'Users must restrict to minRoleLevel 1');
 
     const settingsItem = NAV_ITEMS.find((item) => item.id === 'settings');
     assert.ok(settingsItem, 'Settings item must exist');
@@ -99,29 +104,29 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     const withNull = filterNavSections(NAV_SECTIONS, null);
     assert.equal(withNull.length, 5);
     const totalItemsNull = withNull.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItemsNull, 14);
+    assert.equal(totalItemsNull, 15);
 
     const withUndefined = filterNavSections(NAV_SECTIONS, undefined);
     assert.equal(withUndefined.length, 5);
     const totalItemsUndefined = withUndefined.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItemsUndefined, 14);
+    assert.equal(totalItemsUndefined, 15);
   });
 
-  await t.test('filterNavSections preserves all 5 sections and 14 items for Level 1 (Owner)', () => {
+  await t.test('filterNavSections preserves all 5 sections and 15 items for Level 1 (Owner)', () => {
     const ownerSections = filterNavSections(NAV_SECTIONS, 1);
     assert.equal(ownerSections.length, 5);
     const totalItems = ownerSections.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItems, 14);
+    assert.equal(totalItems, 15);
 
     const adminSection = ownerSections.find((s) => s.id === 'admin');
     assert.ok(adminSection);
     assert.deepEqual(
       adminSection.items.map((i) => i.id),
-      ['activity', 'settings']
+      ['activity', 'users', 'settings']
     );
   });
 
-  await t.test('filterNavSections hides Settings from Admin section for Level 2 (Staff)', () => {
+  await t.test('filterNavSections hides Users and Settings from Admin section for Level 2 (Staff)', () => {
     const staffSections = filterNavSections(NAV_SECTIONS, 2);
     assert.equal(staffSections.length, 5);
     const totalItems = staffSections.reduce((sum, s) => sum + s.items.length, 0);
@@ -133,10 +138,11 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
       adminSection.items.map((i) => i.id),
       ['activity']
     );
+    assert.equal(adminSection.items.some((i) => i.id === 'users'), false);
     assert.equal(adminSection.items.some((i) => i.id === 'settings'), false);
   });
 
-  await t.test('filterNavSections hides Settings from Admin section for Level 3 (Monitor)', () => {
+  await t.test('filterNavSections hides Users and Settings from Admin section for Level 3 (Monitor)', () => {
     const monitorSections = filterNavSections(NAV_SECTIONS, 3);
     assert.equal(monitorSections.length, 5);
     const totalItems = monitorSections.reduce((sum, s) => sum + s.items.length, 0);
@@ -148,6 +154,7 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
       adminSection.items.map((i) => i.id),
       ['activity']
     );
+    assert.equal(adminSection.items.some((i) => i.id === 'users'), false);
     assert.equal(adminSection.items.some((i) => i.id === 'settings'), false);
   });
 

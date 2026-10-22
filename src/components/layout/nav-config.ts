@@ -63,6 +63,7 @@ export const NAV_SECTIONS: readonly NavSectionConfig[] = [
     labelZh: '系统管理',
     items: [
       { id: 'activity', labelId: 'Aktivitas', labelZh: '审计日志', href: '/activity' },
+      { id: 'users', labelId: 'Pengguna', labelZh: '用户管理', href: '/users', minRoleLevel: 1 },
       { id: 'settings', labelId: 'Pengaturan', labelZh: '系统设置', href: '/settings', minRoleLevel: 1 },
     ],
   },
