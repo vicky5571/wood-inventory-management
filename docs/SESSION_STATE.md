@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (Lembar Tagihan Refactor complete)
-**Last Session By:** AI pair-programming session (Lembar Tagihan physical form refactor)
+**Last Updated:** 2026-10-22 (Tally Create Permission Flag complete)
+**Last Session By:** AI pair-programming session (Tally Create Permission Flag feature)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -22,7 +22,7 @@
 
 ## ✅ Completed Modules (Shipped & Verified)
 
-All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor have been implemented, tested, and verified.
+All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, and Tally Create Permission Flag have been implemented, tested, and verified.
 
 | # | Module | Spec | Plan | Status |
 |---|---|---|---|---|
@@ -36,9 +36,10 @@ All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor ha
 | 7 | Production + Sorting | `2026-10-21-production-and-sorting-design.md` | `2026-10-21-production-and-sorting.md` | ✅ Merged |
 | 8 | Sidebar Grouping & Role Filter | `2026-10-22-sidebar-grouping-and-role-filter-design.md` | `2026-10-22-sidebar-grouping-and-role-filter.md` | ✅ Completed |
 | 9 | Database Seeder Rewrite | `2026-10-22-database-seeder-rewrite-design.md` | `2026-10-22-database-seeder-rewrite.md` | ✅ Completed |
+| 10 | Tally Create Permission Flag | `2026-10-22-tally-create-permission-design.md` | `2026-10-22-tally-create-permission.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 768 passed, 0 failed
+- `npm test` → 785 passed, 0 failed
 - `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms
@@ -47,9 +48,22 @@ All 7 client feedback items from October 2026 and the Lembar Tagihan Refactor ha
 
 ## 🚧 In Progress
 
-None. All 12 phases of `2026-10-22-database-seeder-rewrite.md` are complete and verified.
+None. All 9 phases of `2026-10-22-tally-create-permission.md` are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **Tally Create Permission Flag (Orthogonal Capability)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-tally-create-permission-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-tally-create-permission.md`
+  - ADR: `docs/adr/0012-tally-create-permission-flag.md`
+  - Extended SSOT `AuthUser` in `src/types/index.ts` with optional `UserPermissions` carrying `tallyCreate?: boolean`.
+  - Added preset user `usr-warehouse-04` (`gudang@timber.id`, Level 2, `tallyCreate: true`) in `src/auth/users.ts`.
+  - Updated pure `computePermissions` in `src/hooks/useAuth.ts` with backward compatibility and derived `canCreateTally`.
+  - Propagated `permissions` through JWT in `src/auth/session.ts` with backward compatibility for existing tokens.
+  - Required `{ source: 'tally' | 'ledger' }` routing option on `useWoodRecords.saveManifest` (Option B).
+  - Built dedicated `POST /api/records/tally` endpoint (< 250 LOC) with relaxed capability guard, keeping `/api/records` strictly Level 1 only.
+  - Updated `/tally/page.tsx` UI guard to consume `canCreateTally`.
+  - Added unit test suite `test/auth-permissions.test.ts` and integration test suite `test/api-records-tally.test.ts`. All 785 tests passing.
 
 - ✅ **Database Seeder Rewrite (Unified Fixtures & Loaders)**:
   - Spec: `docs/superpowers/specs/2026-10-22-database-seeder-rewrite-design.md`
@@ -177,12 +191,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Database Seeder Rewrite (Item #9) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
+**Status:** Tally Create Permission Flag (Item #10) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#9).
-2. **If client clarifies DPB rakyat questions** → start Spec #10:
+1. **Monitor client feedback** on shipped features (Items #1-#10).
+2. **If client clarifies DPB rakyat questions** → start Spec #11:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -190,11 +204,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#9) without matching spec update first.
+- Modify shipped modules (Items #1-#10) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 768 passed, 0 failed
+- `npm test` → 785 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 25ms

@@ -53,7 +53,7 @@ export default function LedgerPage() {
     if (!canWrite) return;
     const isEdit = Boolean(editingRecord);
     if (manifest && manifest.items && manifest.items.length > 0) {
-      saveManifest(manifest);
+      saveManifest(manifest, { source: 'ledger' });
     } else {
       saveRecord(record);
     }

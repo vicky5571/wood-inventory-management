@@ -66,7 +66,7 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
       ],
     };
 
-    const savedRecords = await hook.saveManifest(manifestInput);
+    const savedRecords = await hook.saveManifest(manifestInput, { source: 'ledger' });
     assert.ok(Array.isArray(savedRecords), 'saveManifest must return an array of records');
     assert.strictEqual(savedRecords.length, 2, 'Must return 2 records for 2 line items');
 
@@ -111,7 +111,7 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
       ],
     };
 
-    const records = await hook.saveManifest(singleManifest);
+    const records = await hook.saveManifest(singleManifest, { source: 'ledger' });
     assert.strictEqual(records.length, 1);
     assert.strictEqual(records[0].id, 'man-single-item');
     assert.strictEqual(records[0].manifest_id, 'man-single-item');
@@ -123,6 +123,7 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
     const origWindow = globalThis.window;
     const origFetch = globalThis.fetch;
     const syncedBodies: string[] = [];
+    const syncedUrls: string[] = [];
 
     globalThis.window = {
       localStorage: {
@@ -133,7 +134,8 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
       },
     } as any;
 
-    globalThis.fetch = (async (_url: any, opts: any) => {
+    globalThis.fetch = (async (url: any, opts: any) => {
+      syncedUrls.push(String(url));
       syncedBodies.push(String(opts?.body || ''));
       return new Response(JSON.stringify({ success: true }));
     }) as any;
@@ -180,7 +182,7 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
         ],
       };
 
-      await hook.saveManifest(manifest);
+      await hook.saveManifest(manifest, { source: 'ledger' });
 
       const savedJson = map.get('wood_receiving_records_next_v1');
       assert.ok(savedJson, 'Must save to localStorage');
@@ -191,10 +193,16 @@ test('useWoodRecords Multi-Item Manifest Integration Suite', async (t) => {
       // Wait briefly for background sync
       await new Promise((r) => setTimeout(r, 60));
       assert.strictEqual(syncedBodies.length, 1, 'Must sync manifest to server in a single atomic POST');
+      assert.strictEqual(syncedUrls[0], '/api/records', 'Ledger source must target /api/records');
       const syncedPayload = JSON.parse(syncedBodies[0]);
       assert.ok(syncedPayload.manifest, 'Must include manifest in request body');
       assert.strictEqual(syncedPayload.manifest.id, 'man-persist-sync');
       assert.strictEqual(syncedPayload.manifest.items.length, 2);
+
+      // Verify tally source targets /api/records/tally
+      await hook.saveManifest({ ...manifest, id: 'man-tally-sync' }, { source: 'tally' });
+      await new Promise((r) => setTimeout(r, 60));
+      assert.strictEqual(syncedUrls[1], '/api/records/tally', 'Tally source must target /api/records/tally');
     } finally {
       globalThis.window = origWindow;
       globalThis.fetch = origFetch;

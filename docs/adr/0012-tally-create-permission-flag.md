@@ -1,7 +1,7 @@
 # ADR-0012: Tally Create Permission Flag (Orthogonal to Role Level)
 
 **Date:** 2026-10-22
-**Status:** Proposed
+**Status:** Accepted
 **Deciders:** Owner + AI pair session
 
 ---

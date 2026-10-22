@@ -36,6 +36,15 @@ export const PRESET_USERS: UserRecord[] = [
     title: 'Level 3',
     passwordHash: hashPassword('password123'),
   },
+  {
+    id: 'usr-warehouse-04',
+    email: 'gudang@timber.id',
+    name: 'Operator Gudang',
+    roleLevel: 2,
+    title: 'Level 2 — Operator Gudang',
+    permissions: { tallyCreate: true },
+    passwordHash: hashPassword('password123'),
+  },
 ];
 
 export async function authenticateUser(credentials: LoginCredentials): Promise<AuthUser | null> {

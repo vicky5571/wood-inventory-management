@@ -39,104 +39,104 @@ Design detail in spec. This plan is implementation steps.
 ## 3. Implementation Checklist
 
 ### Phase 1: SSOT Type Updates (`src/types/index.ts`)
-- [ ] Add `UserPermissions` interface near existing `AuthUser` (around line 514)
-- [ ] Add `permissions?: UserPermissions` field on `AuthUser`
-- [ ] Verify no duplicate inline `permissions` types exist anywhere via `grep -rn "permissions" src/ app/`
+- [x] Add `UserPermissions` interface near existing `AuthUser` (around line 514)
+- [x] Add `permissions?: UserPermissions` field on `AuthUser`
+- [x] Verify no duplicate inline `permissions` types exist anywhere via `grep -rn "permissions" src/ app/`
 
 ### Phase 2: Preset User (`src/auth/users.ts`)
-- [ ] Append `usr-warehouse-04` entry to `PRESET_USERS` array
-- [ ] Verify `authenticateUser('gudang@timber.id', 'password123')` returns new user with permissions object
+- [x] Append `usr-warehouse-04` entry to `PRESET_USERS` array
+- [x] Verify `authenticateUser('gudang@timber.id', 'password123')` returns new user with permissions object
 
 ### Phase 3: Permission Computation (Test-First) (`src/hooks/useAuth.ts`)
-- [ ] Create `test/auth-permissions.test.ts`:
-  - [ ] Level 1 (no permissions field) → `canCreateTally: true`
-  - [ ] Level 2 (no permissions field) → `canCreateTally: false`
-  - [ ] Level 2 (permissions: `{}`) → `canCreateTally: false`
-  - [ ] Level 2 (permissions: `{ tallyCreate: true }`) → `canCreateTally: true`
-  - [ ] Level 2 (permissions: `{ tallyCreate: false }`) → `canCreateTally: false`
-  - [ ] Level 3 (permissions: `{ tallyCreate: true }`) → `canCreateTally: true` (unusual but legal)
-  - [ ] `null` user → `canCreateTally: false`
-  - [ ] `undefined` user → `canCreateTally: false`
-  - [ ] All existing `canWrite`/`canViewAll`/`isMonitorOnly` scenarios still correct
-- [ ] Run `node --test test/auth-permissions.test.ts` → expect failures (function not updated yet)
-- [ ] Update `computePermissions` signature from `(roleLevel: UserRoleLevel | null | undefined)` to `(user: AuthUser | null | undefined)`
-- [ ] Add `canCreateTally` derivation
-- [ ] Update `useAuth` call-site to pass `user` instead of `user?.roleLevel`
-- [ ] Expose `canCreateTally` in hook return
-- [ ] Run `node --test test/auth-permissions.test.ts` → all pass
-- [ ] Grep for other callers of `computePermissions`: `grep -rn "computePermissions" src/ app/ test/` — update if any exist
+- [x] Create `test/auth-permissions.test.ts`:
+  - [x] Level 1 (no permissions field) → `canCreateTally: true`
+  - [x] Level 2 (no permissions field) → `canCreateTally: false`
+  - [x] Level 2 (permissions: `{}`) → `canCreateTally: false`
+  - [x] Level 2 (permissions: `{ tallyCreate: true }`) → `canCreateTally: true`
+  - [x] Level 2 (permissions: `{ tallyCreate: false }`) → `canCreateTally: false`
+  - [x] Level 3 (permissions: `{ tallyCreate: true }`) → `canCreateTally: true` (unusual but legal)
+  - [x] `null` user → `canCreateTally: false`
+  - [x] `undefined` user → `canCreateTally: false`
+  - [x] All existing `canWrite`/`canViewAll`/`isMonitorOnly` scenarios still correct
+- [x] Run `node --test test/auth-permissions.test.ts` → expect failures (function not updated yet)
+- [x] Update `computePermissions` signature from `(roleLevel: UserRoleLevel | null | undefined)` to `(user: AuthUser | null | undefined)`
+- [x] Add `canCreateTally` derivation
+- [x] Update `useAuth` call-site to pass `user` instead of `user?.roleLevel`
+- [x] Expose `canCreateTally` in hook return
+- [x] Run `node --test test/auth-permissions.test.ts` → all pass
+- [x] Grep for other callers of `computePermissions`: `grep -rn "computePermissions" src/ app/ test/` — update if any exist
 
 ### Phase 4: Session Propagation (`src/auth/session.ts`)
-- [ ] Add `permissions?: UserPermissions` field to session payload type
-- [ ] Pass `user.permissions` in `encodeSession` (or equivalent)
-- [ ] Return `permissions` from `decodeSession` / `getAuthenticatedUser`
-- [ ] Verify backward compat manually: decode an old JWT without `permissions` field → should return `permissions: undefined` without error
+- [x] Add `permissions?: UserPermissions` field to session payload type
+- [x] Pass `user.permissions` in `encodeSession` (or equivalent)
+- [x] Return `permissions` from `decodeSession` / `getAuthenticatedUser`
+- [x] Verify backward compat manually: decode an old JWT without `permissions` field → should return `permissions: undefined` without error
 
 ### Phase 5: Hook Signature Change (`src/hooks/useWoodRecords.ts`)
-- [ ] Change `saveManifest(payload)` signature to `saveManifest(payload, options: { source: 'tally' | 'ledger' })`
-- [ ] In function body, choose endpoint:
+- [x] Change `saveManifest(payload)` signature to `saveManifest(payload, options: { source: 'tally' | 'ledger' })`
+- [x] In function body, choose endpoint:
   - `source === 'tally'` → `POST /api/records/tally`
   - `source === 'ledger'` → `POST /api/records` (existing)
-- [ ] Grep for all callers of `saveManifest`: `grep -rn "saveManifest" src/ app/`
-- [ ] Update each caller:
-  - [ ] `app/tally/page.tsx` → `saveManifest(payload, { source: 'tally' })`
-  - [ ] `app/ledger/**` (if any) → `saveManifest(payload, { source: 'ledger' })`
-  - [ ] Any other call-site → audit and tag correctly
-- [ ] TypeScript compile check: `required` param ensures no missed caller
+- [x] Grep for all callers of `saveManifest`: `grep -rn "saveManifest" src/ app/`
+- [x] Update each caller:
+  - [x] `app/tally/page.tsx` → `saveManifest(payload, { source: 'tally' })`
+  - [x] `app/ledger/**` (if any) → `saveManifest(payload, { source: 'ledger' })`
+  - [x] Any other call-site → audit and tag correctly
+- [x] TypeScript compile check: `required` param ensures no missed caller
 
 ### Phase 6: API Endpoint (Test-First) (`app/api/records/tally/route.ts`)
-- [ ] Create `test/api-records-tally.test.ts`:
-  - [ ] POST without session → 401
-  - [ ] POST with Level 1 session + valid payload → 201, manifest persisted
-  - [ ] POST with Level 2 session + `tallyCreate: true` + valid payload → 201
-  - [ ] POST with Level 2 session without permissions → 403
-  - [ ] POST with Level 3 session → 403
-  - [ ] POST with Level 1 session + malformed JSON → 400
-- [ ] Run tests → expect failures (endpoint missing)
-- [ ] Create `app/api/records/tally/route.ts`:
-  - [ ] `export const dynamic = 'force-dynamic'`
-  - [ ] `POST` handler following `app/api/records/route.ts` pattern
-  - [ ] Guard: `if (user.roleLevel !== 1 && !user.permissions?.tallyCreate) return 403`
-  - [ ] Delegate to `serverRecordStore.saveManifest`
-  - [ ] Append activity log with `user.name` / `user.title`
-- [ ] Run tests → all pass
-- [ ] Verify LOC: `wc -l app/api/records/tally/route.ts` → < 250
+- [x] Create `test/api-records-tally.test.ts`:
+  - [x] POST without session → 401
+  - [x] POST with Level 1 session + valid payload → 201, manifest persisted
+  - [x] POST with Level 2 session + `tallyCreate: true` + valid payload → 201
+  - [x] POST with Level 2 session without permissions → 403
+  - [x] POST with Level 3 session → 403
+  - [x] POST with Level 1 session + malformed JSON → 400
+- [x] Run tests → expect failures (endpoint missing)
+- [x] Create `app/api/records/tally/route.ts`:
+  - [x] `export const dynamic = 'force-dynamic'`
+  - [x] `POST` handler following `app/api/records/route.ts` pattern
+  - [x] Guard: `if (user.roleLevel !== 1 && !user.permissions?.tallyCreate) return 403`
+  - [x] Delegate to `serverRecordStore.saveManifest`
+  - [x] Append activity log with `user.name` / `user.title`
+- [x] Run tests → all pass
+- [x] Verify LOC: `wc -l app/api/records/tally/route.ts` → < 250
 
 ### Phase 7: UI Guard Update (`app/tally/page.tsx`)
-- [ ] Line 21: destructure `canCreateTally` from `useAuth()` (keep `user`)
-- [ ] Line 71: `if (!canCreateTally) return toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk tally lapangan.');`
-- [ ] Line 87: `await saveManifest(payload, { source: 'tally' });`
-- [ ] Line 183: `{canCreateTally ? <SubmitButton /> : <MonitorBanner />}`
-- [ ] Line 191: Banner text → `'Mode Monitor: Anda tidak memiliki izin untuk menyimpan tally lapangan.'`
-- [ ] Verify `canWrite` is no longer referenced in this file
-- [ ] Verify LOC: `wc -l app/tally/page.tsx` → < 250
+- [x] Line 21: destructure `canCreateTally` from `useAuth()` (keep `user`)
+- [x] Line 71: `if (!canCreateTally) return toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk tally lapangan.');`
+- [x] Line 87: `await saveManifest(payload, { source: 'tally' });`
+- [x] Line 183: `{canCreateTally ? <SubmitButton /> : <MonitorBanner />}`
+- [x] Line 191: Banner text → `'Mode Monitor: Anda tidak memiliki izin untuk menyimpan tally lapangan.'`
+- [x] Verify `canWrite` is no longer referenced in this file
+- [x] Verify LOC: `wc -l app/tally/page.tsx` → < 250
 
 ### Phase 8: Regression Verification
-- [ ] `npm run drift:check` → `✅ No drift detected`
-- [ ] `npm test` → 0 failures, test count ≥ 768 + new tests
-- [ ] `npm run build:check` → 0 TypeScript errors, Next.js build succeeds
-- [ ] Manual QA matrix (local dev server `npm run dev`):
-  - [ ] Login `manager@timber.id` → `/tally` shows Save button → submit works → appears in `/ledger`
-  - [ ] Login `admin@timber.id` → `/tally` shows Monitor banner, Save hidden
-  - [ ] Login `viewer@timber.id` → `/tally` shows Monitor banner (unchanged)
-  - [ ] Login `gudang@timber.id` → `/tally` shows Save button → submit works → appears in `/ledger`
-  - [ ] Login `gudang@timber.id` → sidebar shows same items as Level 2 (no Settings)
-  - [ ] Login `gudang@timber.id` → `/settings` direct URL → access denied (page-level RBAC)
-  - [ ] Activity log entry for warehouse-user manifest shows `operatorName: 'Operator Gudang'`
-- [ ] Direct API probe (curl or REST client):
-  - [ ] `POST /api/records/tally` without cookie → 401
-  - [ ] `POST /api/records/tally` as `admin@timber.id` → 403
-  - [ ] `POST /api/records/tally` as `gudang@timber.id` → 201
-  - [ ] `POST /api/records` as `gudang@timber.id` (bypass attempt) → 403
+- [x] `npm run drift:check` → `✅ No drift detected`
+- [x] `npm test` → 0 failures, test count ≥ 768 + new tests
+- [x] `npm run build:check` → 0 TypeScript errors, Next.js build succeeds
+- [x] Manual QA matrix (local dev server `npm run dev`):
+  - [x] Login `manager@timber.id` → `/tally` shows Save button → submit works → appears in `/ledger`
+  - [x] Login `admin@timber.id` → `/tally` shows Monitor banner, Save hidden
+  - [x] Login `viewer@timber.id` → `/tally` shows Monitor banner (unchanged)
+  - [x] Login `gudang@timber.id` → `/tally` shows Save button → submit works → appears in `/ledger`
+  - [x] Login `gudang@timber.id` → sidebar shows same items as Level 2 (no Settings)
+  - [x] Login `gudang@timber.id` → `/settings` direct URL → access denied (page-level RBAC)
+  - [x] Activity log entry for warehouse-user manifest shows `operatorName: 'Operator Gudang'`
+- [x] Direct API probe (curl or REST client):
+  - [x] `POST /api/records/tally` without cookie → 401
+  - [x] `POST /api/records/tally` as `admin@timber.id` → 403
+  - [x] `POST /api/records/tally` as `gudang@timber.id` → 201
+  - [x] `POST /api/records` as `gudang@timber.id` (bypass attempt) → 403
 
 ### Phase 9: Documentation & Handoff
-- [ ] Append entry to `CHANGELOG.md` with spec/plan/ADR refs
-- [ ] Update `docs/SESSION_STATE.md`:
+- [x] Append entry to `CHANGELOG.md` with spec/plan/ADR refs
+- [x] Update `docs/SESSION_STATE.md`:
   - Mark feature complete in "Completed Modules" table (Item #10)
   - Clear "In Progress" if nothing else pending
   - Update "Pickup Instructions" with next suggested action
-- [ ] Change ADR-0012 status: `Proposed` → `Accepted`
-- [ ] Commit with message:
+- [x] Change ADR-0012 status: `Proposed` → `Accepted`
+- [x] Commit with message:
   ```
   feat(auth): add tally create permission flag for warehouse operator
 

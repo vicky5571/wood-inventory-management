@@ -18,7 +18,7 @@ import { toast } from '@/src/utils/toast-store';
 import type { ManifestFormInput } from '@/src/types/index';
 
 export default function MobileTallyPage() {
-  const { canWrite, user } = useAuth();
+  const { canCreateTally, user } = useAuth();
   const { saveManifest } = useWoodRecords();
   const { settings } = useSettings();
   const { addLog } = useActivityLog();
@@ -68,7 +68,7 @@ export default function MobileTallyPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canWrite) return toast.error('Akses Ditolak', 'Hanya Pemilik (Level 1) yang dapat menyimpan manifest.');
+    if (!canCreateTally) return toast.error('Akses Ditolak', 'Anda tidak memiliki izin untuk tally lapangan.');
     if (!truckPlateNumber.trim() || !supplierName.trim()) return toast.warning('Data Belum Lengkap', 'Plat truk dan pemasok wajib diisi.');
     setIsSubmitting(true);
     try {
@@ -84,7 +84,7 @@ export default function MobileTallyPage() {
           tallyPieces, tallyVolumeM3, timberPricePerM3: 1500000, timberPphRate: settings.defaultTimberPphRate ?? 0.015,
         }],
       };
-      await saveManifest(payload);
+      await saveManifest(payload, { source: 'tally' });
       addLog({
         action: 'RECORD_CREATED', entityId: payload.id,
         entitySummary: `Tally Lapangan: ${payload.truckPlateNumber} • ${payload.supplierName} (${tallyVolumeM3.toFixed(2)} m³ / ${tallyPieces} btg)`,
@@ -180,7 +180,7 @@ export default function MobileTallyPage() {
 
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-xl z-30">
           <div className="max-w-xl mx-auto">
-            {canWrite ? (
+            {canCreateTally ? (
               <button type="submit" disabled={isSubmitting} className="w-full py-3.5 px-4 bg-[#ffc908] hover:bg-amber-400 active:scale-[0.98] text-[#101828] font-black text-sm rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" />
                 <span>{isSubmitting ? 'Menyimpan...' : 'Simpan & Sinkron Manifest (保存同步)'}</span>
@@ -188,7 +188,7 @@ export default function MobileTallyPage() {
             ) : (
               <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900 flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Mode Monitor: Hanya Pemilik (Level 1) yang berhak menyimpan data tally.</span>
+                <span>Mode Monitor: Anda tidak memiliki izin untuk menyimpan tally lapangan.</span>
               </div>
             )}
           </div>

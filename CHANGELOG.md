@@ -12,6 +12,10 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
 ## [Unreleased]
 
 ### Added
+- **Tally Create Permission Flag** — introduces optional `AuthUser.permissions.tallyCreate` capability flag orthogonal to the `roleLevel` hierarchy. Allows designated Level 2 warehouse operators (`gudang@timber.id`) to submit Tally Lapangan manifests at `/tally` while keeping all financial and write restrictions intact. Dedicated endpoint `POST /api/records/tally` with relaxed guard isolates access.
+  - Spec: `docs/superpowers/specs/2026-10-22-tally-create-permission-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-tally-create-permission.md`
+  - ADR: `docs/adr/0012-tally-create-permission-flag.md`
 - **Drift Prevention Infrastructure** — `AGENTS.md` session protocol, `scripts/drift-check.ts` executable invariant verifier with baseline mode, `docs/SESSION_STATE.md` cross-session handoff artifact, `docs/adr/` directory for architecture decision records, this CHANGELOG. [AGENTS.md]
 - **ADR-0001** — Dual-mode persistence (SQLite + Supabase). [docs/adr/0001-dual-mode-persistence-sqlite-and-supabase.md]
 - **ADR-0002** — NULL vs Zero sentinel for pending price. [docs/adr/0002-null-vs-zero-for-pending-price.md]

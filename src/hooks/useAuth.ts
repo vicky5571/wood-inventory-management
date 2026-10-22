@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AuthUser, LoginCredentials, UserRoleLevel } from '../types/index.ts';
 
-export function computePermissions(roleLevel: UserRoleLevel | null | undefined) {
+export function computePermissions(userOrRoleLevel: AuthUser | UserRoleLevel | null | undefined) {
+  const user = typeof userOrRoleLevel === 'object' && userOrRoleLevel !== null ? userOrRoleLevel : null;
+  const roleLevel = typeof userOrRoleLevel === 'number' ? userOrRoleLevel : user?.roleLevel;
   return {
     canWrite: roleLevel === 1,
     canViewAll: roleLevel === 1 || roleLevel === 2,
     isMonitorOnly: roleLevel === 3,
+    canCreateTally: roleLevel === 1 || Boolean(user?.permissions?.tallyCreate),
   };
 }
 
@@ -72,7 +75,7 @@ export function useAuth() {
     }
   }, []);
 
-  const permissions = computePermissions(user?.roleLevel);
+  const permissions = computePermissions(user);
 
   return {
     user,

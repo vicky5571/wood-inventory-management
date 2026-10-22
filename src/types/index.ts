@@ -511,12 +511,17 @@ export interface RecordCalculationOutput {
 
 export type UserRoleLevel = 1 | 2 | 3;
 
+export interface UserPermissions {
+  tallyCreate?: boolean;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   roleLevel: UserRoleLevel;
   title: string;
+  permissions?: UserPermissions;
 }
 
 export interface AuthSession {

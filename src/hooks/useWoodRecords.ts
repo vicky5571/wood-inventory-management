@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type {
-  WoodReceivingRecord,
-  RecordFilterCriteria,
-  DashboardMetrics,
-  ManifestFormInput,
-  PaginationMeta,
+  WoodReceivingRecord, RecordFilterCriteria, DashboardMetrics, ManifestFormInput, PaginationMeta,
 } from '../types/index.ts';
 import { aggregateDashboardMetrics, computeRecordCalculations } from '../utils/timber-calc.ts';
 import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
@@ -151,13 +147,17 @@ export function useWoodRecords() {
     }, true);
   }, [syncWithServer, updateRecords]);
 
-  const saveManifest = useCallback(async (manifest: ManifestFormInput): Promise<WoodReceivingRecord[]> => {
+  const saveManifest = useCallback(async (
+    manifest: ManifestFormInput,
+    options: { source: 'tally' | 'ledger' }
+  ): Promise<WoodReceivingRecord[]> => {
     hasMutatedRef.current = true;
     const { next, flattened } = applyManifestToRecords(recordsRef.current, manifest);
     updateRecords(next);
 
+    const url = options.source === 'tally' ? '/api/records/tally' : '/api/records';
     syncWithServer(async () => {
-      const res = await fetch('/api/records', {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manifest }),

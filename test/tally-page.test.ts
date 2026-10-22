@@ -28,9 +28,9 @@ test('Mobile Tally Dedicated Route Integration Suite', async (t) => {
     assert.match(content, /loadManifestDraft|saveManifestDraft/, 'Must implement draft persistence');
   });
 
-  await t.test('app/tally/page.tsx enforces Level 1 RBAC write guard and bilingual submit action', () => {
+  await t.test('app/tally/page.tsx enforces canCreateTally permission guard and bilingual submit action', () => {
     const content = fs.readFileSync(pagePath, 'utf-8');
-    assert.match(content, /canWrite/, 'Must verify canWrite permission');
+    assert.match(content, /canCreateTally/, 'Must verify canCreateTally permission');
     assert.match(content, /Simpan & Sinkron Manifest|Simpan Manifest/, 'Must contain manifest save button');
     assert.match(content, /truckPlateNumber/, 'Must capture truckPlateNumber');
     assert.match(content, /supplierName/, 'Must capture supplierName');

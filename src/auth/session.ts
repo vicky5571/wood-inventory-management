@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { AuthUser, UserRoleLevel } from '../types/index.ts';
+import type { AuthUser, UserPermissions, UserRoleLevel } from '../types/index.ts';
 
 export const COOKIE_NAME = 'wood_session';
 const DEFAULT_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -13,6 +13,7 @@ interface TokenPayload {
   name: string;
   roleLevel: UserRoleLevel;
   title: string;
+  permissions?: UserPermissions;
   exp: number; // Unix epoch ms
 }
 
@@ -28,6 +29,7 @@ export function createSessionToken(user: AuthUser, ttlSeconds: number = DEFAULT_
     name: user.name,
     roleLevel: user.roleLevel,
     title: user.title,
+    ...(user.permissions ? { permissions: user.permissions } : {}),
     exp,
   };
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -64,13 +66,18 @@ export function verifySessionToken(token: string | undefined | null): AuthUser |
       return null;
     }
 
-    return {
+    const user: AuthUser = {
       id: payload.userId,
       email: payload.email,
       name: payload.name,
       roleLevel: payload.roleLevel,
       title: payload.title,
     };
+    if (payload.permissions) {
+      user.permissions = payload.permissions;
+    }
+
+    return user;
   } catch {
     return null;
   }
