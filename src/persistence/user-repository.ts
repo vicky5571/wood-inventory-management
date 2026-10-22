@@ -27,6 +27,11 @@ export abstract class UserRepository {
   abstract findById(id: string): Promise<UserRecordRow | null>;
   abstract listAll(opts?: { includeInactive?: boolean }): Promise<UserRecordRow[]>;
   abstract create(input: Omit<UserRecordRow, 'createdAt' | 'updatedAt'>): Promise<UserRecordRow>;
+  /**
+   * Applies shallow patch to user fields.
+   * `undefined` = no-op (preserves existing value).
+   * `null` (or `{}` for permissions) = explicitly clear.
+   */
   abstract update(id: string, patch: Partial<Omit<UserRecordRow, 'id' | 'createdAt'>>): Promise<UserRecordRow>;
   abstract deactivate(id: string): Promise<void>;
   abstract upsertSeed(input: Omit<UserRecordRow, 'createdAt' | 'updatedAt'>): Promise<void>;
@@ -70,6 +75,15 @@ export async function ensureSeedUsers(repo: UserRepository): Promise<void> {
 let globalUserRepository: UserRepository | null = null;
 let seedInitialized = false;
 
+/**
+ * Returns raw UserRepository singleton.
+ *
+ * For auth lookup only (login, session verification).
+ * Admin mutations MUST wrap this via createAuditedUserRepository(actor)
+ * from user-repository-audited.ts to ensure audit trail.
+ * Seeder (ensureSeedUsers) uses raw repo intentionally — bootstrap is
+ * not an admin action.
+ */
 export function getUserRepository(): UserRepository {
   if (!globalUserRepository) {
     globalUserRepository = createUserRepository();

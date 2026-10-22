@@ -22,6 +22,10 @@ Each entry references the governing Spec, Plan, and (where applicable) ADR docum
   - ADR: `docs/adr/0013-user-management-architecture.md`
 
 ### Added
+- **Auth audit**: Extended ActivityActionType with 7 user-lifecycle actions (USER_CREATED, USER_UPDATED, USER_ROLE_CHANGED, USER_PERMISSION_CHANGED, USER_DEACTIVATED, USER_REACTIVATED, USER_PASSWORD_CHANGED). AuditedUserRepository decorator wraps Spec A DAO to emit structured audit entries on admin mutations. Password values never logged. Zero schema change.
+  - Spec: `docs/superpowers/specs/2026-10-22-user-audit-log-extension-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-user-audit-log-extension.md`
+  - ADR: `docs/adr/0013-user-management-architecture.md`
 - **Tally Create Permission Flag** — introduces optional `AuthUser.permissions.tallyCreate` capability flag orthogonal to the `roleLevel` hierarchy. Allows designated Level 2 warehouse operators (`gudang@timber.id`) to submit Tally Lapangan manifests at `/tally` while keeping all financial and write restrictions intact. Dedicated endpoint `POST /api/records/tally` with relaxed guard isolates access.
   - Spec: `docs/superpowers/specs/2026-10-22-tally-create-permission-design.md`
   - Plan: `docs/superpowers/plans/2026-10-22-tally-create-permission.md`

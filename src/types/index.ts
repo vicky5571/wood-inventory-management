@@ -744,7 +744,14 @@ export type ActivityActionType =
   | 'SORTING_CREATED'
   | 'SORTING_UPDATED'
   | 'SORTING_DELETED'
-  | 'SORTING_RESTORED';
+  | 'SORTING_RESTORED'
+  | 'USER_CREATED'
+  | 'USER_UPDATED'
+  | 'USER_ROLE_CHANGED'
+  | 'USER_PERMISSION_CHANGED'
+  | 'USER_DEACTIVATED'
+  | 'USER_REACTIVATED'
+  | 'USER_PASSWORD_CHANGED';
 
 export type PricingStatus = 'PENDING' | 'PRICED';
 
@@ -761,6 +768,75 @@ export interface ActivityLogEntry {
   timestamp: string;
   metadata?: Record<string, unknown>;
 }
+
+export type AuditLogger = (entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => Promise<void>;
+
+/**
+ * Metadata schemas for user lifecycle audit log events (Spec C)
+ */
+export interface UserCreatedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  targetName: string;
+  initialRoleLevel: UserRoleLevel;
+  initialPermissions?: UserPermissions;
+}
+
+export interface UserUpdatedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  changedFields: Array<{
+    field: 'name' | 'email' | 'title';
+    before: string;
+    after: string;
+  }>;
+}
+
+export interface UserRoleChangedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  before: UserRoleLevel;
+  after: UserRoleLevel;
+  reason?: string;
+}
+
+export interface UserPermissionChangedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  before: UserPermissions | undefined;
+  after: UserPermissions | undefined;
+  changes: string[];
+  reason?: string;
+}
+
+export interface UserDeactivatedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  previousRoleLevel: UserRoleLevel;
+  reason?: string;
+}
+
+export interface UserReactivatedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  roleLevel: UserRoleLevel;
+  reason?: string;
+}
+
+export interface UserPasswordChangedMetadata {
+  targetUserId: string;
+  targetEmail: string;
+  reason?: string;
+}
+
+export type UserAuditMetadata =
+  | UserCreatedMetadata
+  | UserUpdatedMetadata
+  | UserRoleChangedMetadata
+  | UserPermissionChangedMetadata
+  | UserDeactivatedMetadata
+  | UserReactivatedMetadata
+  | UserPasswordChangedMetadata;
 
 /**
  * 4-level discrepancy severity classification

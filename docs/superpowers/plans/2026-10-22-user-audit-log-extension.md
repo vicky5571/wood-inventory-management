@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-22
 **Priority:** P1 (prerequisite for Spec D admin UI forensic safety)
-**Status:** DRAFT — Pending Approval
+**Status:** Accepted — Implemented
 **Related Spec:** `docs/superpowers/specs/2026-10-22-user-audit-log-extension-design.md`
 **Related ADR:** ADR-0013 (User Management Architecture)
 **Position in Sequence:** Plan for Spec C of (A→B→C→D). Depends on Spec A (merged `95a6fd1`). Prerequisite for Spec D.
@@ -47,7 +47,7 @@ Design detail in spec. This plan is implementation steps.
 ## 3. Implementation Checklist
 
 ### Phase 1: SSOT Type Updates (`src/types/index.ts`)
-- [ ] Append 7 new values to `ActivityActionType` union (near line 747, after `SORTING_RESTORED`):
+- [x] Append 7 new values to `ActivityActionType` union (near line 747, after `SORTING_RESTORED`):
   ```ts
   | 'USER_CREATED'
   | 'USER_UPDATED'
@@ -57,64 +57,64 @@ Design detail in spec. This plan is implementation steps.
   | 'USER_REACTIVATED'
   | 'USER_PASSWORD_CHANGED';
   ```
-- [ ] Add 7 metadata interfaces per spec §2.2 (`UserCreatedMetadata`, `UserUpdatedMetadata`, `UserRoleChangedMetadata`, `UserPermissionChangedMetadata`, `UserDeactivatedMetadata`, `UserReactivatedMetadata`, `UserPasswordChangedMetadata`).
-- [ ] Add discriminated union `UserAuditMetadata`.
-- [ ] Add `AuditLogger` function type:
+- [x] Add 7 metadata interfaces per spec §2.2 (`UserCreatedMetadata`, `UserUpdatedMetadata`, `UserRoleChangedMetadata`, `UserPermissionChangedMetadata`, `UserDeactivatedMetadata`, `UserReactivatedMetadata`, `UserPasswordChangedMetadata`).
+- [x] Add discriminated union `UserAuditMetadata`.
+- [x] Add `AuditLogger` function type:
   ```ts
   export type AuditLogger = (entry: Omit<ActivityLogEntry, 'id' | 'timestamp'>) => Promise<void>;
   ```
-- [ ] Verify `UserPasswordChangedMetadata` has NO `passwordHash`/`password` fields (grep + visual confirm).
-- [ ] Grep for any inline `UserAuditMetadata`-like definitions elsewhere: `grep -rn "UserAudit\|UserCreatedMetadata" src/ app/` — expect 1 match in types/index.ts only.
+- [x] Verify `UserPasswordChangedMetadata` has NO `passwordHash`/`password` fields (grep + visual confirm).
+- [x] Grep for any inline `UserAuditMetadata`-like definitions elsewhere: `grep -rn "UserAudit\|UserCreatedMetadata" src/ app/` — expect 1 match in types/index.ts only.
 
 ### Phase 2: Permission Diff Helper (Test-First)
-- [ ] Create `test/user-permission-diff.test.ts`:
-  - [ ] `diffPermissions(undefined, undefined)` → `[]`
-  - [ ] `diffPermissions({}, {})` → `[]`
-  - [ ] `diffPermissions({ tallyCreate: true }, { tallyCreate: true })` → `[]` (no-op)
-  - [ ] `diffPermissions(undefined, { tallyCreate: true })` → `['granted: tallyCreate']`
-  - [ ] `diffPermissions({ tallyCreate: true }, undefined)` → `['revoked: tallyCreate']`
-  - [ ] `diffPermissions({ tallyCreate: true }, { tallyCreate: false })` → `['tallyCreate: true → false']`
-  - [ ] `diffPermissions({ tallyCreate: true }, {})` → `['revoked: tallyCreate']` (empty object = no flags = same as undefined)
-- [ ] Run `node --test test/user-permission-diff.test.ts` → expect failures (helper missing).
-- [ ] Create `src/utils/user-permission-diff.ts`:
-  - [ ] Pure function per spec §2.4
-  - [ ] Export typed signature: `(before: UserPermissions | undefined, after: UserPermissions | undefined) => string[]`
-  - [ ] Handle edge cases: `undefined`, `{}`, missing keys, value transitions
-- [ ] Run tests → all pass.
-- [ ] Verify LOC < 250.
+- [x] Create `test/user-permission-diff.test.ts`:
+  - [x] `diffPermissions(undefined, undefined)` → `[]`
+  - [x] `diffPermissions({}, {})` → `[]`
+  - [x] `diffPermissions({ tallyCreate: true }, { tallyCreate: true })` → `[]` (no-op)
+  - [x] `diffPermissions(undefined, { tallyCreate: true })` → `['granted: tallyCreate']`
+  - [x] `diffPermissions({ tallyCreate: true }, undefined)` → `['revoked: tallyCreate']`
+  - [x] `diffPermissions({ tallyCreate: true }, { tallyCreate: false })` → `['tallyCreate: true → false']`
+  - [x] `diffPermissions({ tallyCreate: true }, {})` → `['revoked: tallyCreate']` (empty object = no flags = same as undefined)
+- [x] Run `node --test test/user-permission-diff.test.ts` → expect failures (helper missing).
+- [x] Create `src/utils/user-permission-diff.ts`:
+  - [x] Pure function per spec §2.4
+  - [x] Export typed signature: `(before: UserPermissions | undefined, after: UserPermissions | undefined) => string[]`
+  - [x] Handle edge cases: `undefined`, `{}`, missing keys, value transitions
+- [x] Run tests → all pass.
+- [x] Verify LOC < 250.
 
 ### Phase 3: AuditedUserRepository (Test-First)
-- [ ] Create `test/user-repository-audited.test.ts` with scenarios:
-  - [ ] `create` emits 1 `USER_CREATED` entry; metadata matches `UserCreatedMetadata` shape; actor fields = constructor-supplied actor
-  - [ ] `update` with name change only → 1 `USER_UPDATED` entry with `changedFields: [{ field: 'name', before, after }]`
-  - [ ] `update` with email + title change (both non-role) → 1 `USER_UPDATED` with 2 changedFields
-  - [ ] `update` with roleLevel change only → 1 `USER_ROLE_CHANGED` entry (NOT `USER_UPDATED`)
-  - [ ] `update` with permission grant → 1 `USER_PERMISSION_CHANGED`; `changes: ['granted: tallyCreate']`
-  - [ ] `update` with permission revoke → 1 `USER_PERMISSION_CHANGED`; `changes: ['revoked: tallyCreate']`
-  - [ ] `update` with permissions same before/after → 0 permission entries (no-op suppressed)
-  - [ ] `update` with passwordHash → 1 `USER_PASSWORD_CHANGED`; assert metadata has NO `passwordHash` key via `Object.keys(metadata)` check
-  - [ ] `update` with role + name + passwordHash in one call → 3 separate entries (one per category: role, update, password)
-  - [ ] `update(id, { isActive: true })` where existing.isActive=false → 1 `USER_REACTIVATED` entry (not `USER_UPDATED`)
-  - [ ] `update(id, { isActive: true })` where existing.isActive=true already → 0 entries (true no-op)
-  - [ ] `update(id, { name: 'x' })` where new name === existing.name → 0 entries (no-op)
-  - [ ] `deactivate(id)` → 1 `USER_DEACTIVATED` entry; metadata.previousRoleLevel captured
-  - [ ] `deactivate` on non-existent id → throws `UserNotFoundError`; 0 log entries
-  - [ ] Logger error during `create` → log emission fails, mutation rolled back? Per spec §6: mutation committed, logger error re-thrown. Test documents actual behavior.
-  - [ ] `upsertSeed` is NOT exposed on wrapper (TypeScript signature omits it)
-  - [ ] `findByEmail`, `findById`, `listAll` pass through unchanged → 0 log entries for reads
-- [ ] Run tests → expect failures (class missing).
-- [ ] Create `src/persistence/user-repository-audited.ts`:
-  - [ ] Export `AuditedUserRepository extends UserRepository`
-  - [ ] Constructor: `(inner: UserRepository, logger: AuditLogger, actor: AuthUser)`
-  - [ ] Implement all 7 abstract methods; omit `upsertSeed` or throw on call (document choice)
-  - [ ] `emitUpdateLogs(existing, updated, patch)` private method dispatching to the right action type per diff
-  - [ ] Export `createAuditedUserRepository(actor: AuthUser): UserRepository` factory using `serverRecordStore.appendActivityLog`
-  - [ ] JSDoc at module top: "For admin mutations only. Auth lookup (login, session) uses raw getUserRepository()."
-- [ ] Run tests → all pass.
-- [ ] Verify LOC: `wc -l src/persistence/user-repository-audited.ts` → < 250. If ≥ 250, Phase 3 contingency: extract `emitUpdateLogs` to `src/persistence/user-audit-emitter.ts`.
+- [x] Create `test/user-repository-audited.test.ts` with scenarios:
+  - [x] `create` emits 1 `USER_CREATED` entry; metadata matches `UserCreatedMetadata` shape; actor fields = constructor-supplied actor
+  - [x] `update` with name change only → 1 `USER_UPDATED` entry with `changedFields: [{ field: 'name', before, after }]`
+  - [x] `update` with email + title change (both non-role) → 1 `USER_UPDATED` with 2 changedFields
+  - [x] `update` with roleLevel change only → 1 `USER_ROLE_CHANGED` entry (NOT `USER_UPDATED`)
+  - [x] `update` with permission grant → 1 `USER_PERMISSION_CHANGED`; `changes: ['granted: tallyCreate']`
+  - [x] `update` with permission revoke → 1 `USER_PERMISSION_CHANGED`; `changes: ['revoked: tallyCreate']`
+  - [x] `update` with permissions same before/after → 0 permission entries (no-op suppressed)
+  - [x] `update` with passwordHash → 1 `USER_PASSWORD_CHANGED`; assert metadata has NO `passwordHash` key via `Object.keys(metadata)` check
+  - [x] `update` with role + name + passwordHash in one call → 3 separate entries (one per category: role, update, password)
+  - [x] `update(id, { isActive: true })` where existing.isActive=false → 1 `USER_REACTIVATED` entry (not `USER_UPDATED`)
+  - [x] `update(id, { isActive: true })` where existing.isActive=true already → 0 entries (true no-op)
+  - [x] `update(id, { name: 'x' })` where new name === existing.name → 0 entries (no-op)
+  - [x] `deactivate(id)` → 1 `USER_DEACTIVATED` entry; metadata.previousRoleLevel captured
+  - [x] `deactivate` on non-existent id → throws `UserNotFoundError`; 0 log entries
+  - [x] Logger error during `create` → log emission fails, mutation rolled back? Per spec §6: mutation committed, logger error re-thrown. Test documents actual behavior.
+  - [x] `upsertSeed` is NOT exposed on wrapper (TypeScript signature omits it)
+  - [x] `findByEmail`, `findById`, `listAll` pass through unchanged → 0 log entries for reads
+- [x] Run tests → expect failures (class missing).
+- [x] Create `src/persistence/user-repository-audited.ts`:
+  - [x] Export `AuditedUserRepository extends UserRepository`
+  - [x] Constructor: `(inner: UserRepository, logger: AuditLogger, actor: AuthUser)`
+  - [x] Implement all 7 abstract methods; omit `upsertSeed` or throw on call (document choice)
+  - [x] `emitUpdateLogs(existing, updated, patch)` private method dispatching to the right action type per diff
+  - [x] Export `createAuditedUserRepository(actor: AuthUser): UserRepository` factory using `serverRecordStore.appendActivityLog`
+  - [x] JSDoc at module top: "For admin mutations only. Auth lookup (login, session) uses raw getUserRepository()."
+- [x] Run tests → all pass.
+- [x] Verify LOC: `wc -l src/persistence/user-repository-audited.ts` → < 250. If ≥ 250, Phase 3 contingency: extract `emitUpdateLogs` to `src/persistence/user-audit-emitter.ts`.
 
 ### Phase 4: Factory Consumer Documentation
-- [ ] Add JSDoc on `getUserRepository()` in `src/persistence/user-repository.ts`:
+- [x] Add JSDoc on `getUserRepository()` in `src/persistence/user-repository.ts`:
   ```
   /**
    * Returns raw UserRepository singleton.
@@ -128,25 +128,25 @@ Design detail in spec. This plan is implementation steps.
   ```
 
 ### Phase 5: Regression Check (Seeder + Auth Must NOT Emit User-Audit Entries)
-- [ ] Add regression test to `test/user-repository-seed.test.ts` (or new section):
-  - [ ] Fresh DB + `ensureSeedUsers()` → query `activity_logs WHERE action LIKE 'USER_%'` → 0 rows
-- [ ] Add regression test:
-  - [ ] `getAuthenticatedUser` call (which triggers `findById`) → 0 USER_* log entries
-- [ ] Grep audit: `grep -rn "appendActivityLog" src/auth/ src/persistence/user-repository*.ts` — expect zero matches (auth and raw DAO must not touch logger).
-- [ ] Confirm no existing test file uses `createAuditedUserRepository` yet (it's for Spec D consumption).
+- [x] Add regression test to `test/user-repository-seed.test.ts` (or new section):
+  - [x] Fresh DB + `ensureSeedUsers()` → query `activity_logs WHERE action LIKE 'USER_%'` → 0 rows
+- [x] Add regression test:
+  - [x] `getAuthenticatedUser` call (which triggers `findById`) → 0 USER_* log entries
+- [x] Grep audit: `grep -rn "appendActivityLog" src/auth/ src/persistence/user-repository*.ts` — expect zero matches (auth and raw DAO must not touch logger).
+- [x] Confirm no existing test file uses `createAuditedUserRepository` yet (it's for Spec D consumption).
 
 ### Phase 6: Verification Gate
-- [ ] `npm run drift:check` → `✅ No drift detected`
-- [ ] `npm test` → `pass N, fail 0` where N ≥ 828 + ~22 new tests (= 850+)
-- [ ] `npm run build:check` → 0 TypeScript errors
-- [ ] Grep assertion: `grep -r "passwordHash" test/user-repository-audited.test.ts` — must appear only in test setup, never in asserted log metadata
-- [ ] Backward compat smoke:
+- [x] `npm run drift:check` → `✅ No drift detected`
+- [x] `npm test` → `pass N, fail 0` where N ≥ 828 + ~22 new tests (= 850+)
+- [x] `npm run build:check` → 0 TypeScript errors
+- [x] Grep assertion: `grep -r "passwordHash" test/user-repository-audited.test.ts` — must appear only in test setup, never in asserted log metadata
+- [x] Backward compat smoke:
   - Login flow still works (`manager@timber.id`, `admin@timber.id`, `gudang@timber.id`)
   - Existing `/api/activity` listing endpoint returns successfully
   - Seeder (`npm run db:seed`) runs with no USER_* entries added
 
 ### Phase 7: Documentation & Handoff
-- [ ] Append entry to `CHANGELOG.md`:
+- [x] Append entry to `CHANGELOG.md`:
   ```
   ### Added
   - **Auth audit**: Extended ActivityActionType with 7 user-lifecycle
@@ -159,12 +159,12 @@ Design detail in spec. This plan is implementation steps.
     Plan: docs/superpowers/plans/2026-10-22-user-audit-log-extension.md
     Refs: ADR-0013
   ```
-- [ ] Update `docs/SESSION_STATE.md`:
+- [x] Update `docs/SESSION_STATE.md`:
   - Add Item #13 "User Audit Log Extension (Spec C)" to Completed Modules
   - Clear "In Progress" if nothing else active
   - Update "Pickup Instructions": "Spec D (Admin UI) is next. Prerequisites A + B + C complete. TD-001 recommended before starting."
-- [ ] Change Spec C status: `Draft — Pending Approval` → `Accepted — Implemented`
-- [ ] Change Plan C status: `DRAFT — Pending Approval` → `Accepted — Implemented`
+- [x] Change Spec C status: `Draft — Pending Approval` → `Accepted — Implemented`
+- [x] Change Plan C status: `DRAFT — Pending Approval` → `Accepted — Implemented`
 - [ ] Commit:
   ```
   feat(auth): add 7 user-lifecycle audit action types + AuditedUserRepository

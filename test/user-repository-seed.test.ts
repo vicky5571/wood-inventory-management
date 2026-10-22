@@ -7,6 +7,11 @@ import {
   ensureSeedUsers,
   UserRepository,
 } from '../src/persistence/user-repository.ts';
+import {
+  createSessionToken,
+  getAuthenticatedUser,
+  COOKIE_NAME,
+} from '../src/auth/session.ts';
 
 describe('UserRepository Seeder Suite', () => {
   let repo: UserRepository;
@@ -71,5 +76,35 @@ describe('UserRepository Seeder Suite', () => {
     const after = await repo.listAll({ includeInactive: true });
     assert.equal(after.length, 1);
     assert.equal(after[0].id, 'custom-admin-01');
+  });
+
+  it('fresh DB + ensureSeedUsers emits ZERO activity_logs with action LIKE USER_%', async () => {
+    await ensureSeedUsers(repo);
+    const userAuditRows = db.prepare(`
+      SELECT * FROM activity_logs WHERE action LIKE 'USER_%'
+    `).all();
+    assert.equal(userAuditRows.length, 0);
+  });
+
+  it('getAuthenticatedUser lookup emits ZERO activity_logs with action LIKE USER_%', async () => {
+    await ensureSeedUsers(repo);
+    const token = createSessionToken({
+      id: 'usr-manager-01',
+      email: 'manager@timber.id',
+      name: 'Manager',
+      roleLevel: 1,
+      title: 'Manager',
+    }, 3600);
+
+    const req = new Request('https://timber.test/api/records', {
+      headers: { cookie: `${COOKIE_NAME}=${token}` },
+    });
+    const user = await getAuthenticatedUser(req);
+    assert.ok(user);
+
+    const userAuditRows = db.prepare(`
+      SELECT * FROM activity_logs WHERE action LIKE 'USER_%'
+    `).all();
+    assert.equal(userAuditRows.length, 0);
   });
 });

@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (Session Invalidation Spec B complete)
-**Last Session By:** AI pair-programming session (Session Invalidation Spec B)
+**Last Updated:** 2026-10-22 (User Audit Log Extension Spec C complete)
+**Last Session By:** AI pair-programming session (User Audit Log Extension Spec C)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -22,7 +22,7 @@
 
 ## ✅ Completed Modules (Shipped & Verified)
 
-All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, Tally Create Permission Flag, and User Storage Migration (Spec A) have been implemented, tested, and verified.
+All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Sidebar Grouping, Database Seeder Rewrite, Tally Create Permission Flag, User Storage Migration (Spec A), Session Invalidation (Spec B), and User Audit Log Extension (Spec C) have been implemented, tested, and verified.
 
 | # | Module | Spec | Plan | Status |
 |---|---|---|---|---|
@@ -39,9 +39,10 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 10 | Tally Create Permission Flag | `2026-10-22-tally-create-permission-design.md` | `2026-10-22-tally-create-permission.md` | ✅ Completed |
 | 11 | User Storage Migration (Spec A) | `2026-10-22-user-storage-migration-design.md` | `2026-10-22-user-storage-migration.md` | ✅ Completed |
 | 12 | Session Invalidation (Spec B) | `2026-10-22-session-invalidation-design.md` | `2026-10-22-session-invalidation.md` | ✅ Completed |
+| 13 | User Audit Log Extension (Spec C) | `2026-10-22-user-audit-log-extension-design.md` | `2026-10-22-user-audit-log-extension.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-22):**
-- `npm test` → 828 passed, 0 failed
+- `npm test` → 857 passed, 0 failed
 - `npm run build:check` → 0 errors (Next.js production build clean, 22/22 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
@@ -50,9 +51,23 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 ## 🚧 In Progress
 
-None. All 10 phases of `2026-10-22-session-invalidation.md` (Spec B) are complete and verified.
+None. All 7 phases of `2026-10-22-user-audit-log-extension.md` (Spec C) are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **User Audit Log Extension (Spec C — AuditedUserRepository & User Mutation Audit Trail)**:
+  - Spec: `docs/superpowers/specs/2026-10-22-user-audit-log-extension-design.md`
+  - Plan: `docs/superpowers/plans/2026-10-22-user-audit-log-extension.md`
+  - ADR: `docs/adr/0013-user-management-architecture.md`
+  - Appended 7 user-lifecycle action types to `ActivityActionType` in `src/types/index.ts`: `USER_CREATED`, `USER_UPDATED`, `USER_ROLE_CHANGED`, `USER_PERMISSION_CHANGED`, `USER_DEACTIVATED`, `USER_REACTIVATED`, `USER_PASSWORD_CHANGED`.
+  - Added strictly-typed metadata interfaces for each action type + `UserAuditMetadata` union + `AuditLogger` signature. Password fields are strictly prohibited and absent from metadata interfaces.
+  - Implemented pure helper `diffPermissions` in `src/utils/user-permission-diff.ts` (47 LOC, < 250 LOC).
+  - Implemented `AuditedUserRepository` decorator wrapping `UserRepository` in `src/persistence/user-repository-audited.ts` (233 LOC, < 250 LOC).
+  - Implemented `createAuditedUserRepository(actor)` factory.
+  - Ensured seeder (`ensureSeedUsers`) and auth lookups (`getAuthenticatedUser`) bypass logging via raw DAO.
+  - Resolved TD-001 with JSDoc documenting shallow patch semantics on `UserRepository.update`.
+  - Added unit test suites `test/user-permission-diff.test.ts` (7 tests) and `test/user-repository-audited.test.ts` (18 tests), plus seeder bypass regression tests in `test/user-repository-seed.test.ts`.
+  - All 857 tests passing, clean production Next.js build (22/22 routes), zero drift detected.
 
 - ✅ **Session Invalidation on User State Changes (Spec B — Fresh User Lookup Per Request)**:
   - Spec: `docs/superpowers/specs/2026-10-22-session-invalidation-design.md`
@@ -187,11 +202,12 @@ None. All 10 phases of `2026-10-22-session-invalidation.md` (Spec B) are complet
 **Technical debt backlog (optional cleanup):**
 
 ### TD-001: UserRepository.update patch semantics undocumented
+- **Status:** ✅ Resolved in Spec C Phase 4 via JSDoc documentation on `UserRepository.update` in `src/persistence/user-repository.ts`.
 - **Context:** `src/persistence/user-repository-sqlite.ts` (and Supabase impl) use shallow-patch semantic where `undefined` = no-op, `null` (or `{}` for permissions) = clear. Pattern is consistent across all fields (`name`, `email`, `roleLevel`, `title`, `permissions`, `isActive`, `passwordHash`) using `patch.X ?? existing.X` idiom. Standard PATCH REST pattern (Prisma/TypeORM-style).
 - **Issue:** No JSDoc on `UserRepository.update` interface documenting this. Developer may intuitively use `{ permissions: undefined }` to clear permissions and silently get a no-op instead. Latent trap for Spec D admin UI.
 - **Fix:** Add JSDoc to `UserRepository.update` abstract method in `src/persistence/user-repository.ts` explaining: `undefined` = no-op; `null` (or `{}` for object fields) = explicit clear.
 - **Scope:** ~5 LOC (JSDoc only). No behavior change.
-- **Priority:** Resolve before Spec D (admin UI) implementation to prevent latent bug.
+- **Priority:** Resolved before Spec D (admin UI) implementation to prevent latent bug.
 - **Discovered:** 2026-10-22 during Spec B implementation QA (false-alarm "bug" revealed documentation gap).
 
 ### TD-002: Session failure-reason disambiguation uses O(N) scan
@@ -234,17 +250,18 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Session Invalidation (Item #12 / Spec B) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
+**Status:** User Audit Log Extension (Item #13 / Spec C) completed and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`.
 
 **Suggested next actions (in priority order):**
 
-1. **Spec C: User Audit Log Extension** — Next phase in ADR-0013 sequence (A → B → C → D).
-   - Write spec `docs/superpowers/specs/YYYY-MM-DD-user-audit-log-design.md`
-   - Write plan `docs/superpowers/plans/YYYY-MM-DD-user-audit-log.md`
-   - Log user lifecycle events (`USER_CREATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`, `USER_PERMISSION_CHANGED`, `USER_PASSWORD_RESET`) to audit trail.
-2. **Spec D: Admin UI** — Depends on A + B + C.
-3. **Monitor client feedback** on shipped features (Items #1-#12).
-4. **If client clarifies DPB rakyat questions** → start Spec #13:
+1. **Spec D: Admin User Management UI** — Final phase in ADR-0013 sequence (A → B → C → D).
+   - Prerequisites A + B + C complete.
+   - Write spec `docs/superpowers/specs/YYYY-MM-DD-user-management-admin-ui-design.md`
+   - Write plan `docs/superpowers/plans/YYYY-MM-DD-user-management-admin-ui.md`
+   - Admin UI page at `/settings/users` or dedicated route with user list, create/edit modal, password reset, deactivate/reactivate, and audit trail link.
+2. **TD-002: Session failure-reason disambiguation uses O(N) scan** — Optional optimization before Spec D if deactivated-user list is large.
+3. **Monitor client feedback** on shipped features (Items #1-#13).
+4. **If client clarifies DPB rakyat questions** → start Spec #14:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -252,11 +269,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#12) without matching spec update first.
+- Modify shipped modules (Items #1-#13) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 828 passed, 0 failed
+- `npm test` → 857 passed, 0 failed
 - `npm run build:check` → 0 errors
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms

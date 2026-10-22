@@ -2,8 +2,8 @@
 
 **Document:** `docs/superpowers/specs/2026-10-22-user-audit-log-extension-design.md`
 **Date:** 2026-10-22
-**Status:** Draft — Pending Approval
-**Related Plan:** TBD — `docs/superpowers/plans/YYYY-MM-DD-user-audit-log-extension.md`
+**Status:** Accepted — Implemented
+**Related Plan:** `docs/superpowers/plans/2026-10-22-user-audit-log-extension.md`
 **Related ADR:** ADR-0013 (User Management Architecture) — this is Spec C of 4.
 **Position in Sequence:** Spec C of (A→B→C→D). Depends on Spec A (merged `95a6fd1`). Prerequisite for Spec D.
 **Architecture:** Extend `ActivityActionType` SSOT with 5 user-lifecycle action types (`USER_CREATED`, `USER_UPDATED`, `USER_ROLE_CHANGED`, `USER_PERMISSION_CHANGED`, `USER_DEACTIVATED`, `USER_REACTIVATED`). Hook `UserRepository` mutation methods to append structured audit log entries capturing admin identity, target user, before/after values, and reason. Zero schema change — existing `activity_logs` table + `metadata_json` column accommodate all new actions.
