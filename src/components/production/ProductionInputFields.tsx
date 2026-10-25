@@ -23,11 +23,11 @@ export function ProductionInputFields({
 }: ProductionInputFieldsProps) {
   return (
     <>
-      <div className="p-3 bg-surface-raised/50 border border-border-subtle rounded-lg space-y-3">
-        <div className="font-semibold text-foreground">Log Mentah (Input)</div>
+      <div className="p-3 bg-amber-50/50 border border-amber-200/60 rounded-xl space-y-3">
+        <div className="font-bold text-amber-950 uppercase tracking-wider text-[11px]">Log Mentah (Input)</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-muted font-medium mb-1">Volume Input (m3) *</label>
+            <label className="block text-gray-700 font-semibold mb-1">Volume Input (m³) *</label>
             <input
               type="number"
               step="0.0001"
@@ -35,27 +35,27 @@ export function ProductionInputFields({
               required
               value={form.inputVolumeM3}
               onChange={(e) => onChange({ inputVolumeM3: Number(e.target.value) })}
-              className="w-full px-3 py-2 bg-surface-raised border border-border-default rounded-md text-foreground focus:outline-none focus:border-primary text-xs"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 text-xs font-mono"
             />
           </div>
           <div>
-            <label className="block text-muted font-medium mb-1">Jumlah Batang Input *</label>
+            <label className="block text-gray-700 font-semibold mb-1">Jumlah Batang Input *</label>
             <input
               type="number"
               min="1"
               required
               value={form.inputPieces}
               onChange={(e) => onChange({ inputPieces: Number(e.target.value) })}
-              className="w-full px-3 py-2 bg-surface-raised border border-border-default rounded-md text-foreground focus:outline-none focus:border-primary text-xs"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 text-xs font-mono"
             />
           </div>
         </div>
       </div>
 
-      <div className="p-3 bg-surface-raised/50 border border-border-subtle rounded-lg space-y-3">
-        <div className="font-semibold text-foreground">Hasil Olahan (Output)</div>
+      <div className="p-3 bg-gray-50/70 border border-gray-200/80 rounded-xl space-y-3">
+        <div className="font-bold text-gray-900 uppercase tracking-wider text-[11px]">Hasil Olahan (Output)</div>
         <div>
-          <label className="block text-muted font-medium mb-1">Produk Hasil Gergaji *</label>
+          <label className="block text-gray-700 font-semibold mb-1">Produk Hasil Gergaji *</label>
           <ProductSuggestionCombobox
             value={form.outputProduct}
             onChange={(p) => onChange({ outputProduct: p })}
@@ -64,7 +64,7 @@ export function ProductionInputFields({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-muted font-medium mb-1">Volume Output (m3) *</label>
+            <label className="block text-gray-700 font-semibold mb-1">Volume Output (m³) *</label>
             <input
               type="number"
               step="0.0001"
@@ -72,18 +72,18 @@ export function ProductionInputFields({
               required
               value={form.outputVolumeM3}
               onChange={(e) => onChange({ outputVolumeM3: Number(e.target.value) })}
-              className="w-full px-3 py-2 bg-surface-raised border border-border-default rounded-md text-foreground focus:outline-none focus:border-primary text-xs"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 text-xs font-mono"
             />
           </div>
           <div>
-            <label className="block text-muted font-medium mb-1">Jumlah Batang / Lembar *</label>
+            <label className="block text-gray-700 font-semibold mb-1">Jumlah Batang / Lembar *</label>
             <input
               type="number"
               min="0"
               required
               value={form.outputPieces}
               onChange={(e) => onChange({ outputPieces: Number(e.target.value) })}
-              className="w-full px-3 py-2 bg-surface-raised border border-border-default rounded-md text-foreground focus:outline-none focus:border-primary text-xs"
+              className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 text-xs font-mono"
             />
           </div>
         </div>

@@ -88,16 +88,16 @@ export function ProductionView() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#101828]">
             Produksi Sawmill
           </h1>
-          <p className="text-xs sm:text-sm text-muted">
+          <p className="text-xs sm:text-sm text-gray-500">
             Pencatatan pemotongan log mentah menjadi produk sawn timber dan kalkulasi rendemen
           </p>
         </div>
         {isSyncing && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-full self-start sm:self-auto">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-full self-start sm:self-auto">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>Sinkronisasi server...</span>
           </div>
         )}

@@ -55,6 +55,13 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
+- ✅ **Sawmill Production Table & Page Styling Alignment**:
+  - Replaced undefined abstract design tokens (`bg-surface-raised`, `border-border-default`, `text-muted`, `bg-surface-base`, `bg-primary`) across `src/components/production/` with TimberGuard standard design tokens.
+  - Aligned [`ProductionTable.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/production/ProductionTable.tsx) to standard table card styling (`bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden`), headers (`bg-gray-50/90 border-b border-gray-200 text-gray-500 uppercase font-semibold text-[10px]`) with bilingual Chinese subtitles, row hover (`hover:bg-amber-50/20`), numeric fonts (`font-mono font-bold`), clean rendemen badges, and standard action buttons (`Edit2`, `Trash2`).
+  - Aligned [`ProductionToolbar.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/production/ProductionToolbar.tsx), [`ProductionKpiStrip.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/production/ProductionKpiStrip.tsx), [`ProductionEmptyState.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/production/ProductionEmptyState.tsx), and [`ProductionFormModal.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/production/ProductionFormModal.tsx) to standard TimberGuard styling and amber brand theme (`#ffc908`).
+  - All files strictly verified under 250 LOC threshold (`ProductionTable.tsx`: 195 LOC).
+  - Passed all verification gates: `npm run drift:check` (0 drift), `npm test` (901 passing, 0 failing), `npm run build:check` (0 errors).
+
 - ✅ **Tally Lapangan Simpan Button Container Polish (Opsi 3)**:
   - Moved the Simpan & Sinkron Manifest button container in [`app/tally/page.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/app/tally/page.tsx) from a viewport-wide `fixed bottom-0 left-0 right-0` bar into a scoped `sticky bottom-4` card directly inside the form cards alur.
   - Aligned card borders and padding with the form (`p-3.5 rounded-2xl border border-gray-200 shadow-xl bg-white/95 backdrop-blur-md`).
