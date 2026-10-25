@@ -55,7 +55,12 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
-### Recently Completed (This Session)
+- ✅ **Tally Lapangan Simpan Button Container Polish (Opsi 3)**:
+  - Moved the Simpan & Sinkron Manifest button container in [`app/tally/page.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/app/tally/page.tsx) from a viewport-wide `fixed bottom-0 left-0 right-0` bar into a scoped `sticky bottom-4` card directly inside the form cards alur.
+  - Aligned card borders and padding with the form (`p-3.5 rounded-2xl border border-gray-200 shadow-xl bg-white/95 backdrop-blur-md`).
+  - Completely freed the left sidebar navigation from bottom overlay overlap.
+  - Kept [`app/tally/page.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/app/tally/page.tsx) at 198 LOC (within the strict < 200 LOC limit).
+  - All 901 unit/integration tests passing, Next.js build clean, zero drift detected.
 
 - ✅ **Supabase Cloud Schema Synchronization & Migration Key Type Alignment**:
   - Diagnosed Supabase PostgREST 404 (PGRST205) schema cache errors on `app_settings` and `activity_logs`.

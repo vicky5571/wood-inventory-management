@@ -99,7 +99,7 @@ export default function MobileTallyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 text-gray-900">
+    <div className="min-h-screen bg-gray-50 pb-12 text-gray-900">
       <header className="sticky top-0 z-30 bg-[#101828] text-white px-4 py-3 shadow-md flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <Link href="/ledger" className="p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition">
@@ -178,20 +178,18 @@ export default function MobileTallyPage() {
         <TallyMeasurementPad onApplyMeasurement={handleApplyMeasurement} initialPieces={tallyPieces} />
         <TallyDiscrepancyCard deliveredVolumeM3={deliveredVolumeM3} deliveredPieces={deliveredPieces} tallyVolumeM3={tallyVolumeM3} tallyPieces={tallyPieces} acceptableThresholdPct={settings.acceptableDiscrepancyThresholdPct} />
 
-        <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-xl z-30">
-          <div className="max-w-xl mx-auto">
-            {canCreateTally ? (
-              <button type="submit" disabled={isSubmitting} className="w-full py-3.5 px-4 bg-[#ffc908] hover:bg-amber-400 active:scale-[0.98] text-[#101828] font-black text-sm rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-2">
-                <Save className="w-4 h-4" />
-                <span>{isSubmitting ? 'Menyimpan...' : 'Simpan & Sinkron Manifest (保存同步)'}</span>
-              </button>
-            ) : (
-              <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900 flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Mode Monitor: Anda tidak memiliki izin untuk menyimpan tally lapangan.</span>
-              </div>
-            )}
-          </div>
+        <div className="sticky bottom-4 z-30 bg-white/95 backdrop-blur-md p-3.5 rounded-2xl border border-gray-200 shadow-xl">
+          {canCreateTally ? (
+            <button type="submit" disabled={isSubmitting} className="w-full py-3.5 px-4 bg-[#ffc908] hover:bg-amber-400 active:scale-[0.98] text-[#101828] font-black text-sm rounded-xl transition cursor-pointer shadow-md flex items-center justify-center gap-2">
+              <Save className="w-4 h-4" />
+              <span>{isSubmitting ? 'Menyimpan...' : 'Simpan & Sinkron Manifest (保存同步)'}</span>
+            </button>
+          ) : (
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Mode Monitor: Anda tidak memiliki izin untuk menyimpan tally lapangan.</span>
+            </div>
+          )}
         </div>
       </form>
     </div>
