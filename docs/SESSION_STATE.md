@@ -56,10 +56,13 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
 - ✅ **Dashboard Executive KPI Cards UX & Responsiveness Polish**:
-  - Re-architected bottom sub-metric layout across all 6 KPI cards in [`KpiCards.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCards.tsx) (238 LOC) and [`KpiCardPendingPricing.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCardPendingPricing.tsx) (88 LOC) from cramped `grid grid-cols-2 gap-2` to stacked `flex flex-col gap-1.5`.
+  - Re-architected bottom sub-metric layout across all 6 KPI cards in [`KpiCards.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCards.tsx) (218 LOC) and [`KpiCardPendingPricing.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCardPendingPricing.tsx) (80 LOC) from cramped `grid grid-cols-2 gap-2` to stacked `flex flex-col gap-1.5`.
   - Moved "Selisih Fisik" below "Surat Jalan", "Selisih Batang" below "SJ Batang", "Net Kayu" below "Hutang AP", "Status Lapangan" below "Total Rit", "Status Evaluasi" below "Ambang Batas", and "Aksi" below "Estimasi".
   - Eliminated number and currency truncation on accounts payable and pricing exposure by granting each sub-metric full card width with dedicated title and monospace value lines.
-  - Enhanced responsive grid breakpoints from `sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6` to `sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5` for smoother scaling across tablets and laptops.
+  - Extracted modular helpers to [`kpi-card-helpers.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/kpi-card-helpers.tsx) (80 LOC) including `StatusPill`, `SubMetricBox`, `formatRupiah`, and `renderDiscrepancyBadge`.
+  - Relocated notification pill badges (e.g. "3 Belum Lunas", "Kritis", "3 Item Belum Berharga") from cramped card headers into a dedicated row beneath the primary metric with `whitespace-nowrap shrink-0` and pulsing warning dots (`animate-pulse`), completely eliminating multi-line word wrapping and ensuring perfectly aligned, uniform headers across all 6 cards.
+  - Enhanced responsive grid breakpoints to `sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5` for smoother scaling across tablets and laptops.
+  - All files strictly adhere to < 250 LOC threshold (`KpiCards.tsx`: 218 LOC, `KpiCardPendingPricing.tsx`: 80 LOC, `kpi-card-helpers.tsx`: 80 LOC).
   - Passed all verification gates: `npm run drift:check` (0 drift), `npm test` (901 passing, 0 failing), `npm run build:check` (0 errors).
 
 - ✅ **Sortir & Mutasi Stok Kavling Table & Page Styling Alignment**:
