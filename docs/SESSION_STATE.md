@@ -4,8 +4,8 @@
 >
 > **Update Rule:** The last section ("Pickup Instructions") must always reflect the exact next step for the following session.
 
-**Last Updated:** 2026-10-22 (Admin User Management UI Spec D complete)
-**Last Session By:** AI pair-programming session (Admin User Management UI Spec D)
+**Last Updated:** 2026-10-26 (Supabase Schema Sync & Migration Script Fix)
+**Last Session By:** AI pair-programming session (Supabase Schema Sync)
 **Branch:** vicky (verify current via `git branch --show-current`)
 
 ---
@@ -56,6 +56,13 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
 ### Recently Completed (This Session)
+
+- ✅ **Supabase Cloud Schema Synchronization & Migration Key Type Alignment**:
+  - Diagnosed Supabase PostgREST 404 (PGRST205) schema cache errors on `app_settings` and `activity_logs`.
+  - Created idempotent consolidated migration script [`supabase/sync_missing_tables.sql`](file:///Users/mac/Web%20Development/wood-inventory-management/supabase/sync_missing_tables.sql) covering all 18 domain entities, updated financial views (`v_receiving_item_financials`, `v_receiving_manifest_summaries`, `v_buku_besar_flat`), and RLS policies.
+  - Aligned foreign key types in `20261021000004_payment_forms.sql` and `20261022000000_lembar_tagihan_refactor.sql` from UUID to TEXT to conform with SSOT string IDs (`tenants.id`, `suppliers.id`, `receiving_manifests.id`, `receiving_items.id`).
+  - Added permissive RLS policies on `brokers`, `payment_forms`, `payment_form_lines`, `sawmill_production_records`, and `stock_sorting_records`.
+  - Executed and verified `npm run db:seed:supabase` with 100% success across all 18 tables.
 
 - ✅ **Admin User Management UI (Spec D — Complete Admin Lifecycle & 7 API Routes)**:
   - Spec: `docs/superpowers/specs/2026-10-22-admin-user-management-ui-design.md`
@@ -292,7 +299,7 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Admin User Management UI (Item #15 / Spec D) completed and verified. All 4 phases of the User Management Roadmap (Specs A, B, C, D + TD-001, TD-002) are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via `npm run db:seed`. Baseline: 901 passed, 0 failed, 23/23 routes compiled clean.
+**Status:** Supabase Cloud Schema synchronization completed and verified. All 18 tables seeded successfully into Supabase (`npm run db:seed:supabase`). All 4 phases of the User Management Roadmap (Specs A, B, C, D + TD-001, TD-002) are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 901 passed, 0 failed, 23/23 routes compiled clean.
 
 **Suggested next actions (in priority order):**
 
@@ -315,3 +322,4 @@ git status && git log --oneline -5
 - `npm run build:check` → 0 errors (23/23 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
+- `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities

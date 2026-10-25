@@ -29,3 +29,8 @@ BEGIN
     CREATE INDEX IF NOT EXISTS idx_manifests_broker ON public.receiving_manifests(tenant_id, broker_id);
   END IF;
 END $$;
+
+ALTER TABLE public.brokers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read and write access on brokers"
+  ON public.brokers FOR ALL USING (true) WITH CHECK (true);

@@ -45,3 +45,12 @@ CREATE TABLE IF NOT EXISTS public.stock_sorting_records (
 CREATE INDEX IF NOT EXISTS idx_sorting_tenant_date ON public.stock_sorting_records(tenant_id, sorting_date);
 CREATE INDEX IF NOT EXISTS idx_sorting_source_lot ON public.stock_sorting_records(tenant_id, source_storage_yard, source_kavling_number);
 CREATE INDEX IF NOT EXISTS idx_sorting_target_lot ON public.stock_sorting_records(tenant_id, target_storage_yard, target_kavling_number);
+
+ALTER TABLE public.sawmill_production_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_sorting_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read and write access on sawmill_production_records"
+  ON public.sawmill_production_records FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public read and write access on stock_sorting_records"
+  ON public.stock_sorting_records FOR ALL USING (true) WITH CHECK (true);
