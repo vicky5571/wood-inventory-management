@@ -36,18 +36,18 @@ function renderDiscrepancyBadge(diff: number, unit: string, isInteger: boolean =
 
 function SubMetricBox({ title, children, isRose = false }: { title: string; children: React.ReactNode; isRose?: boolean }) {
   return (
-    <div className={`rounded-xl px-2.5 py-2 border flex flex-col justify-between ${
+    <div className={`rounded-xl px-3 py-1.5 border flex flex-col justify-center ${
       isRose ? 'bg-rose-50/60 border-rose-100/80 text-rose-700' : 'bg-gray-50/80 border-gray-100 text-slate-600'
     }`}>
-      <span className="text-[11px] font-semibold uppercase tracking-wider">{title}</span>
-      {children}
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 leading-tight">{title}</span>
+      <div className="mt-0.5 leading-tight">{children}</div>
     </div>
   );
 }
 
 export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
       {/* 1. Total Volume Hero Card */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group">
         <div className="h-1 w-full bg-[#ffc908]" />
@@ -67,9 +67,9 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="text-sm font-semibold text-gray-500">m³</span>
           </div>
         </div>
-        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
           <SubMetricBox title="Surat Jalan">
-            <span className="text-xs font-bold font-mono tabular-nums text-gray-700 mt-0.5">{metrics.totalDeliveredVolumeM3.toFixed(2)} m³</span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-700">{metrics.totalDeliveredVolumeM3.toFixed(2)} m³</span>
           </SubMetricBox>
           <SubMetricBox title="Selisih Fisik">
             {renderDiscrepancyBadge(metrics.volumeDiscrepancyM3, 'm³', false)}
@@ -96,9 +96,9 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="text-sm font-semibold text-gray-500">Btg</span>
           </div>
         </div>
-        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
           <SubMetricBox title="SJ Batang">
-            <span className="text-xs font-bold font-mono tabular-nums text-gray-700 mt-0.5">{metrics.totalDeliveredPieces.toLocaleString('id-ID')} Btg</span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-700">{metrics.totalDeliveredPieces.toLocaleString('id-ID')} Btg</span>
           </SubMetricBox>
           <SubMetricBox title="Selisih Batang">
             {renderDiscrepancyBadge(metrics.pieceDiscrepancy, 'Btg', true)}
@@ -133,14 +133,14 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="text-2xl font-bold font-mono tracking-tight text-[#101828]">{formatRupiah(metrics.totalGrandExpenditure)}</span>
           </div>
         </div>
-        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
           <SubMetricBox title="Hutang AP (未付)" isRose>
-            <span className="text-[11px] font-bold font-mono tabular-nums text-rose-800 mt-0.5 truncate">
+            <span className="text-xs font-bold font-mono tabular-nums text-rose-800">
               {formatRupiah(metrics.totalOutstandingPayable)}
             </span>
           </SubMetricBox>
           <SubMetricBox title="Net Kayu">
-            <span className="text-[11px] font-bold font-mono tabular-nums text-gray-800 mt-0.5 truncate">
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-800">
               {formatRupiah(metrics.totalNetTimberPayable)}
             </span>
           </SubMetricBox>
@@ -166,12 +166,12 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="text-xs font-semibold text-gray-500">Kavling Terpakai</span>
           </div>
         </div>
-        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
           <SubMetricBox title="Total Rit">
-            <span className="text-xs font-bold font-mono tabular-nums text-gray-800 mt-0.5">{metrics.totalRecordsCount} Pengiriman</span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-800">{metrics.totalRecordsCount} Pengiriman</span>
           </SubMetricBox>
           <SubMetricBox title="Status Lapangan">
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00bb7f] mt-0.5">
+            <span className="inline-flex items-center gap-1 text-xs font-bold text-[#00bb7f]">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#00bb7f]" />
               Aktif TPK
             </span>
@@ -219,12 +219,12 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
             <span className="text-xs font-semibold text-gray-500">Rit Terindikasi</span>
           </div>
         </div>
-        <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
+        <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
           <SubMetricBox title="Ambang Batas">
-            <span className="text-[11px] font-bold font-mono tabular-nums text-gray-700 mt-0.5">1.5m³ / 2.0%</span>
+            <span className="text-xs font-bold font-mono tabular-nums text-gray-700">1.5m³ / 2.0%</span>
           </SubMetricBox>
           <SubMetricBox title="Status Evaluasi" isRose={(metrics.recordsWithAlarmCount ?? 0) > 0}>
-            <span className={`text-[11px] font-bold mt-0.5 ${(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+            <span className={`text-xs font-bold ${(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
               {(metrics.recordsWithAlarmCount ?? 0) > 0 ? 'Perlu Investigasi' : 'Toleransi Wajar'}
             </span>
           </SubMetricBox>

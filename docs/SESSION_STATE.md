@@ -55,6 +55,13 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 
 None. All 18 phases of `2026-10-22-admin-user-management-ui.md` (Spec D) are complete and verified.
 
+- ✅ **Dashboard Executive KPI Cards UX & Responsiveness Polish**:
+  - Re-architected bottom sub-metric layout across all 6 KPI cards in [`KpiCards.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCards.tsx) (238 LOC) and [`KpiCardPendingPricing.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/dashboard/KpiCardPendingPricing.tsx) (88 LOC) from cramped `grid grid-cols-2 gap-2` to stacked `flex flex-col gap-1.5`.
+  - Moved "Selisih Fisik" below "Surat Jalan", "Selisih Batang" below "SJ Batang", "Net Kayu" below "Hutang AP", "Status Lapangan" below "Total Rit", "Status Evaluasi" below "Ambang Batas", and "Aksi" below "Estimasi".
+  - Eliminated number and currency truncation on accounts payable and pricing exposure by granting each sub-metric full card width with dedicated title and monospace value lines.
+  - Enhanced responsive grid breakpoints from `sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6` to `sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5` for smoother scaling across tablets and laptops.
+  - Passed all verification gates: `npm run drift:check` (0 drift), `npm test` (901 passing, 0 failing), `npm run build:check` (0 errors).
+
 - ✅ **Sortir & Mutasi Stok Kavling Table & Page Styling Alignment**:
   - Replaced undefined abstract design tokens (`bg-surface-raised`, `border-border-default`, `text-muted`, `bg-surface-base`, `bg-primary`, `bg-card`) across `src/components/sorting/` with TimberGuard standard design tokens.
   - Aligned [`SortingTable.tsx`](file:///Users/mac/Web%20Development/wood-inventory-management/src/components/sorting/SortingTable.tsx) (155 LOC) to standard table card styling (`bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden`), table headers (`bg-gray-50/90 border-b border-gray-200 text-gray-500 font-semibold uppercase tracking-wider text-[10px]`) with bilingual Chinese subtitles, row hover (`hover:bg-amber-50/20`), numeric fonts (`font-mono font-bold text-gray-900`), and standard action buttons (`Edit2`, `Trash2`).

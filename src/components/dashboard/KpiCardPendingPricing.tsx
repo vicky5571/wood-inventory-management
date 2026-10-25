@@ -69,16 +69,16 @@ export function KpiCardPendingPricing({ metrics }: { metrics: DashboardMetrics }
         </div>
       </div>
 
-      <div className="mt-auto px-4 pb-3.5 pt-1 grid grid-cols-2 gap-2">
-        <div className="rounded-xl px-2.5 py-2 border bg-gray-50/80 border-gray-100 text-slate-600 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider">Estimasi</span>
-          <span className="text-[11px] font-bold font-mono tabular-nums text-gray-800 mt-0.5 truncate">
+      <div className="mt-auto px-4 pb-3.5 pt-1 flex flex-col gap-1.5">
+        <div className="rounded-xl px-3 py-1.5 border bg-gray-50/80 border-gray-100 text-slate-600 flex flex-col justify-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 leading-tight">Estimasi</span>
+          <span className="text-xs font-bold font-mono tabular-nums text-gray-800 mt-0.5 leading-tight">
             {formatRupiah(exposure)}
           </span>
         </div>
-        <div className="rounded-xl px-2.5 py-2 border bg-amber-50/60 border-amber-100/80 text-amber-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-wider">Aksi</span>
-          <span className="text-[11px] font-bold mt-0.5 group-hover:underline">
+        <div className="rounded-xl px-3 py-1.5 border bg-amber-50/60 border-amber-100/80 text-amber-800 flex flex-col justify-center">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 leading-tight">Aksi</span>
+          <span className="text-xs font-bold text-amber-900 mt-0.5 leading-tight group-hover:underline">
             Tetapkan &rarr;
           </span>
         </div>
