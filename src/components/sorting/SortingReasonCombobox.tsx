@@ -105,7 +105,7 @@ export function SortingReasonCombobox({
           disabled={disabled}
           required={required}
           placeholder={placeholder}
-          className="w-full pl-3.5 pr-9 py-2 text-sm bg-surface-raised border border-border-default rounded-md text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full pl-3.5 pr-9 py-2 text-xs bg-white border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           onChange={(e) => {
             const next = e.target.value;
             setQuery(next);
@@ -120,19 +120,19 @@ export function SortingReasonCombobox({
           tabIndex={-1}
           disabled={disabled}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors p-1"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
         >
           <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-surface-raised border border-border-default rounded-lg shadow-xl py-1 text-sm">
+        <div className="absolute z-50 left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl py-1 text-xs">
           {showCustomOption && (
             <button
               type="button"
               onClick={() => selectOption(query.trim())}
-              className="w-full text-left px-3.5 py-2.5 flex items-center gap-2.5 text-primary hover:bg-primary/10 transition-colors font-medium border-b border-border-subtle"
+              className="w-full text-left px-3.5 py-2.5 flex items-center gap-2.5 text-amber-700 hover:bg-amber-50 transition-colors font-semibold border-b border-gray-100 cursor-pointer"
             >
               <Plus className="w-4 h-4 shrink-0" />
               <span>Gunakan alasan: &ldquo;{query.trim()}&rdquo;</span>
@@ -147,23 +147,23 @@ export function SortingReasonCombobox({
                   key={opt}
                   type="button"
                   onClick={() => selectOption(opt)}
-                  className={`w-full text-left px-3.5 py-2 flex items-center justify-between transition-colors ${
+                  className={`w-full text-left px-3.5 py-2 flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-primary/15 text-primary font-medium'
-                      : 'text-foreground hover:bg-surface-overlay'
+                      ? 'bg-amber-50 text-amber-900 font-semibold'
+                      : 'text-gray-800 hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <Tag className="w-3.5 h-3.5 text-muted shrink-0" />
+                    <Tag className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span className="truncate">{opt}</span>
                   </div>
-                  {isSelected && <Check className="w-4 h-4 text-primary shrink-0 ml-2" />}
+                  {isSelected && <Check className="w-4 h-4 text-amber-700 shrink-0 ml-2" />}
                 </button>
               );
             })
           ) : (
             !showCustomOption && (
-              <div className="px-3.5 py-3 text-center text-xs text-muted">
+              <div className="px-3.5 py-3 text-center text-xs text-gray-400">
                 Tidak ada saran alasan yang cocok
               </div>
             )
