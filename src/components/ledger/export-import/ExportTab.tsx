@@ -6,6 +6,8 @@ import type { WoodReceivingRecord, DatePreset } from '@/src/types/index';
 import {
   resolveDatePreset,
   filterRecordsByDateRange,
+  thisMonthStart,
+  todayISO,
 } from '@/src/utils/records-export-filter';
 import { exportRecordsToCsvWithRange } from '@/src/utils/records-csv';
 import { exportRecordsToExcelWithRange } from '@/src/utils/records-excel';
@@ -25,10 +27,27 @@ const PRESETS: Array<{ key: DatePreset; label: string }> = [
 
 export function ExportTab({ allRecords }: ExportTabProps) {
   const [selectedPreset, setSelectedPreset] = useState<DatePreset>('this_month');
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
+  const [customStart, setCustomStart] = useState(() => thisMonthStart());
+  const [customEnd, setCustomEnd] = useState(() => todayISO());
   const [exportFormat, setExportFormat] = useState<'csv' | 'excel'>('csv');
   const [isExporting, setIsExporting] = useState(false);
+
+  const handlePresetSelect = (preset: DatePreset) => {
+    setSelectedPreset(preset);
+    if (preset === 'custom') return;
+    const range = resolveDatePreset(preset);
+    setCustomStart(range.startDate || '');
+    setCustomEnd(range.endDate || '');
+  };
+
+  const handleDateChange = (field: 'start' | 'end', val: string) => {
+    setSelectedPreset('custom');
+    if (field === 'start') {
+      setCustomStart(val);
+    } else {
+      setCustomEnd(val);
+    }
+  };
 
   const resolvedRange = selectedPreset === 'custom'
     ? { startDate: customStart || undefined, endDate: customEnd || undefined }
@@ -67,7 +86,7 @@ export function ExportTab({ allRecords }: ExportTabProps) {
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setSelectedPreset(p.key)}
+                onClick={() => handlePresetSelect(p.key)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition border cursor-pointer ${
                   active
                     ? 'bg-[#ffc908]/20 border-[#ffc908] text-gray-900 font-semibold shadow-2xs'
@@ -80,32 +99,31 @@ export function ExportTab({ allRecords }: ExportTabProps) {
           })}
         </div>
 
-        {selectedPreset === 'custom' && (
-          <div className="mt-3 grid grid-cols-2 gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
-            <div>
-              <label className="block text-[11px] font-medium text-gray-600 mb-1">Dari Tanggal (起始)</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={customStart}
-                  onChange={(e) => setCustomStart(e.target.value)}
-                  className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908]"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[11px] font-medium text-gray-600 mb-1">Sampai Tanggal (结束)</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={customEnd}
-                  onChange={(e) => setCustomEnd(e.target.value)}
-                  className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908]"
-                />
-              </div>
+        {/* Date inputs — always visible */}
+        <div className="mt-3 grid grid-cols-2 gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Dari Tanggal (起始)</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => handleDateChange('start', e.target.value)}
+                className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908]"
+              />
             </div>
           </div>
-        )}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Sampai Tanggal (结束)</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => handleDateChange('end', e.target.value)}
+                className="w-full text-xs px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#ffc908]"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Format selector */}
