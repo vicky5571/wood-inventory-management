@@ -14,19 +14,9 @@ import { SupabaseRecordStore } from './supabase/supabase-record-store.ts';
 import { paginateInMemoryRecords } from './in-memory-pagination.ts';
 import { ServerMasterDataBridge } from './server-master-data-bridge.ts';
 import type {
-  WoodReceivingRecord,
-  RecordQueryParams,
-  PaginatedResult,
-  ManifestFormInput,
-  StorageYard,
-  StorageLot,
-  StorageLotStatus,
-  StorageLotWithYard,
-  Supplier,
-  Broker,
-  WoodSpecies,
-  AppSettings,
-  ActivityLogEntry,
+  WoodReceivingRecord, RecordQueryParams, PaginatedResult, ManifestFormInput,
+  StorageYard, StorageLot, StorageLotStatus, StorageLotWithYard,
+  Supplier, Broker, WoodSpecies, AppSettings, ActivityLogEntry,
 } from '../types/index.ts';
 
 export class ServerRecordStore {
@@ -177,6 +167,18 @@ export class ServerRecordStore {
 
   saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
     return this.masterDataBridge.saveStorageLot(lot);
+  }
+
+  updateStorageLotStatus(id: string, status: StorageLotStatus): Promise<StorageLot> {
+    return this.masterDataBridge.updateStorageLotStatus(id, status);
+  }
+
+  deleteStorageLot(id: string): Promise<void> {
+    return this.masterDataBridge.deleteStorageLot(id);
+  }
+
+  deleteStorageYard(id: string): Promise<void> {
+    return this.masterDataBridge.deleteStorageYard(id);
   }
 
   getSuppliers(): Promise<Supplier[]> {

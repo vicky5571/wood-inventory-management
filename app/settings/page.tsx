@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSettings } from '@/src/hooks/useSettings';
 import { useAuth } from '@/src/hooks/useAuth';
 import { useActivityLog } from '@/src/hooks/useActivityLog';
+import { useWoodRecords } from '@/src/hooks/useWoodRecords';
 import { toast } from '@/src/utils/toast-store';
 import { SpeciesSettings } from '@/src/components/settings/SpeciesSettings';
 import { TaxSettings } from '@/src/components/settings/TaxSettings';
@@ -22,9 +23,19 @@ export default function SettingsPage() {
   const { settings, saveSettings } = useSettings();
   const { user, canWrite } = useAuth();
   const { addLog } = useActivityLog();
+  const { allRecords } = useWoodRecords();
   const [activeTab, setActiveTab] = useState<'species' | 'tax' | 'storage' | 'account'>('species');
   const [companyName, setCompanyName] = useState(settings.companyName || 'PT. BRILLIANT JAYA WOOD INDUSTRY');
   const [companyError, setCompanyError] = useState<string | null>(null);
+
+  const lotOccupancy = useMemo<Record<string, number>>(() => {
+    const map: Record<string, number> = {};
+    for (const r of allRecords) {
+      if (!r.kavlingNumber) continue;
+      map[r.kavlingNumber] = (map[r.kavlingNumber] ?? 0) + (r.tallyVolumeM3 ?? 0);
+    }
+    return map;
+  }, [allRecords]);
 
   useEffect(() => {
     if (settings.companyName) {
@@ -159,7 +170,13 @@ export default function SettingsPage() {
         />
       )}
 
-      {activeTab === 'storage' && <StorageSettings settings={settings} />}
+      {activeTab === 'storage' && (
+        <StorageSettings
+          settings={settings}
+          canWrite={canWrite}
+          lotOccupancy={lotOccupancy}
+        />
+      )}
 
       {activeTab === 'account' && (
         <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-xs max-w-2xl flex flex-col gap-5">

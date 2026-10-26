@@ -15,6 +15,9 @@ import {
   getStorageLocationsFromDb,
   saveStorageYardToDb,
   saveStorageLotToDb,
+  updateStorageLotStatusInDb,
+  deleteStorageLotFromDb,
+  deleteStorageYardFromDb,
 } from './sqlite/storage-locations-db.ts';
 import {
   seedMasterDataIfEmpty,
@@ -24,12 +27,7 @@ import {
   getSpeciesFromDb,
   saveSpeciesToDb,
 } from './sqlite/master-data-queries.ts';
-import {
-  seedBrokersIfEmpty,
-  getBrokersFromDb,
-  saveBrokerToDb,
-  deleteBrokerFromDb,
-} from './sqlite/broker-queries.ts';
+import { seedBrokersIfEmpty, getBrokersFromDb, saveBrokerToDb, deleteBrokerFromDb } from './sqlite/broker-queries.ts';
 import {
   getSettingsFromDb,
   saveSettingsToDb,
@@ -41,19 +39,9 @@ import { SEED_WOOD_RECORDS } from './seed/fixtures.ts';
 import { queryPaginatedRecords, deleteRecordFromSqlite } from './sqlite/record-queries.ts';
 import { seedSalesIfEmpty } from './sqlite/sales-queries.ts';
 import type {
-  WoodReceivingRecord,
-  RecordQueryParams,
-  PaginatedResult,
-  ManifestFormInput,
-  StorageYard,
-  StorageLot,
-  StorageLotStatus,
-  StorageLotWithYard,
-  Supplier,
-  Broker,
-  WoodSpecies,
-  AppSettings,
-  ActivityLogEntry,
+  WoodReceivingRecord, RecordQueryParams, PaginatedResult, ManifestFormInput,
+  StorageYard, StorageLot, StorageLotStatus, StorageLotWithYard,
+  Supplier, Broker, WoodSpecies, AppSettings, ActivityLogEntry,
 } from '../types/index.ts';
 
 export class SqliteRecordStore {
@@ -158,6 +146,21 @@ export class SqliteRecordStore {
   async saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
     this.ensureInitialized();
     return saveStorageLotToDb(this.db, lot);
+  }
+
+  async updateStorageLotStatus(id: string, status: StorageLotStatus): Promise<StorageLot> {
+    this.ensureInitialized();
+    return updateStorageLotStatusInDb(this.db, id, status);
+  }
+
+  async deleteStorageLot(id: string): Promise<void> {
+    this.ensureInitialized();
+    deleteStorageLotFromDb(this.db, id);
+  }
+
+  async deleteStorageYard(id: string): Promise<void> {
+    this.ensureInitialized();
+    deleteStorageYardFromDb(this.db, id);
   }
 
   async getSuppliers(): Promise<Supplier[]> {

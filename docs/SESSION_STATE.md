@@ -43,9 +43,10 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 14 | DAO Inactive-User Lookup (TD-002) | `2026-10-22-dao-inactive-user-lookup-design.md` | `2026-10-22-dao-inactive-user-lookup.md` | ✅ Completed |
 | 15 | Admin User Management UI (Spec D) | `2026-10-22-admin-user-management-ui-design.md` | `2026-10-22-admin-user-management-ui.md` | ✅ Completed |
 | 16 | Ledger Export / Import Modal | `docs/superpowers/export-import-spec.md` | `docs/superpowers/export-import-implementation-plan.md` | ✅ Completed |
+| 17 | Storage Settings Fix (CRUD & Live Occupancy) | `docs/superpowers/storage-settings-fix-spec.md` | `docs/superpowers/storage-settings-fix-implementation-plan.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-27):**
-- `npm test` → 913 passed, 0 failed (100% clean)
+- `npm test` → 921 passed, 0 failed (100% clean)
 - `npm run build:check` → 0 errors (Next.js production build clean, 23/23 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
@@ -330,12 +331,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Ledger Export / Import Modal feature completed and verified. All 16 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 913 passed, 0 failed, 23/23 routes compiled clean.
+**Status:** Storage Settings Fix (CRUD & Live Occupancy, Module #17) feature completed and verified. All 17 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 921 passed, 0 failed, 23/23 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#16).
-2. **If client clarifies DPB rakyat questions** → start Spec #17:
+1. **Monitor client feedback** on shipped features (Items #1-#17).
+2. **If client clarifies DPB rakyat questions** → start Spec #18:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
@@ -345,11 +346,11 @@ git status && git log --oneline -5
 
 **DO NOT:**
 - Start new features without client confirmation of scope.
-- Modify shipped modules (Items #1-#16) without matching spec update first.
+- Modify shipped modules (Items #1-#17) without matching spec update first.
 - Add fields to `src/types/index.ts` outside of a formal spec.
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 913 passed, 0 failed
+- `npm test` → 921 passed, 0 failed
 - `npm run build:check` → 0 errors (23/23 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms

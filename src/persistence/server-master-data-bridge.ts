@@ -1,32 +1,14 @@
 import type { SqliteRecordStore } from './sqlite-record-store.ts';
 import { supabaseFetch } from './supabase/supabase-client.ts';
 import {
-  fetchSupabaseSuppliers,
-  saveSupabaseSupplier,
-  deleteSupabaseSupplier,
-  fetchSupabaseSpecies,
-  saveSupabaseSpecies,
-  fetchSupabaseSettings,
-  saveSupabaseSettings,
-  fetchSupabaseActivityLogs,
-  fetchSupabaseUserActivityLogs,
-  appendSupabaseActivityLog,
+  fetchSupabaseSuppliers, saveSupabaseSupplier, deleteSupabaseSupplier,
+  fetchSupabaseSpecies, saveSupabaseSpecies, fetchSupabaseSettings, saveSupabaseSettings,
+  fetchSupabaseActivityLogs, fetchSupabaseUserActivityLogs, appendSupabaseActivityLog,
 } from './supabase/master-data-supabase.ts';
-import {
-  fetchSupabaseBrokers,
-  saveSupabaseBroker,
-  deleteSupabaseBroker,
-} from './supabase/supabase-broker-store.ts';
+import { fetchSupabaseBrokers, saveSupabaseBroker, deleteSupabaseBroker } from './supabase/supabase-broker-store.ts';
 import type {
-  Supplier,
-  Broker,
-  WoodSpecies,
-  AppSettings,
-  ActivityLogEntry,
-  StorageYard,
-  StorageLot,
-  StorageLotStatus,
-  StorageLotWithYard,
+  Supplier, Broker, WoodSpecies, AppSettings, ActivityLogEntry,
+  StorageYard, StorageLot, StorageLotStatus, StorageLotWithYard,
 } from '../types/index.ts';
 import { loadStorageLocations, addYard, addLot } from '../utils/storage-locations.ts';
 
@@ -48,10 +30,7 @@ interface SupabaseLotRow {
   status: StorageLotStatus;
   created_at?: string;
   updated_at?: string;
-  storage_yards?: {
-    name?: string;
-    location_code?: string;
-  };
+  storage_yards?: { name?: string; location_code?: string };
 }
 
 export class ServerMasterDataBridge {
@@ -105,11 +84,7 @@ export class ServerMasterDataBridge {
     const data = loadStorageLocations();
     const lots: StorageLotWithYard[] = data.lots.map((lot) => {
       const yard = data.yards.find((y) => y.id === lot.yardId);
-      return {
-        ...lot,
-        yardCode: yard?.yardCode || '',
-        yardName: yard?.name || '',
-      };
+      return { ...lot, yardCode: yard?.yardCode || '', yardName: yard?.name || '' };
     });
     return { yards: data.yards, lots };
   }
@@ -128,148 +103,92 @@ export class ServerMasterDataBridge {
     return addLot(lot.yardId, lot.lotCode, lot.status);
   }
 
-  async getSuppliers(): Promise<Supplier[]> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseSuppliers();
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getSuppliers failed, falling back to SQLite:', err);
-      }
+  async updateStorageLotStatus(id: string, status: StorageLotStatus): Promise<StorageLot> {
+    return this.getSqliteStore().updateStorageLotStatus(id, status);
+  }
+
+  async deleteStorageLot(id: string): Promise<void> {
+    return this.getSqliteStore().deleteStorageLot(id);
+  }
+
+  async deleteStorageYard(id: string): Promise<void> {
+    return this.getSqliteStore().deleteStorageYard(id);
+  }
+
+  private async trySupabase<T>(fn: () => Promise<T>, op: string): Promise<T | null> {
+    if (!this.isSupabaseMode()) return null;
+    try {
+      return await fn();
+    } catch (err) {
+      console.warn(`[ServerRecordStore] Supabase ${op} failed, falling back to SQLite:`, err);
+      return null;
     }
-    return this.getSqliteStore().getSuppliers();
+  }
+
+  async getSuppliers(): Promise<Supplier[]> {
+    const remote = await this.trySupabase(() => fetchSupabaseSuppliers(), 'getSuppliers');
+    return remote ?? this.getSqliteStore().getSuppliers();
   }
 
   async saveSupplier(data: Partial<Supplier> & { name: string }): Promise<Supplier> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await saveSupabaseSupplier(data);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase saveSupplier failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().saveSupplier(data);
+    const remote = await this.trySupabase(() => saveSupabaseSupplier(data), 'saveSupplier');
+    return remote ?? this.getSqliteStore().saveSupplier(data);
   }
 
   async deleteSupplier(id: string): Promise<boolean> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await deleteSupabaseSupplier(id);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase deleteSupplier failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().deleteSupplier(id);
+    const remote = await this.trySupabase(() => deleteSupabaseSupplier(id), 'deleteSupplier');
+    return remote ?? this.getSqliteStore().deleteSupplier(id);
   }
 
   async getBrokers(): Promise<Broker[]> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseBrokers();
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getBrokers failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().getBrokers();
+    const remote = await this.trySupabase(() => fetchSupabaseBrokers(), 'getBrokers');
+    return remote ?? this.getSqliteStore().getBrokers();
   }
 
   async saveBroker(data: Partial<Broker> & { name: string }): Promise<Broker> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await saveSupabaseBroker(data);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase saveBroker failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().saveBroker(data);
+    const remote = await this.trySupabase(() => saveSupabaseBroker(data), 'saveBroker');
+    return remote ?? this.getSqliteStore().saveBroker(data);
   }
 
   async deleteBroker(id: string): Promise<boolean> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await deleteSupabaseBroker(id);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase deleteBroker failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().deleteBroker(id);
+    const remote = await this.trySupabase(() => deleteSupabaseBroker(id), 'deleteBroker');
+    return remote ?? this.getSqliteStore().deleteBroker(id);
   }
 
   async getSpecies(): Promise<WoodSpecies[]> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseSpecies();
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getSpecies failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().getSpecies();
+    const remote = await this.trySupabase(() => fetchSupabaseSpecies(), 'getSpecies');
+    return remote ?? this.getSqliteStore().getSpecies();
   }
 
   async saveSpecies(species: Partial<WoodSpecies> & { code: string; commonName: string }): Promise<WoodSpecies> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await saveSupabaseSpecies(species);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase saveSpecies failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().saveSpecies(species);
+    const remote = await this.trySupabase(() => saveSupabaseSpecies(species), 'saveSpecies');
+    return remote ?? this.getSqliteStore().saveSpecies(species);
   }
 
   async getSettings(): Promise<AppSettings> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseSettings();
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getSettings failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().getSettings();
+    const remote = await this.trySupabase(() => fetchSupabaseSettings(), 'getSettings');
+    return remote ?? this.getSqliteStore().getSettings();
   }
 
   async saveSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await saveSupabaseSettings(patch);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase saveSettings failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().saveSettings(patch);
+    const remote = await this.trySupabase(() => saveSupabaseSettings(patch), 'saveSettings');
+    return remote ?? this.getSqliteStore().saveSettings(patch);
   }
 
   async getActivityLogs(actionFilter?: string, limit?: number): Promise<ActivityLogEntry[]> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseActivityLogs(actionFilter, limit);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getActivityLogs failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().getActivityLogs(actionFilter, limit);
+    const remote = await this.trySupabase(() => fetchSupabaseActivityLogs(actionFilter, limit), 'getActivityLogs');
+    return remote ?? this.getSqliteStore().getActivityLogs(actionFilter, limit);
   }
 
   async getUserActivityLogs(userId: string, limit: number = 100): Promise<ActivityLogEntry[]> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await fetchSupabaseUserActivityLogs(userId, limit);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase getUserActivityLogs failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().getUserActivityLogs(userId, limit);
+    const remote = await this.trySupabase(() => fetchSupabaseUserActivityLogs(userId, limit), 'getUserActivityLogs');
+    return remote ?? this.getSqliteStore().getUserActivityLogs(userId, limit);
   }
 
   async appendActivityLog(
     entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
   ): Promise<ActivityLogEntry> {
-    if (this.isSupabaseMode()) {
-      try {
-        return await appendSupabaseActivityLog(entry);
-      } catch (err) {
-        console.warn('[ServerRecordStore] Supabase appendActivityLog failed, falling back to SQLite:', err);
-      }
-    }
-    return this.getSqliteStore().appendActivityLog(entry);
+    const remote = await this.trySupabase(() => appendSupabaseActivityLog(entry), 'appendActivityLog');
+    return remote ?? this.getSqliteStore().appendActivityLog(entry);
   }
 }

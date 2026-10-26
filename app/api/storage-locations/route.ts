@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       );
     }
 
-    let payload: any;
+    let payload: Record<string, unknown>;
     try {
       payload = await request.json();
     } catch {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         );
       }
       const savedYard = await serverRecordStore.saveStorageYard({
-        id: payload.id,
+        id: typeof payload.id === 'string' ? payload.id : undefined,
         name: payload.name.trim(),
         yardCode: payload.yardCode ? String(payload.yardCode).trim() : undefined,
         description: payload.description !== undefined ? String(payload.description).trim() : undefined,
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         );
       }
       const savedLot = await serverRecordStore.saveStorageLot({
-        id: payload.id,
+        id: typeof payload.id === 'string' ? payload.id : undefined,
         yardId: payload.yardId.trim(),
         lotCode: payload.lotCode.trim(),
         status: payload.status as StorageLotStatus,
@@ -146,6 +146,68 @@ export async function POST(request: Request) {
       { success: false, error: message },
       { status: 500 }
     );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (user.roleLevel !== 1) return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya Level 1' }, { status: 403 });
+
+    let payload: { type?: string; id?: string; status?: string };
+    try {
+      payload = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    if (payload.type === 'lot' && payload.id && payload.status) {
+      const validStatuses = ['ACTIVE', 'FULL', 'MAINTENANCE'];
+      if (!validStatuses.includes(payload.status)) {
+        return NextResponse.json({ success: false, error: 'Status tidak valid' }, { status: 400 });
+      }
+      const updated = await serverRecordStore.updateStorageLotStatus(payload.id, payload.status as StorageLotStatus);
+      return NextResponse.json({ success: true, data: updated });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    if (user.roleLevel !== 1) return NextResponse.json({ success: false, error: 'Akses ditolak: Hanya Level 1' }, { status: 403 });
+
+    let payload: { type?: string; id?: string };
+    try {
+      payload = await request.json();
+    } catch {
+      return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400 });
+    }
+
+    if (payload.type === 'yard' && payload.id) {
+      await serverRecordStore.deleteStorageYard(payload.id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (payload.type === 'lot' && payload.id) {
+      await serverRecordStore.deleteStorageLot(payload.id);
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Server error';
+    if (message.includes('masih memiliki') || message.includes('still has')) {
+      return NextResponse.json({ success: false, error: message }, { status: 409 });
+    }
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 

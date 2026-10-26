@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SqliteRecordStore } from '../src/persistence/sqlite-record-store.ts';
 import { ServerRecordStore } from '../src/persistence/server-record-store.ts';
-import { GET, POST } from '../app/api/storage-locations/route.ts';
+import { GET, POST, PATCH, DELETE } from '../app/api/storage-locations/route.ts';
 import { createSessionToken, COOKIE_NAME } from '../src/auth/session.ts';
 import type { StorageLotStatus } from '../src/types/index.ts';
 
@@ -359,5 +359,203 @@ test('Storage Locations SQLite Persistence & REST API Suite', async (t) => {
     const afterRes = await GET();
     const afterBody = await afterRes.json();
     assert.strictEqual(afterBody.data.yards.length, initialYardCount, 'No phantom yard should have been created');
+  });
+
+  await t.test('SqliteRecordStore: updateStorageLotStatus and delete methods', async () => {
+    const store = new SqliteRecordStore(':memory:');
+    const locations = await store.getStorageLocations();
+    const lot = locations.lots[0];
+    assert.ok(lot);
+
+    const updated = await store.updateStorageLotStatus(lot.id, 'MAINTENANCE');
+    assert.strictEqual(updated.status, 'MAINTENANCE');
+
+    // Trying to delete yard with lots must throw guard error
+    await assert.rejects(
+      async () => {
+        await store.deleteStorageYard(lot.yardId);
+      },
+      /masih memiliki/
+    );
+
+    // Create a temporary empty yard and delete it
+    const emptyYard = await store.saveStorageYard({ name: 'Empty Test Yard' });
+    await store.deleteStorageYard(emptyYard.id);
+
+    // Delete a lot
+    const lotToDelete = await store.saveStorageLot({ yardId: lot.yardId, lotCode: 'KAV-TEMP-DEL' });
+    await store.deleteStorageLot(lotToDelete.id);
+  });
+
+  await t.test('PATCH /api/storage-locations rejects unauthenticated requests with 401', async () => {
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ type: 'lot', id: 'lot-kav-01', status: 'FULL' }),
+    });
+    const res = await PATCH(req);
+    assert.strictEqual(res.status, 401);
+  });
+
+  await t.test('PATCH /api/storage-locations rejects roleLevel 2 and 3 with 403', async () => {
+    const staffReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: 'lot-kav-01', status: 'FULL' }),
+    });
+    const staffRes = await PATCH(staffReq);
+    assert.strictEqual(staffRes.status, 403);
+
+    const viewerReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${viewerToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: 'lot-kav-01', status: 'FULL' }),
+    });
+    const viewerRes = await PATCH(viewerReq);
+    assert.strictEqual(viewerRes.status, 403);
+  });
+
+  await t.test('PATCH /api/storage-locations rejects invalid status with 400', async () => {
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: 'lot-kav-01', status: 'UNKNOWN_STATUS' }),
+    });
+    const res = await PATCH(req);
+    assert.strictEqual(res.status, 400);
+  });
+
+  await t.test('PATCH /api/storage-locations updates lot status successfully with 200', async () => {
+    const getRes = await GET();
+    const getBody = await getRes.json();
+    const targetLot = getBody.data.lots[0];
+    assert.ok(targetLot, 'Expected at least one lot in GET()');
+
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'PATCH',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: targetLot.id, status: 'FULL' }),
+    });
+    const res = await PATCH(req);
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    assert.strictEqual(body.data.status, 'FULL');
+  });
+
+  await t.test('DELETE /api/storage-locations rejects unauthenticated with 401 and roleLevel > 1 with 403', async () => {
+    const unauthReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ type: 'lot', id: 'some-lot-id' }),
+    });
+    const unauthRes = await DELETE(unauthReq);
+    assert.strictEqual(unauthRes.status, 401);
+
+    const staffReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${staffToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: 'some-lot-id' }),
+    });
+    const staffRes = await DELETE(staffReq);
+    assert.strictEqual(staffRes.status, 403);
+  });
+
+  await t.test('DELETE /api/storage-locations returns 409 when deleting yard with attached lots', async () => {
+    const getRes = await GET();
+    const getBody = await getRes.json();
+    const yardWithLots = getBody.data.yards.find((y: { id: string }) =>
+      getBody.data.lots.some((l: { yardId: string }) => l.yardId === y.id)
+    );
+    assert.ok(yardWithLots, 'Expected at least one yard with lots');
+
+    const req = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ type: 'yard', id: yardWithLots.id }),
+    });
+    const res = await DELETE(req);
+    assert.strictEqual(res.status, 409);
+    const body = await res.json();
+    assert.strictEqual(body.success, false);
+    assert.ok(body.error.includes('masih memiliki'));
+  });
+
+  await t.test('DELETE /api/storage-locations deletes a lot and empty yard successfully', async () => {
+    // First create a yard
+    const yardReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({
+        type: 'yard',
+        name: 'Disposable Yard',
+        yardCode: 'TPK-DSP',
+      }),
+    });
+    const yardRes = await POST(yardReq);
+    const yardBody = await yardRes.json();
+    const yardId = yardBody.data.id;
+
+    // Create a lot in that yard
+    const lotReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({
+        type: 'lot',
+        yardId,
+        lotCode: 'KAV-DSP-01',
+      }),
+    });
+    const lotRes = await POST(lotReq);
+    const lotBody = await lotRes.json();
+    const lotId = lotBody.data.id;
+
+    // Delete lot
+    const delLotReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ type: 'lot', id: lotId }),
+    });
+    const delLotRes = await DELETE(delLotReq);
+    assert.strictEqual(delLotRes.status, 200);
+
+    // Delete yard
+    const delYardReq = new Request('http://localhost:3000/api/storage-locations', {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+        cookie: `${COOKIE_NAME}=${managerToken}`,
+      },
+      body: JSON.stringify({ type: 'yard', id: yardId }),
+    });
+    const delYardRes = await DELETE(delYardReq);
+    assert.strictEqual(delYardRes.status, 200);
   });
 });
