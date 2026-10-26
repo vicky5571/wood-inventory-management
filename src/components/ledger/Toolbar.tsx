@@ -1,5 +1,5 @@
 import type { RecordFilterCriteria } from '@/src/types';
-import { Search, Download, RotateCcw, Plus, X, Calendar } from 'lucide-react';
+import { Search, ArrowUpDown, RotateCcw, Plus, X, Calendar } from 'lucide-react';
 
 export function Toolbar({
   filters,
@@ -7,7 +7,7 @@ export function Toolbar({
   canWrite = true,
   onFilterChange,
   onResetDemo,
-  onExportCsv,
+  onExportImport,
   onNewEntry,
 }: {
   filters: RecordFilterCriteria;
@@ -15,7 +15,7 @@ export function Toolbar({
   canWrite?: boolean;
   onFilterChange: (filters: RecordFilterCriteria) => void;
   onResetDemo: () => void;
-  onExportCsv: () => void;
+  onExportImport: () => void;
   onNewEntry: () => void;
 }) {
   const hasDateFilter = Boolean(filters.startDate || filters.endDate);
@@ -99,14 +99,14 @@ export function Toolbar({
             )}
           </div>
 
-          {/* Export CSV */}
+          {/* Export / Import */}
           <button
             type="button"
-            onClick={onExportCsv}
+            onClick={onExportImport}
             className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition shadow-2xs cursor-pointer"
           >
-            <Download className="w-4 h-4 text-gray-500" />
-            <span>Export CSV</span>
+            <ArrowUpDown className="w-4 h-4 text-gray-500" />
+            <span>Export / Import</span>
           </button>
         </div>
 

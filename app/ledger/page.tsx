@@ -9,7 +9,8 @@ import { RecordTable } from '@/src/components/ledger/RecordTable';
 import { RecordModal } from '@/src/components/ledger/RecordModal';
 import { PrintReceivingSlipModal } from '@/src/components/ledger/PrintReceivingSlipModal';
 import { ConfirmDialog } from '@/src/components/ui/ConfirmDialog';
-import type { WoodReceivingRecord, ManifestFormInput } from '@/src/types';
+import { ExportImportModal } from '@/src/components/ledger/ExportImportModal';
+import type { WoodReceivingRecord, ManifestFormInput, ImportRow } from '@/src/types';
 import { TableProperties, ShieldAlert } from 'lucide-react';
 
 export default function LedgerPage() {
@@ -18,6 +19,7 @@ export default function LedgerPage() {
 
   const {
     records,
+    allRecords,
     filters,
     speciesList,
     setFilters,
@@ -25,7 +27,7 @@ export default function LedgerPage() {
     saveManifest,
     deleteRecord,
     resetDemo,
-    exportCsv,
+    importRecords,
   } = useWoodRecords();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +35,7 @@ export default function LedgerPage() {
   const [printingRecord, setPrintingRecord] = useState<WoodReceivingRecord | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isExportImportOpen, setIsExportImportOpen] = useState(false);
 
   const pendingRecord = pendingDeleteId ? records.find((r) => r.id === pendingDeleteId) : null;
 
@@ -94,6 +97,17 @@ export default function LedgerPage() {
     });
   };
 
+  const handleImportConfirm = (rows: ImportRow[]) => {
+    if (!canWrite) return;
+    importRecords(rows);
+    addLog({
+      action: 'RECORDS_IMPORTED',
+      entitySummary: `${rows.length} record diimport ke buku besar`,
+      operatorName: user?.name,
+      operatorRole: user?.title,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-5">
       {/* Page Header */}
@@ -136,7 +150,7 @@ export default function LedgerPage() {
             canWrite={canWrite}
             onFilterChange={setFilters}
             onResetDemo={() => setIsResetConfirmOpen(true)}
-            onExportCsv={exportCsv}
+            onExportImport={() => setIsExportImportOpen(true)}
             onNewEntry={handleNewEntry}
           />
 
@@ -191,6 +205,14 @@ export default function LedgerPage() {
           setPendingDeleteId(null);
         }}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      {/* Export / Import Modal */}
+      <ExportImportModal
+        isOpen={isExportImportOpen}
+        allRecords={allRecords}
+        onClose={() => setIsExportImportOpen(false)}
+        onImportConfirm={handleImportConfirm}
       />
 
       {/* Reset Demo Confirmation Safeguard Dialog */}

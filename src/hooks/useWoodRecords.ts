@@ -7,6 +7,7 @@ import type {
 import { aggregateDashboardMetrics, computeRecordCalculations } from '../utils/timber-calc.ts';
 import { applyManifestToRecords } from '../utils/manifest-flattener.ts';
 import { exportRecordsToCsv } from '../utils/records-csv.ts';
+import type { ImportRow } from '../types/index.ts';
 import { filterWoodRecords } from '../utils/record-search.ts';
 import { buildRecordsApiUrl } from '../utils/record-query-url.ts';
 import {
@@ -239,10 +240,30 @@ export function useWoodRecords() {
   const exportCsv = useCallback(() => exportRecordsToCsv(records), [records]);
   const effectivePagination = useMemo(() => computeEffectivePagination(pagination, records.length, page, pageSize), [pagination, records.length, page, pageSize]);
 
+  const importRecords = useCallback((importedRows: ImportRow[]) => {
+    if (importedRows.length === 0) return;
+    hasMutatedRef.current = true;
+    const newRecords = importedRows.map((r) => r.record);
+    const next = [...newRecords, ...recordsRef.current];
+    updateRecords(next);
+
+    syncWithServer(async () => {
+      for (const record of newRecords) {
+        const res = await fetch('/api/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record),
+        });
+        if (!res.ok) notifySyncFailure();
+      }
+    }, true);
+  }, [syncWithServer, updateRecords]);
+
   return {
     records, allRecords, metrics, filters, speciesList, isHydrated, isSyncing,
     pagination: effectivePagination, page, pageSize, setPage, setPageSize,
     setFilters, saveRecord, updateRecordPrice, saveManifest, deleteRecord,
-    restoreRecord, resetDemo, exportCsv,
+    restoreRecord, resetDemo, exportCsv, importRecords,
   };
 }
+

@@ -89,3 +89,76 @@ export function exportRecordsToCsv(records: WoodReceivingRecord[], filenamePrefi
   document.body.removeChild(link);
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
+
+/**
+ * Export CSV with explicit date-range label in filename.
+ */
+export function exportRecordsToCsvWithRange(
+  records: WoodReceivingRecord[],
+  startDate?: string,
+  endDate?: string,
+  filenamePrefix = 'penerimaan_kayu',
+): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const start = startDate ? startDate.replace(/-/g, '') : 'awal';
+  const end   = endDate   ? endDate.replace(/-/g, '')   : 'akhir';
+  // UTF-8 BOM so Excel opens without encoding issues
+  const BOM = '\uFEFF';
+  const csvContent = BOM + generateRecordsCsvContent(records);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href  = url;
+  link.download = `${filenamePrefix}_${start}_${end}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+/**
+ * Download a blank CSV import template (header row only).
+ */
+export function downloadCsvTemplate(): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const BOM = '\uFEFF';
+  const content = BOM + CSV_HEADERS.join(',') + '\n';
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href  = url;
+  link.download = 'template_import_buku_besar.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+/**
+ * Parse a CSV string (RFC 4180) into raw row arrays.
+ * Returns [headerRow, ...dataRows] — each row is string[].
+ */
+export function parseCsvToRows(csvText: string): string[][] {
+  const lines = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  return lines
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const fields: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === ',' && !inQuotes) {
+          fields.push(current); current = '';
+        } else {
+          current += ch;
+        }
+      }
+      fields.push(current);
+      return fields;
+    });
+}
+

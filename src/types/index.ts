@@ -798,7 +798,8 @@ export type ActivityActionType =
   | 'USER_PERMISSION_CHANGED'
   | 'USER_DEACTIVATED'
   | 'USER_REACTIVATED'
-  | 'USER_PASSWORD_CHANGED';
+  | 'USER_PASSWORD_CHANGED'
+  | 'RECORDS_IMPORTED';
 
 export type PricingStatus = 'PENDING' | 'PRICED';
 
@@ -1378,5 +1379,39 @@ export interface StockSortingFormInput {
   notes?: string;
 }
 
+/**
+ * ==============================================================================
+ * Ledger Export & Import Domain Types
+ * ==============================================================================
+ */
 
+export type DatePreset = 'this_month' | 'last_month' | 'this_week' | 'last_week' | 'custom' | 'all';
 
+export interface PresetDateRange {
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ImportRow {
+  record: WoodReceivingRecord;
+  rowIndex: number;
+}
+
+export interface ImportError {
+  rowIndex: number;
+  reason: string;
+}
+
+export interface ImportParseResult {
+  valid: ImportRow[];
+  duplicates: ImportRow[];
+  errors: ImportError[];
+  totalRows: number;
+}
+
+export interface ExportImportModalProps {
+  isOpen: boolean;
+  allRecords: WoodReceivingRecord[];
+  onClose: () => void;
+  onImportConfirm: (rows: ImportRow[]) => void;
+}
