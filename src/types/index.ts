@@ -982,6 +982,7 @@ export interface WoodSalesRecord {
   customerName: string;           // Nama Pembeli (freeform)
   storageYard: string;            // TPK sumber (e.g. TPK-Timur)
   kavlingNumber: string;          // Kavling sumber (e.g. KAV-01)
+  lotId?: string;                 // Optional FK to storage_lots.id
   woodSpecies: string;            // Jenis Kayu (e.g. Meranti)
   speciesId?: string;             // Optional FK to WoodSpecies.id
   pieces: number;                 // Batang terjual
@@ -1324,6 +1325,7 @@ export interface SawmillProductionRecord {
   // Input (consumed from log stock)
   sourceStorageYard: string;
   sourceKavlingNumber: string;
+  sourceLotId?: string;
   inputSpecies: string;
   speciesId?: string;
   inputVolumeM3: number;
@@ -1354,9 +1356,11 @@ export interface StockSortingRecord {
 
   sourceStorageYard: string;
   sourceKavlingNumber: string;
+  sourceLotId?: string;
 
   targetStorageYard: string;
   targetKavlingNumber: string;
+  targetLotId?: string;
 
   volumeM3: number;
   pieces: number;

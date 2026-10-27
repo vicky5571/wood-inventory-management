@@ -24,7 +24,8 @@ export function calculateLotStockBalance(
   yard: string,
   kavling: string,
   productionRecords?: SawmillProductionRecord[],
-  sortingRecords?: StockSortingRecord[]
+  sortingRecords?: StockSortingRecord[],
+  lotId?: string
 ): LotStockBalance {
   const normYard = (yard || '').trim().toLowerCase();
   const normKavling = (kavling || '').trim().toLowerCase();
@@ -36,24 +37,28 @@ export function calculateLotStockBalance(
   });
 
   const matchingSales = (salesRecords || []).filter((s) => {
+    if (lotId && s.lotId) return s.lotId === lotId;
     const y = (s.storageYard || '').trim().toLowerCase();
     const k = (s.kavlingNumber || '').trim().toLowerCase();
     return y === normYard && k === normKavling;
   });
 
   const matchingProduction = (productionRecords || []).filter((p) => {
+    if (lotId && p.sourceLotId) return p.sourceLotId === lotId;
     const y = (p.sourceStorageYard || '').trim().toLowerCase();
     const k = (p.sourceKavlingNumber || '').trim().toLowerCase();
     return y === normYard && k === normKavling;
   });
 
   const matchingSortingOut = (sortingRecords || []).filter((s) => {
+    if (lotId && s.sourceLotId) return s.sourceLotId === lotId;
     const y = (s.sourceStorageYard || '').trim().toLowerCase();
     const k = (s.sourceKavlingNumber || '').trim().toLowerCase();
     return y === normYard && k === normKavling;
   });
 
   const matchingSortingIn = (sortingRecords || []).filter((s) => {
+    if (lotId && s.targetLotId) return s.targetLotId === lotId;
     const y = (s.targetStorageYard || '').trim().toLowerCase();
     const k = (s.targetKavlingNumber || '').trim().toLowerCase();
     return y === normYard && k === normKavling;
@@ -173,28 +178,31 @@ export function aggregateAllLotBalances(
   const safeProductions = productionRecords || [];
   const safeSortings = sortingRecords || [];
 
-  const lotMap = new Map<string, { yard: string; kavling: string }>();
+  const lotMap = new Map<string, { yard: string; kavling: string; lotId?: string }>();
 
-  const registerLot = (rawYard?: string, rawKavling?: string) => {
+  const registerLot = (rawYard?: string, rawKavling?: string, lotId?: string) => {
     const y = (rawYard || '').trim();
     const k = (rawKavling || '').trim();
     if (!y && !k) return;
     const key = `${y.toLowerCase()}:::${k.toLowerCase()}`;
-    if (!lotMap.has(key)) {
-      lotMap.set(key, { yard: y, kavling: k });
+    const existing = lotMap.get(key);
+    if (!existing) {
+      lotMap.set(key, { yard: y, kavling: k, lotId });
+    } else if (!existing.lotId && lotId) {
+      existing.lotId = lotId;
     }
   };
 
   for (const rec of safeInbounds) registerLot(rec?.storageYard, rec?.kavlingNumber);
-  for (const sale of safeSales) registerLot(sale?.storageYard, sale?.kavlingNumber);
-  for (const prod of safeProductions) registerLot(prod?.sourceStorageYard, prod?.sourceKavlingNumber);
+  for (const sale of safeSales) registerLot(sale?.storageYard, sale?.kavlingNumber, sale?.lotId);
+  for (const prod of safeProductions) registerLot(prod?.sourceStorageYard, prod?.sourceKavlingNumber, prod?.sourceLotId);
   for (const sort of safeSortings) {
-    registerLot(sort?.sourceStorageYard, sort?.sourceKavlingNumber);
-    registerLot(sort?.targetStorageYard, sort?.targetKavlingNumber);
+    registerLot(sort?.sourceStorageYard, sort?.sourceKavlingNumber, sort?.sourceLotId);
+    registerLot(sort?.targetStorageYard, sort?.targetKavlingNumber, sort?.targetLotId);
   }
 
   const results: LotStockBalance[] = [];
-  for (const { yard, kavling } of lotMap.values()) {
+  for (const { yard, kavling, lotId } of lotMap.values()) {
     results.push(
       calculateLotStockBalance(
         safeInbounds,
@@ -202,7 +210,8 @@ export function aggregateAllLotBalances(
         yard,
         kavling,
         safeProductions,
-        safeSortings
+        safeSortings,
+        lotId
       )
     );
   }

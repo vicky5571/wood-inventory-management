@@ -16,6 +16,10 @@ export function ensureSalesTable(db: DatabaseSync): void {
       code TEXT NOT NULL UNIQUE,
       common_name TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS storage_lots (
+      id TEXT PRIMARY KEY,
+      lot_code TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS sales_records (
       id TEXT PRIMARY KEY,
       sale_date TEXT NOT NULL,
@@ -25,6 +29,7 @@ export function ensureSalesTable(db: DatabaseSync): void {
       customer_name TEXT NOT NULL,
       storage_yard TEXT NOT NULL,
       kavling_number TEXT NOT NULL,
+      lot_id TEXT REFERENCES storage_lots(id) ON DELETE SET NULL,
       wood_species TEXT NOT NULL,
       species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL,
       pieces INTEGER NOT NULL CHECK (pieces > 0),
@@ -53,6 +58,7 @@ function mapRowToSalesRecord(row: Record<string, unknown>): WoodSalesRecord {
     customerName: String(row.customer_name),
     storageYard: String(row.storage_yard),
     kavlingNumber: String(row.kavling_number),
+    lotId: row.lot_id ? String(row.lot_id) : undefined,
     woodSpecies: String(row.wood_species),
     speciesId: row.species_id ? String(row.species_id) : undefined,
     pieces: Number(row.pieces),
@@ -71,6 +77,16 @@ function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | 
   if (!woodSpeciesName) return null;
   try {
     const row = db.prepare('SELECT id FROM wood_species WHERE LOWER(common_name) = LOWER(?) LIMIT 1').get(woodSpeciesName.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveLotId(db: DatabaseSync, kavlingNumber?: string): string | null {
+  if (!kavlingNumber) return null;
+  try {
+    const row = db.prepare('SELECT id FROM storage_lots WHERE LOWER(lot_code) = LOWER(?) LIMIT 1').get(kavlingNumber.trim()) as { id: string } | undefined;
     return row?.id ?? null;
   } catch {
     return null;
@@ -102,18 +118,19 @@ export class SalesQueries {
   public insert(record: Omit<WoodSalesRecord, 'createdAt' | 'updatedAt'>): WoodSalesRecord {
     const now = new Date().toISOString();
     const speciesId = record.speciesId || resolveSpeciesId(this.db, record.woodSpecies);
+    const lotId = record.lotId || resolveLotId(this.db, record.kavlingNumber);
     const stmt = this.db.prepare(`
       INSERT INTO sales_records (
         id, sale_date, delivery_order_number, truck_plate_number, driver_name,
-        customer_name, storage_yard, kavling_number, wood_species, species_id,
+        customer_name, storage_yard, kavling_number, lot_id, wood_species, species_id,
         pieces, volume_m3, price_per_m3, total_price, payment_status,
         invoice_number, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
       record.id, record.saleDate, record.deliveryOrderNumber, record.truckPlateNumber,
-      record.driverName || null, record.customerName, record.storageYard, record.kavlingNumber,
+      record.driverName || null, record.customerName, record.storageYard, record.kavlingNumber, lotId,
       record.woodSpecies, speciesId, record.pieces, record.volumeM3, record.pricePerM3,
       record.totalPrice, record.paymentStatus || 'UNPAID', record.invoiceNumber || null,
       record.notes || null, now, now
@@ -132,12 +149,13 @@ export class SalesQueries {
       ...record,
       updatedAt: now,
     };
-    const speciesId = record.speciesId || resolveSpeciesId(this.db, merged.woodSpecies);
+    const speciesId = record.speciesId !== undefined ? (record.speciesId || null) : (record.woodSpecies ? resolveSpeciesId(this.db, merged.woodSpecies) : (existing.speciesId || null));
+    const lotId = record.lotId !== undefined ? (record.lotId || null) : (record.kavlingNumber ? resolveLotId(this.db, merged.kavlingNumber) : (existing.lotId || null));
 
     const stmt = this.db.prepare(`
       UPDATE sales_records SET
         sale_date = ?, delivery_order_number = ?, truck_plate_number = ?, driver_name = ?,
-        customer_name = ?, storage_yard = ?, kavling_number = ?, wood_species = ?, species_id = ?,
+        customer_name = ?, storage_yard = ?, kavling_number = ?, lot_id = ?, wood_species = ?, species_id = ?,
         pieces = ?, volume_m3 = ?, price_per_m3 = ?, total_price = ?, payment_status = ?,
         invoice_number = ?, notes = ?, updated_at = ?
       WHERE id = ?
@@ -145,7 +163,7 @@ export class SalesQueries {
 
     stmt.run(
       merged.saleDate, merged.deliveryOrderNumber, merged.truckPlateNumber, merged.driverName || null,
-      merged.customerName, merged.storageYard, merged.kavlingNumber, merged.woodSpecies, speciesId,
+      merged.customerName, merged.storageYard, merged.kavlingNumber, lotId, merged.woodSpecies, speciesId,
       merged.pieces, merged.volumeM3, merged.pricePerM3, merged.totalPrice, merged.paymentStatus,
       merged.invoiceNumber || null, merged.notes || null, now, merged.id
     );

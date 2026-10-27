@@ -15,6 +15,10 @@ export function ensureProductionTables(db: DatabaseSync): void {
       code TEXT NOT NULL UNIQUE,
       common_name TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS storage_lots (
+      id TEXT PRIMARY KEY,
+      lot_code TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS sawmill_production_records (
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL DEFAULT 'default-tenant' REFERENCES tenants(id) ON DELETE CASCADE,
@@ -22,6 +26,7 @@ export function ensureProductionTables(db: DatabaseSync): void {
       shift TEXT CHECK (shift IS NULL OR shift IN ('PAGI','SIANG','MALAM')),
       source_storage_yard TEXT NOT NULL,
       source_kavling_number TEXT NOT NULL,
+      source_lot_id TEXT REFERENCES storage_lots(id) ON DELETE SET NULL,
       input_species TEXT NOT NULL,
       species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL,
       input_volume_m3 REAL NOT NULL CHECK (input_volume_m3 > 0),
@@ -46,6 +51,7 @@ interface SqliteProductionRow {
   shift: string | null;
   source_storage_yard: string;
   source_kavling_number: string;
+  source_lot_id?: string | null;
   input_species: string;
   species_id?: string | null;
   input_volume_m3: number;
@@ -69,6 +75,16 @@ function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | 
   }
 }
 
+function resolveLotId(db: DatabaseSync, kavlingNumber?: string): string | null {
+  if (!kavlingNumber) return null;
+  try {
+    const row = db.prepare('SELECT id FROM storage_lots WHERE LOWER(lot_code) = LOWER(?) LIMIT 1').get(kavlingNumber.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function mapRowToProductionRecord(row: SqliteProductionRow): SawmillProductionRecord {
   const { yieldPercent, wasteVolumeM3 } = computeProductionYield(
     Number(row.input_volume_m3),
@@ -82,6 +98,7 @@ function mapRowToProductionRecord(row: SqliteProductionRow): SawmillProductionRe
     shift: (row.shift as ProductionShift) || undefined,
     sourceStorageYard: row.source_storage_yard,
     sourceKavlingNumber: row.source_kavling_number,
+    sourceLotId: row.source_lot_id || undefined,
     inputSpecies: row.input_species,
     speciesId: row.species_id || undefined,
     inputVolumeM3: Number(row.input_volume_m3),
@@ -128,34 +145,23 @@ export class ProductionQueries {
     const now = new Date().toISOString();
     const tenantId = record.tenantId || 'default-tenant';
     const speciesId = record.speciesId || resolveSpeciesId(this.db, record.inputSpecies);
+    const sourceLotId = record.sourceLotId || resolveLotId(this.db, record.sourceKavlingNumber);
     const stmt = this.db.prepare(`
       INSERT INTO sawmill_production_records (
         id, tenant_id, production_date, shift,
-        source_storage_yard, source_kavling_number,
+        source_storage_yard, source_kavling_number, source_lot_id,
         input_species, species_id, input_volume_m3, input_pieces,
         output_product, output_volume_m3, output_pieces,
         operator_name, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
-      record.id,
-      tenantId,
-      record.productionDate,
-      record.shift || null,
-      record.sourceStorageYard,
-      record.sourceKavlingNumber,
-      record.inputSpecies,
-      speciesId,
-      record.inputVolumeM3,
-      record.inputPieces,
-      record.outputProduct,
-      record.outputVolumeM3,
-      record.outputPieces,
-      record.operatorName,
-      record.notes || null,
-      now,
-      now
+      record.id, tenantId, record.productionDate, record.shift || null,
+      record.sourceStorageYard, record.sourceKavlingNumber, sourceLotId,
+      record.inputSpecies, speciesId, record.inputVolumeM3, record.inputPieces,
+      record.outputProduct, record.outputVolumeM3, record.outputPieces,
+      record.operatorName, record.notes || null, now, now
     );
 
     return this.getById(record.id, tenantId)!;
@@ -172,23 +178,16 @@ export class ProductionQueries {
     const speciesId = record.speciesId !== undefined
       ? (record.speciesId || null)
       : (record.inputSpecies ? resolveSpeciesId(this.db, record.inputSpecies) : (existing.speciesId || null));
+    const sourceLotId = record.sourceLotId !== undefined
+      ? (record.sourceLotId || null)
+      : (record.sourceKavlingNumber ? resolveLotId(this.db, record.sourceKavlingNumber) : (existing.sourceLotId || null));
 
     const stmt = this.db.prepare(`
       UPDATE sawmill_production_records SET
-        production_date = ?,
-        shift = ?,
-        source_storage_yard = ?,
-        source_kavling_number = ?,
-        input_species = ?,
-        species_id = ?,
-        input_volume_m3 = ?,
-        input_pieces = ?,
-        output_product = ?,
-        output_volume_m3 = ?,
-        output_pieces = ?,
-        operator_name = ?,
-        notes = ?,
-        updated_at = ?
+        production_date = ?, shift = ?, source_storage_yard = ?, source_kavling_number = ?,
+        source_lot_id = ?, input_species = ?, species_id = ?, input_volume_m3 = ?,
+        input_pieces = ?, output_product = ?, output_volume_m3 = ?, output_pieces = ?,
+        operator_name = ?, notes = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
     `);
 
@@ -197,6 +196,7 @@ export class ProductionQueries {
       record.shift !== undefined ? (record.shift || null) : (existing.shift || null),
       record.sourceStorageYard ?? existing.sourceStorageYard,
       record.sourceKavlingNumber ?? existing.sourceKavlingNumber,
+      sourceLotId,
       record.inputSpecies ?? existing.inputSpecies,
       speciesId,
       record.inputVolumeM3 ?? existing.inputVolumeM3,
@@ -206,9 +206,7 @@ export class ProductionQueries {
       record.outputPieces ?? existing.outputPieces,
       record.operatorName ?? existing.operatorName,
       record.notes !== undefined ? (record.notes || null) : (existing.notes || null),
-      now,
-      record.id,
-      tenantId
+      now, record.id, tenantId
     );
 
     return this.getById(record.id, tenantId)!;

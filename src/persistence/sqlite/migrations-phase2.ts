@@ -11,6 +11,7 @@ export function runPhase2Migrations(db: DatabaseSync): void {
   migrateTimberPriceEntries(db);
   migrateReceivingManifestsContractFk(db);
   migrateSpeciesFkToTables(db);
+  migrateLotFkToTables(db);
   rebuildViewsIfOutdated(db);
 }
 
@@ -149,6 +150,43 @@ function migrateSpeciesFkToTables(db: DatabaseSync): void {
   }
 }
 
+function migrateLotFkToTables(db: DatabaseSync): void {
+  const lotMigrations = [
+    { table: 'sales_records', newCol: 'lot_id', srcCol: 'kavling_number' },
+    { table: 'sawmill_production_records', newCol: 'source_lot_id', srcCol: 'source_kavling_number' },
+    { table: 'stock_sorting_records', newCol: 'source_lot_id', srcCol: 'source_kavling_number' },
+    { table: 'stock_sorting_records', newCol: 'target_lot_id', srcCol: 'target_kavling_number' },
+  ];
+
+  for (const { table, newCol, srcCol } of lotMigrations) {
+    const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name=?;`).get(table) as { name: string } | undefined;
+    if (!tableCheck) continue;
+
+    const cols = (db.prepare(`PRAGMA table_info(${table});`).all() as { name: string }[]).map((c) => c.name);
+    if (!cols.includes(newCol)) {
+      db.exec(`
+        ALTER TABLE ${table}
+        ADD COLUMN ${newCol} TEXT REFERENCES storage_lots(id) ON DELETE SET NULL;
+      `);
+
+      db.prepare(`
+        UPDATE ${table}
+        SET ${newCol} = (
+          SELECT id FROM storage_lots
+          WHERE LOWER(lot_code) = LOWER(${table}.${srcCol})
+          LIMIT 1
+        )
+        WHERE ${newCol} IS NULL AND ${srcCol} IS NOT NULL AND ${srcCol} != '';
+      `).run();
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_${table}_${newCol}
+        ON ${table}(${newCol});
+      `);
+    }
+  }
+}
+
 function rebuildViewsIfOutdated(db: DatabaseSync): void {
   const viewCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='view' AND name='v_buku_besar_flat';`).get() as { name: string } | undefined;
   if (!viewCheck) {
@@ -160,5 +198,3 @@ function rebuildViewsIfOutdated(db: DatabaseSync): void {
     db.exec(SQLITE_VIEWS_DDL);
   }
 }
-
-
