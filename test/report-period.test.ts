@@ -88,4 +88,23 @@ test('Report Period & Price Database Integration Suite', async (t) => {
     assert.equal(reopened.reopenedBy, 'Admin Vicky');
     assert.ok(reopened.reopenedAt);
   });
+
+  await t.test('report_periods enforces tenants(id) foreign key constraint', () => {
+    const db = sqlite.getDatabase();
+    const fkList = db.prepare(`PRAGMA foreign_key_list(report_periods)`).all() as { table: string }[];
+    const hasTenantsFk = fkList.some((fk) => fk.table === 'tenants');
+    assert.ok(hasTenantsFk, 'report_periods must have REFERENCES tenants(id) foreign key');
+
+    // Attempting to insert a report period with non-existent tenant must fail FK check
+    assert.throws(() => {
+      db.prepare(`
+        INSERT INTO report_periods (
+          id, tenant_id, name, status, start_date, end_date, created_at, updated_at
+        ) VALUES (
+          'rp-fake', 'non-existent-tenant-xyz', 'Fake Period', 'OPEN', '2026-01-01', '2026-01-31', datetime('now'), datetime('now')
+        )
+      `).run();
+    }, /FOREIGN KEY constraint failed/);
+  });
 });
+

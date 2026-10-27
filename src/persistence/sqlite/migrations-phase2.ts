@@ -12,8 +12,10 @@ export function runPhase2Migrations(db: DatabaseSync): void {
   migrateReceivingManifestsContractFk(db);
   migrateSpeciesFkToTables(db);
   migrateLotFkToTables(db);
+  migrateReportPeriodsTenantFk(db);
   rebuildViewsIfOutdated(db);
 }
+
 
 function migrateTimberPriceEntries(db: DatabaseSync): void {
   const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='timber_price_entries';`).get() as { name: string } | undefined;
@@ -198,3 +200,41 @@ function rebuildViewsIfOutdated(db: DatabaseSync): void {
     db.exec(SQLITE_VIEWS_DDL);
   }
 }
+
+function migrateReportPeriodsTenantFk(db: DatabaseSync): void {
+  const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='report_periods';`).get() as { name: string } | undefined;
+  if (!tableCheck) return;
+
+  const rpFkList = db.prepare(`PRAGMA foreign_key_list(report_periods);`).all() as { table: string }[];
+  if (rpFkList.some((fk) => fk.table === 'tenants')) return;
+
+  db.exec(`
+    ALTER TABLE report_periods RENAME TO report_periods_old;
+    CREATE TABLE report_periods (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL DEFAULT 'default-tenant' REFERENCES tenants(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED','REOPENED')),
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      closed_at TEXT,
+      closed_by TEXT,
+      total_records INTEGER,
+      total_volume_m3 REAL,
+      total_net_payable_idr REAL,
+      price_snapshot_ids TEXT,
+      reopened_at TEXT,
+      reopened_by TEXT,
+      reopen_reason TEXT,
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    INSERT INTO report_periods SELECT * FROM report_periods_old;
+    DROP TABLE report_periods_old;
+    CREATE INDEX IF NOT EXISTS idx_rp_dates ON report_periods(start_date, end_date);
+    CREATE INDEX IF NOT EXISTS idx_rp_status ON report_periods(status);
+  `);
+}
+

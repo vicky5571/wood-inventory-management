@@ -62,9 +62,18 @@ function mapRow(row: SqliteReportPeriodRow): ReportPeriod {
 
 export function ensureReportPeriodTables(db: DatabaseSync): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS tenants (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS report_periods (
       id                    TEXT PRIMARY KEY,
-      tenant_id             TEXT NOT NULL DEFAULT 'default-tenant',
+      tenant_id             TEXT NOT NULL DEFAULT 'default-tenant'
+                              REFERENCES tenants(id) ON DELETE CASCADE,
       name                  TEXT NOT NULL,
       status                TEXT NOT NULL DEFAULT 'OPEN'
                               CHECK (status IN ('OPEN','CLOSED','REOPENED')),
