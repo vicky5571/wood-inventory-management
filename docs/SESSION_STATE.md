@@ -50,13 +50,14 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 21 | Fix Payment Form Detail View Race Condition | `docs/superpowers/specs/2026-10-28-fix-payment-form-detail-view-design.md` | `docs/superpowers/plans/2026-10-28-fix-payment-form-detail-view.md` | ✅ Completed |
 | 22 | Real-Time Totals Footer (Payment Form DRAFT) | `docs/superpowers/specs/2026-10-28-fix-payment-form-realtime-totals-design.md` | `docs/superpowers/plans/2026-10-28-fix-payment-form-realtime-totals.md` | ✅ Completed |
 | 23 | Price Auto-Fill on Receiving Input | `docs/superpowers/specs/2026-10-28-price-autofill-receiving-design.md` | `docs/superpowers/plans/2026-10-28-price-autofill-receiving.md` | ✅ Completed |
+| 24 | Species Name Canonical Sync | `docs/superpowers/specs/2026-10-28-species-name-sync-design.md` | `docs/superpowers/plans/2026-10-28-species-name-sync.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-28):**
-- `npm test` → 963 passed, 0 failed (100% clean)
+- `npm test` → 968 passed, 0 failed (100% clean)
 - `npm run build:check` → 0 errors (Next.js production build clean, 25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run test:smoke` → ✅ Passed
-- `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 38ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
 
 
@@ -339,22 +340,22 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Price Auto-Fill on Receiving Input (Module #23) completed and verified. Real-Time Totals Footer (Payment Form DRAFT) (Module #22) completed and verified. All 23 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 963 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
+**Status:** Species Name Canonical Sync (Module #24) completed and verified. Price Auto-Fill on Receiving Input (Module #23) completed and verified. Real-Time Totals Footer (Payment Form DRAFT) (Module #22) completed and verified. All 24 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 968 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#23).
-2. **If client clarifies DPB rakyat questions** → start Spec #24:
+1. **Monitor client feedback** on shipped features (Items #1-#24).
+2. **If client clarifies DPB rakyat questions** → start Spec #25:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
    ```
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 963 passed, 0 failed
+- `npm test` → 968 passed, 0 failed
 - `npm run build:check` → 0 errors (25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run test:smoke` → ✅ Passed
-- `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
+- `npm run db:seed` → ✅ Idempotent SQLite seeding in 38ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
 

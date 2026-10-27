@@ -4,6 +4,7 @@
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { TimberPriceEntry } from '../../types/index.ts';
+import { TIMBER_SPECIES_CATALOGUE, DEFAULT_TIMBER_SPECIES } from '../../utils/timber-species.ts';
 
 interface SqlitePriceRow {
   id: string;
@@ -95,6 +96,13 @@ export function savePriceEntryToDb(
   const woodSpeciesName = entry.woodSpecies?.trim() || (
     (db.prepare(`SELECT common_name FROM wood_species WHERE id = ?;`).get(speciesId) as { common_name: string } | undefined)?.common_name || speciesId
   );
+  const catalogueMatch = TIMBER_SPECIES_CATALOGUE.find(
+    (s) => s.commonName.toLowerCase() === woodSpeciesName.toLowerCase()
+  );
+  const defaultMatch = DEFAULT_TIMBER_SPECIES.find(
+    (s) => s.toLowerCase() === woodSpeciesName.toLowerCase()
+  );
+  const normalizedSpeciesName = catalogueMatch?.commonName || defaultMatch || woodSpeciesName;
 
   db.prepare(`
     INSERT INTO timber_price_entries
@@ -117,7 +125,7 @@ export function savePriceEntryToDb(
     id,
     entry.tenantId ?? 'default-tenant',
     speciesId,
-    woodSpeciesName,
+    normalizedSpeciesName,
     entry.supplierId ? entry.supplierId.trim() : null,
     entry.supplierName ? entry.supplierName.trim() : null,
     entry.effectiveFrom,
@@ -129,7 +137,7 @@ export function savePriceEntryToDb(
     now,
     now
   );
-  return { ...entry, id, speciesId, woodSpecies: woodSpeciesName, createdAt: now, updatedAt: now } as TimberPriceEntry;
+  return { ...entry, id, speciesId, woodSpecies: normalizedSpeciesName, createdAt: now, updatedAt: now } as TimberPriceEntry;
 }
 
 export function deletePriceEntryFromDb(db: DatabaseSync, id: string): void {
