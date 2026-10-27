@@ -66,7 +66,7 @@ export function generateRecordsCsvContent(records: WoodReceivingRecord[], broker
     r.freightGrossTotal,
     r.freightPphAmount,
     r.freightNetPayable,
-    escapeCsvField(r.brokerId ? (brokerMap?.[r.brokerId] || r.brokerId) : ''),
+    escapeCsvField(r.brokerName || (r.brokerId ? (brokerMap?.[r.brokerId] || r.brokerId) : '')),
     r.brokerFee,
     r.grandNetPayable,
     escapeCsvField(r.paymentStatus || 'UNPAID'),

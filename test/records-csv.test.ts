@@ -83,5 +83,22 @@ test('Records CSV Export Suite — All Excel Columns', async (t) => {
     assert.ok(row.includes(String(record.brokerFee)));
     assert.ok(row.includes(String(record.grandNetPayable)));
   });
+
+  await t.test('generateRecordsCsvContent prefers brokerName over raw brokerId', () => {
+    const record = {
+      ...SEED_WOOD_RECORDS[0],
+      brokerId: 'BRK-001',
+      brokerName: 'Pak Slamet Broker',
+    };
+
+    const csv = generateRecordsCsvContent([record]);
+    const lines = csv.split('\n');
+    assert.strictEqual(lines.length, 2);
+    const row = lines[1];
+
+    assert.ok(row.includes('Pak Slamet Broker'), 'Row should contain brokerName');
+    assert.ok(!row.includes('BRK-001'), 'Row should not contain raw brokerId when brokerName is present');
+  });
 });
+
 

@@ -177,6 +177,7 @@ export interface WoodReceivingRecord {
 
   // Broker & Overall Summary
   brokerId?: string;             // Optional FK to Broker.id
+  brokerName?: string;           // Optional broker name joined from brokers table
   brokerFee: number;             // Broker fee
   grandNetPayable: number | null;       // timberNetPayable + freightNetPayable + brokerFee (null when timber unpriced)
 

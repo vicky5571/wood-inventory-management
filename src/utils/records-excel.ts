@@ -37,7 +37,7 @@ function buildSheetRows(records: WoodReceivingRecord[]): (string | number | null
     r.freightGrossTotal,
     r.freightPphAmount,
     r.freightNetPayable,
-    r.brokerId || '',
+    r.brokerName || r.brokerId || '',
     r.brokerFee,
     r.grandNetPayable,
     r.paymentStatus || 'UNPAID',

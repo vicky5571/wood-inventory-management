@@ -104,6 +104,7 @@ export const SQLITE_VIEWS_DDL = `
     m.contract_id AS contractId,
     sup.name AS supplierName,
     m.broker_id AS brokerId,
+    COALESCE(b.name, '') AS brokerName,
     f.species_name AS woodSpecies,
     i.species_id AS speciesId,
     i.wood_length_m AS woodLengthM,
@@ -149,6 +150,7 @@ export const SQLITE_VIEWS_DDL = `
     m.updated_at AS updatedAt
   FROM receiving_manifests m
   JOIN suppliers sup ON m.supplier_id = sup.id
+  LEFT JOIN brokers b ON m.broker_id = b.id
   JOIN receiving_items i ON m.id = i.manifest_id
   JOIN v_receiving_item_financials f ON i.id = f.item_id;
 `;

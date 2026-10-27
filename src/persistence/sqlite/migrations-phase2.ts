@@ -194,7 +194,7 @@ function rebuildViewsIfOutdated(db: DatabaseSync): void {
     return;
   }
   const vCols = (db.prepare(`PRAGMA table_info(v_buku_besar_flat);`).all() as { name: string }[]).map((c) => c.name);
-  if (!vCols.includes('speciesId') || !vCols.includes('contractId')) {
+  if (!vCols.includes('speciesId') || !vCols.includes('contractId') || !vCols.includes('brokerName')) {
     db.exec(SQLITE_VIEWS_DDL);
   }
 }
