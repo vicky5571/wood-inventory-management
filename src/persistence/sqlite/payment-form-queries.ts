@@ -161,6 +161,20 @@ export function ensurePaymentFormTables(db: DatabaseSync): void {
     `);
   }
 
+  try {
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_payment_forms_supplier ON payment_forms(supplier_id);
+      CREATE INDEX IF NOT EXISTS idx_payment_forms_status ON payment_forms(status);
+      UPDATE payment_forms
+      SET supplier_id = (
+        SELECT id FROM suppliers
+        WHERE LOWER(name) = LOWER(payment_forms.supplier_name)
+        LIMIT 1
+      )
+      WHERE supplier_id IS NULL OR supplier_id = '';
+    `);
+  } catch {}
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS payment_form_lines (
       id TEXT PRIMARY KEY, payment_form_id TEXT NOT NULL REFERENCES payment_forms(id) ON DELETE CASCADE,
@@ -194,6 +208,16 @@ export function ensurePaymentFormTables(db: DatabaseSync): void {
   }
 }
 
+function resolveSupplierId(db: DatabaseSync, supplierName?: string): string | null {
+  if (!supplierName) return null;
+  try {
+    const row = db.prepare('SELECT id FROM suppliers WHERE LOWER(name) = LOWER(?) LIMIT 1').get(supplierName.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | null {
   if (!woodSpeciesName) return null;
   try {
@@ -210,7 +234,7 @@ function mapRowToPaymentForm(row: PaymentFormRow): PaymentForm {
     preprintedNumber: row.preprinted_number ?? row.form_number ?? '',
     issueDate: row.issue_date || (row.created_at ? row.created_at.slice(0, 10) : ''),
     weekStartDate: row.week_start_date, weekEndDate: row.week_end_date,
-    supplierName: row.supplier_name, supplierId: row.supplier_id || undefined,
+    supplierName: row.supplier_name, supplierId: row.supplier_id || '',
     woodSpecies: row.wood_species, speciesId: row.species_id || undefined, contractNumber: row.contract_number || '', lines: [],
     recordIds: JSON.parse(row.record_ids || '[]'), itemIds: JSON.parse(row.item_ids || '[]'),
     totalAmountIDR: Number(row.total_amount_idr) || Number(row.total_timber_net_idr) || 0,
@@ -277,6 +301,12 @@ export function getPaymentFormById(db: DatabaseSync, id: string, tenantId: strin
 }
 
 export function createPaymentForm(db: DatabaseSync, form: PaymentForm): PaymentForm {
+  if (!form.supplierId) {
+    const sId = resolveSupplierId(db, form.supplierName);
+    if (sId) {
+      form.supplierId = sId;
+    }
+  }
   const speciesId = form.speciesId || resolveSpeciesId(db, form.woodSpecies);
   db.prepare(`
     INSERT INTO payment_forms (

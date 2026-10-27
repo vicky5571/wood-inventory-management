@@ -137,6 +137,7 @@ test('Payment Form Grouping Engine Suite', async (t) => {
       weekStartDate: weekStart,
       weekEndDate: weekEnd,
       supplierName: 'PT Rimba Jaya',
+      supplierId: 'SPL-001',
       woodSpecies: 'Jati',
       contractNumber: 'CTR-001',
       recordIds: ['rec-locked'],

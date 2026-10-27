@@ -162,7 +162,7 @@ class PaymentFormStore {
           weekStartDate: startDate,
           weekEndDate: endDate,
           supplierName: group.supplierName,
-          supplierId: group.supplierId,
+          supplierId: group.supplierId || '',
           woodSpecies: group.woodSpecies,
           contractNumber: group.contractNumber,
           lines: group.lines,

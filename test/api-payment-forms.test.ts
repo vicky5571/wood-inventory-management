@@ -196,4 +196,19 @@ test('Payment Forms API Endpoints Suite', async (t) => {
     const json = await delRes.json();
     assert.equal(json.data.status, 'VOID');
   });
+
+  await t.test('POST /api/payment-forms resolves supplierId from supplierName', async () => {
+    const createReq = createMockRequest('http://localhost:3000/api/payment-forms', 'POST', {
+      weekStartDate: '2026-10-17',
+      weekEndDate: '2026-10-23',
+      supplierName: 'Perum Perhutani KPH Randublatung',
+      woodSpecies: 'Jati',
+    }, 1);
+    const createRes = await createForm(createReq);
+    assert.equal(createRes.status, 201);
+    const json = await createRes.json();
+    assert.equal(json.success, true);
+    assert.ok(json.data.supplierId, 'supplierId should be resolved and populated');
+  });
 });
+

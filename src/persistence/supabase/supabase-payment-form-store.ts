@@ -52,7 +52,7 @@ function mapRowToForm(r: SupabasePaymentFormRow): PaymentForm {
     weekStartDate: r.week_start_date,
     weekEndDate: r.week_end_date,
     supplierName: r.supplier_name,
-    supplierId: r.supplier_id || undefined,
+    supplierId: r.supplier_id || '',
     woodSpecies: r.wood_species,
     contractNumber: r.contract_number || '',
     lines: [],

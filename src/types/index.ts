@@ -1211,7 +1211,7 @@ export interface PaymentForm {
 
   // Grouping key fields
   supplierName: string;
-  supplierId?: string;
+  supplierId: string;
   woodSpecies: string;
   speciesId?: string;
   contractNumber: string;             // Empty string for non-contract

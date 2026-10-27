@@ -13,8 +13,10 @@ export function runPhase2Migrations(db: DatabaseSync): void {
   migrateSpeciesFkToTables(db);
   migrateLotFkToTables(db);
   migrateReportPeriodsTenantFk(db);
+  migratePaymentFormsSupplier(db);
   rebuildViewsIfOutdated(db);
 }
+
 
 
 function migrateTimberPriceEntries(db: DatabaseSync): void {
@@ -215,21 +217,10 @@ function migrateReportPeriodsTenantFk(db: DatabaseSync): void {
       tenant_id TEXT NOT NULL DEFAULT 'default-tenant' REFERENCES tenants(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED','REOPENED')),
-      start_date TEXT NOT NULL,
-      end_date TEXT NOT NULL,
-      closed_at TEXT,
-      closed_by TEXT,
-      total_records INTEGER,
-      total_volume_m3 REAL,
-      total_net_payable_idr REAL,
-      price_snapshot_ids TEXT,
-      reopened_at TEXT,
-      reopened_by TEXT,
-      reopen_reason TEXT,
-      notes TEXT,
-      created_by TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      start_date TEXT NOT NULL, end_date TEXT NOT NULL, closed_at TEXT, closed_by TEXT,
+      total_records INTEGER, total_volume_m3 REAL, total_net_payable_idr REAL,
+      price_snapshot_ids TEXT, reopened_at TEXT, reopened_by TEXT, reopen_reason TEXT,
+      notes TEXT, created_by TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
     );
     INSERT INTO report_periods SELECT * FROM report_periods_old;
     DROP TABLE report_periods_old;
@@ -237,4 +228,20 @@ function migrateReportPeriodsTenantFk(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_rp_status ON report_periods(status);
   `);
 }
+
+function migratePaymentFormsSupplier(db: DatabaseSync): void {
+  const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='payment_forms';`).get() as { name: string } | undefined;
+  if (!tableCheck) return;
+
+  try {
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_payment_forms_supplier ON payment_forms(supplier_id);
+      CREATE INDEX IF NOT EXISTS idx_payment_forms_status ON payment_forms(status);
+      UPDATE payment_forms
+      SET supplier_id = (SELECT id FROM suppliers WHERE LOWER(name) = LOWER(payment_forms.supplier_name) LIMIT 1)
+      WHERE supplier_id IS NULL OR supplier_id = '';
+    `);
+  } catch {}
+}
+
 
