@@ -15,6 +15,7 @@ import { ManifestItemsTable } from './ManifestItemsTable';
 import { RecordFinancialSection } from './RecordFinancialSection';
 import { RecordReconciliationCard } from './RecordReconciliationCard';
 import { useSettings } from '@/src/hooks/useSettings';
+import { useTimberPrices } from '@/src/hooks/useTimberPrices';
 import { X, Scale, CheckCircle2, Zap, AlertTriangle } from 'lucide-react';
 import { getQuickReceivingDraft } from '@/src/utils/dev-quick-fill.ts';
 import { validateDiscrepancyInputs } from '@/src/utils/discrepancy-validation';
@@ -47,6 +48,7 @@ export function RecordModal({
   onClose: () => void; onSave: (record: WoodReceivingRecord, manifest?: ManifestFormInput) => void;
 }) {
   const { settings } = useSettings();
+  const { activeEntries: priceEntries } = useTimberPrices();
   const [form, setForm] = useState<Partial<WoodReceivingRecord>>({});
   const [items, setItems] = useState<ManifestItemInput[]>([]);
   const [pendingDraft, setPendingDraft] = useState<Partial<ManifestFormInput> | null>(null);
@@ -214,7 +216,14 @@ export function RecordModal({
             </div>
           )}
           <RecordDocumentSection form={form} setForm={setForm} availableSpecies={availableSpecies} hideSpeciesSection={true} />
-          <ManifestItemsTable items={items} onChange={setItems} availableSpecies={availableSpecies} />
+          <ManifestItemsTable
+            items={items}
+            onChange={setItems}
+            availableSpecies={availableSpecies}
+            priceEntries={priceEntries}
+            supplierName={form.supplierName}
+            receiptDate={form.receiptDate}
+          />
           <RecordFinancialSection form={form} setForm={setForm} hideTimberPricing={true} />
           <RecordReconciliationCard preview={preview} />
 

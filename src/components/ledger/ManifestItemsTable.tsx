@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useCallback } from 'react';
-import type { ManifestItemInput } from '@/src/types';
+import type { ManifestItemInput, TimberPriceEntry } from '@/src/types';
 import { ManifestItemRow } from './ManifestItemRow';
 import { Layers, Plus } from 'lucide-react';
 
@@ -10,6 +10,9 @@ export interface ManifestItemsTableProps {
   onChange?: (items: ManifestItemInput[]) => void;
   setItems?: React.Dispatch<React.SetStateAction<ManifestItemInput[]>>;
   availableSpecies?: string[];
+  priceEntries?: TimberPriceEntry[];
+  supplierName?: string;
+  receiptDate?: string;
 }
 
 interface MemoRowProps {
@@ -20,10 +23,14 @@ interface MemoRowProps {
   onDelete: (index: number) => void;
   availableSpecies?: string[];
   disabledDelete?: boolean;
+  priceEntries?: TimberPriceEntry[];
+  supplierName?: string;
+  receiptDate?: string;
 }
 
 const MemoizedManifestRow = React.memo(function MemoizedManifestRow({
   item, index, totalItems, onUpdate, onDelete, availableSpecies, disabledDelete,
+  priceEntries, supplierName, receiptDate,
 }: MemoRowProps) {
   const handleChange = useCallback((updated: ManifestItemInput) => onUpdate(index, updated), [onUpdate, index]);
   const handleDelete = useCallback(() => onDelete(index), [onDelete, index]);
@@ -37,6 +44,9 @@ const MemoizedManifestRow = React.memo(function MemoizedManifestRow({
       onDelete={handleDelete}
       availableSpecies={availableSpecies}
       disabledDelete={disabledDelete}
+      priceEntries={priceEntries}
+      supplierName={supplierName}
+      receiptDate={receiptDate}
     />
   );
 });
@@ -46,6 +56,9 @@ export function ManifestItemsTable({
   onChange,
   setItems,
   availableSpecies,
+  priceEntries,
+  supplierName,
+  receiptDate,
 }: ManifestItemsTableProps) {
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -137,6 +150,9 @@ export function ManifestItemsTable({
               onDelete={handleDeleteItem}
               availableSpecies={availableSpecies}
               disabledDelete={items.length <= 1}
+              priceEntries={priceEntries}
+              supplierName={supplierName}
+              receiptDate={receiptDate}
             />
           ))
         )}

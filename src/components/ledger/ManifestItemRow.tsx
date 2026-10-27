@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { ManifestItemInput } from '@/src/types';
+import type { ManifestItemInput, TimberPriceEntry } from '@/src/types';
+import { lookupPriceForRecord } from '@/src/utils/price-lookup';
 import { SpeciesCombobox } from './SpeciesCombobox';
 import { YardSelect } from './YardSelect';
 import { KavlingSelect } from './KavlingSelect';
@@ -23,10 +24,14 @@ export interface ManifestItemRowProps {
   onDelete: () => void;
   availableSpecies?: string[];
   disabledDelete?: boolean;
+  priceEntries?: TimberPriceEntry[];
+  supplierName?: string;
+  receiptDate?: string;
 }
 
 export const ManifestItemRow = React.memo(function ManifestItemRow({
   item, index, totalItems, onChange, onDelete, availableSpecies, disabledDelete,
+  priceEntries, supplierName, receiptDate,
 }: ManifestItemRowProps) {
   const tallyVol = Math.max(0, Number(item.tallyVolumeM3) || 0), delivVol = Math.max(0, Number(item.deliveredVolumeM3) || 0);
   const tallyPcs = Math.max(0, Number(item.tallyPieces) || 0), delivPcs = Math.max(0, Number(item.deliveredPieces) || 0);
@@ -41,6 +46,7 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
 
   const isSurplusOrMatch = volDiff >= 0;
   const cannotDelete = disabledDelete ?? totalItems <= 1;
+  const [autoFilledLabel, setAutoFilledLabel] = React.useState<string | null>(null);
 
   const updateField = <K extends keyof ManifestItemInput>(field: K, value: ManifestItemInput[K]) => {
     onChange({ ...item, [field]: value });
@@ -117,8 +123,27 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5">
         <div className="sm:col-span-2 lg:col-span-5">
           <label className={labelCls}>Jenis Kayu (树种) <span className="text-[#ed1c24]">*</span></label>
-          <SpeciesCombobox value={item.woodSpecies || ''} onChange={(val) => updateField('woodSpecies', val)}
-            availableSpecies={availableSpecies} required id={`species-combobox-${item.id || index}`} />
+          <SpeciesCombobox
+            value={item.woodSpecies || ''}
+            onChange={(val) => {
+              if (!val) { updateField('woodSpecies', val); return; }
+              if (priceEntries && priceEntries.length > 0 && item.timberPricePerM3 === null) {
+                const result = lookupPriceForRecord(
+                  { woodSpecies: val, supplierName: supplierName || '', receiptDate: receiptDate || new Date().toISOString().slice(0, 10) } as Parameters<typeof lookupPriceForRecord>[0],
+                  priceEntries
+                );
+                if (result.matched) {
+                  const label = result.entry.supplierName ? `${result.entry.woodSpecies} · ${result.entry.supplierName}` : `${result.entry.woodSpecies} (Global)`;
+                  setAutoFilledLabel(label);
+                  onChange({ ...item, woodSpecies: val, timberPricePerM3: result.entry.pricePerM3, timberPphRate: result.entry.timberPphRate });
+                  return;
+                }
+              }
+              setAutoFilledLabel(null);
+              updateField('woodSpecies', val);
+            }}
+            availableSpecies={availableSpecies} required id={`species-combobox-${item.id || index}`}
+          />
         </div>
         <div className="lg:col-span-2">
           <label className={labelCls}>Panjang m (长)</label>
@@ -190,6 +215,7 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
                 value={item.timberPricePerM3 ?? ''}
                 onChange={(e) => {
                   const val = e.target.value.trim();
+                  setAutoFilledLabel(null);
                   updateField('timberPricePerM3', val === '' ? null : (parseFloat(val) || 0));
                 }}
                 className={inputCls}
@@ -201,6 +227,12 @@ export const ManifestItemRow = React.memo(function ManifestItemRow({
                 onChange={(e) => updateField('timberPphRate', parseFloat(e.target.value) || 0)} className={inputCls} />
             </div>
           </div>
+          {autoFilledLabel && (
+            <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+              Auto: Rp {(item.timberPricePerM3 ?? 0).toLocaleString('id-ID')} · {autoFilledLabel}
+            </span>
+          )}
         </div>
       </div>
     </div>
