@@ -1436,9 +1436,10 @@ export interface ExportImportModalProps {
 export interface TimberPriceEntry {
   id: string;
   tenantId: string;
-  woodSpecies: string;
-  supplierId?: string;
-  supplierName?: string;
+  speciesId: string;            // FK -> WoodSpecies.id
+  woodSpecies: string;          // denormalized display name
+  supplierId?: string;          // FK -> Supplier.id, ON DELETE SET NULL
+  supplierName?: string;        // denormalized display name
   effectiveFrom: string;        // YYYY-MM-DD inclusive
   effectiveTo?: string;         // YYYY-MM-DD inclusive, undefined = still active
   pricePerM3: number;

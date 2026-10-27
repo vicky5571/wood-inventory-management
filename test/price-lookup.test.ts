@@ -41,6 +41,7 @@ describe('Price Lookup Utility Suite', () => {
     {
       id: 'tpe-jati-global-old',
       tenantId: 'default-tenant',
+      speciesId: 'spc-jati',
       woodSpecies: 'Jati Log',
       effectiveFrom: '2026-01-01',
       effectiveTo: '2026-02-28',
@@ -52,6 +53,7 @@ describe('Price Lookup Utility Suite', () => {
     {
       id: 'tpe-jati-global-current',
       tenantId: 'default-tenant',
+      speciesId: 'spc-jati',
       woodSpecies: 'Jati Log',
       effectiveFrom: '2026-03-01',
       effectiveTo: undefined,
@@ -63,6 +65,7 @@ describe('Price Lookup Utility Suite', () => {
     {
       id: 'tpe-jati-supplier-specific',
       tenantId: 'default-tenant',
+      speciesId: 'spc-jati',
       woodSpecies: 'Jati Log',
       supplierName: 'PT. Kayu Abadi',
       effectiveFrom: '2026-03-01',
@@ -75,6 +78,7 @@ describe('Price Lookup Utility Suite', () => {
     {
       id: 'tpe-merbau-global',
       tenantId: 'default-tenant',
+      speciesId: 'spc-merbau',
       woodSpecies: 'Merbau',
       effectiveFrom: '2026-01-01',
       effectiveTo: undefined,
@@ -118,6 +122,21 @@ describe('Price Lookup Utility Suite', () => {
     if (res.matched) {
       assert.equal(res.entry.id, 'tpe-jati-global-old');
       assert.equal(res.entry.pricePerM3, 3000000);
+    }
+  });
+
+  it('matches via speciesId even when display woodSpecies differs slightly', () => {
+    const recordWithSpeciesId = {
+      ...baseRecord,
+      woodSpecies: 'Jati Merah Super', // string differs
+      speciesId: 'spc-jati',          // ID matches
+      supplierName: 'CV. Other Supplier',
+    };
+    const res = lookupPriceForRecord(recordWithSpeciesId as unknown as WoodReceivingRecord, sampleEntries);
+    assert.equal(res.matched, true);
+    if (res.matched) {
+      assert.equal(res.entry.id, 'tpe-jati-global-current');
+      assert.equal(res.entry.speciesId, 'spc-jati');
     }
   });
 

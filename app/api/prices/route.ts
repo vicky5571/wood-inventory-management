@@ -25,9 +25,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    if (!body.woodSpecies || body.pricePerM3 == null || !body.effectiveFrom) {
+    if (!body.speciesId || !body.woodSpecies || body.pricePerM3 == null || !body.effectiveFrom) {
       return NextResponse.json(
-        { success: false, error: 'Jenis kayu, harga/m³, dan tanggal berlaku dari wajib diisi' },
+        { success: false, error: 'Jenis kayu (ID dan nama), harga/m³, dan tanggal berlaku dari wajib diisi' },
         { status: 400 }
       );
     }

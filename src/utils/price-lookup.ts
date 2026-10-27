@@ -27,10 +27,14 @@ export function lookupPriceForRecord(
   allEntries: TimberPriceEntry[]
 ): PriceLookupResult {
   const receiptDate = record.receiptDate;
+  const recSpeciesId = (record as unknown as { speciesId?: string }).speciesId;
   const targetSpecies = (record.woodSpecies || '').trim().toLowerCase();
 
   const candidates = allEntries.filter((e) => {
-    if ((e.woodSpecies || '').trim().toLowerCase() !== targetSpecies) return false;
+    const speciesMatch = recSpeciesId
+      ? e.speciesId === recSpeciesId
+      : (e.woodSpecies || '').trim().toLowerCase() === targetSpecies;
+    if (!speciesMatch) return false;
     if (e.effectiveFrom > receiptDate) return false;
     if (e.effectiveTo && e.effectiveTo < receiptDate) return false;
     return true;

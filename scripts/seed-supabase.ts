@@ -31,6 +31,7 @@ export interface SupabaseSeedResult {
   production: number;
   sorting: number;
   users: number;
+  prices: number;
 }
 
 export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
@@ -393,6 +394,20 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     is_active: u.isActive,
   })));
 
+  await upsert('timber_price_entries', fixtures.SEED_TIMBER_PRICES.map((p) => ({
+    id: p.id,
+    tenant_id: p.tenantId,
+    wood_species: p.woodSpecies,
+    supplier_id: p.supplierId || null,
+    supplier_name: p.supplierName || null,
+    effective_from: p.effectiveFrom,
+    effective_to: p.effectiveTo || null,
+    price_per_m3: p.pricePerM3,
+    timber_pph_rate: p.timberPphRate,
+    notes: p.notes || null,
+    created_by: p.createdBy || null,
+  })));
+
   return {
     tenants: fixtures.SEED_TENANTS.length,
     settings: 1,
@@ -402,6 +417,7 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     suppliers: fixtures.SEED_SUPPLIERS.length,
     brokers: fixtures.SEED_BROKERS.length,
     users: fixtures.SEED_USERS.length,
+    prices: fixtures.SEED_TIMBER_PRICES.length,
     contracts: fixtures.SEED_CONTRACTS.length,
     sortimentItems: fixtures.SEED_SORTIMENT_ITEMS.length,
     contractReceipts: fixtures.SEED_CONTRACT_RECEIPTS.length,

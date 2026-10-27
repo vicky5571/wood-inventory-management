@@ -7,6 +7,7 @@ import { ensureSortingTables } from './sorting-queries.ts';
 import { ensurePriceTables } from './price-queries.ts';
 import { ensureReportPeriodTables } from './report-period-queries.ts';
 import { createUsersTable } from './user-tables.ts';
+import { runPhase2Migrations } from './migrations-phase2.ts';
 
 export { createUsersTable };
 
@@ -243,4 +244,5 @@ export function runMigrations(db: DatabaseSync): void {
   createUsersTable(db);
   const viewCols = db.prepare(`PRAGMA table_info(v_buku_besar_flat);`).all() as { name: string }[];
   if (!viewCols.some((c) => c.name === 'reportPeriodId')) db.exec(SQLITE_VIEWS_DDL);
+  runPhase2Migrations(db);
 }

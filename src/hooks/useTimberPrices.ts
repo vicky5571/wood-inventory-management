@@ -33,6 +33,7 @@ export function useTimberPrices() {
   const saveEntry = useCallback(
     async (
       entry: Partial<TimberPriceEntry> & {
+        speciesId: string;
         woodSpecies: string;
         pricePerM3: number;
         effectiveFrom: string;

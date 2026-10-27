@@ -23,6 +23,7 @@ export interface SeedResult {
   lots: number;
   suppliers: number;
   brokers: number;
+  prices: number;
   contracts: number;
   sortimentItems: number;
   contractReceipts: number;
@@ -59,6 +60,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     upsertLots(db);
     upsertSuppliers(db);
     upsertBrokers(db);
+    upsertPriceEntries(db);
 
     // Contracts
     upsertContracts(db);
@@ -109,6 +111,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     lots: count('storage_lots'),
     suppliers: count('suppliers'),
     brokers: count('brokers'),
+    prices: count('timber_price_entries'),
     contracts: count('perhutani_contracts'),
     sortimentItems: count('contract_sortiment_items'),
     contractReceipts: count('contract_receipts'),
@@ -211,6 +214,45 @@ function upsertBrokers(db: DatabaseSync) {
   `);
   for (const b of fixtures.SEED_BROKERS) {
     stmt.run(b.id, b.code, b.name, b.contactPerson || null, b.phone || null, b.address || null, b.taxId || null, b.defaultCommissionPerM3 ?? null, b.notes || null, b.status);
+  }
+}
+
+function upsertPriceEntries(db: DatabaseSync) {
+  const stmt = db.prepare(`
+    INSERT INTO timber_price_entries (
+      id, tenant_id, species_id, wood_species_name, supplier_id, supplier_name,
+      effective_from, effective_to, price_per_m3, timber_pph_rate,
+      notes, created_by, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      species_id = excluded.species_id,
+      wood_species_name = excluded.wood_species_name,
+      supplier_id = excluded.supplier_id,
+      supplier_name = excluded.supplier_name,
+      effective_from = excluded.effective_from,
+      effective_to = excluded.effective_to,
+      price_per_m3 = excluded.price_per_m3,
+      timber_pph_rate = excluded.timber_pph_rate,
+      notes = excluded.notes,
+      updated_at = datetime('now');
+  `);
+  for (const p of fixtures.SEED_TIMBER_PRICES) {
+    stmt.run(
+      p.id,
+      p.tenantId,
+      p.speciesId,
+      p.woodSpecies,
+      p.supplierId || null,
+      p.supplierName || null,
+      p.effectiveFrom,
+      p.effectiveTo || null,
+      p.pricePerM3,
+      p.timberPphRate,
+      p.notes || null,
+      p.createdBy || null,
+      p.createdAt,
+      p.updatedAt
+    );
   }
 }
 
@@ -507,6 +549,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   console.log(`   - Wood Species:             ${stats.species}`);
   console.log(`   - Suppliers:                ${stats.suppliers}`);
   console.log(`   - Brokers:                  ${stats.brokers}`);
+  console.log(`   - Timber Prices:            ${stats.prices}`);
   console.log(`   - Users:                    ${stats.users}`);
   console.log(`   - Perhutani Contracts:      ${stats.contracts}`);
   console.log(`   - Contract Sortiment Items: ${stats.sortimentItems}`);
