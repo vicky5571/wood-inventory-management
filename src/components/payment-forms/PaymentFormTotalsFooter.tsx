@@ -12,14 +12,23 @@ import type { PaymentForm } from '../../types/index.ts';
 
 interface PaymentFormTotalsFooterProps {
   form: PaymentForm;
+  isDirty?: boolean;
 }
 
-export function PaymentFormTotalsFooter({ form }: PaymentFormTotalsFooterProps) {
+export function PaymentFormTotalsFooter({ form, isDirty }: PaymentFormTotalsFooterProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 mb-8">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">
-        Ringkasan Keuangan & Volume (金额及体积汇总)
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+          Ringkasan Keuangan & Volume (金额及体积汇总)
+        </h3>
+        {isDirty && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+            Preview — Belum Disimpan
+          </span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">

@@ -45,6 +45,7 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
   const [lines, setLines] = useState<PaymentFormLineItem[]>([]);
   const [terbilangVal, setTerbilangVal] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (formId) {
@@ -69,6 +70,7 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
     setLines(newLines);
     const totals = computeFormTotals(newLines);
     setTerbilangVal(totals.terbilang);
+    setIsDirty(true);
   };
 
   const handleSaveDraft = async () => {
@@ -89,6 +91,7 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
         totalTimberPphIDR: totals.totalTimberPphIDR,
         totalTimberNetIDR: totals.totalTimberNetIDR,
       });
+      setIsDirty(false);
     } finally {
       setIsSaving(false);
     }
@@ -122,6 +125,17 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
 
   const isDraft = activeForm.status === 'DRAFT';
 
+  const footerTotals = isDraft
+    ? computeFormTotals(lines)
+    : {
+        totalAmountIDR: activeForm.totalAmountIDR,
+        totalTallyVolumeM3: activeForm.totalTallyVolumeM3,
+        totalTallyPieces: activeForm.totalTallyPieces,
+        totalTimberGrossIDR: activeForm.totalTimberGrossIDR,
+        totalTimberPphIDR: activeForm.totalTimberPphIDR,
+        totalTimberNetIDR: activeForm.totalTimberNetIDR,
+      };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <PaymentFormHeaderCard
@@ -153,7 +167,7 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
         <PaymentFormLinesTable lines={activeForm.lines || []} />
       )}
 
-      <PaymentFormTotalsFooter form={{ ...activeForm, lines, totalAmountIDR: computeFormTotals(lines).totalAmountIDR }} />
+      <PaymentFormTotalsFooter form={{ ...activeForm, ...footerTotals }} isDirty={isDirty} />
 
       {/* Modals */}
       <PrintPaymentFormModal
