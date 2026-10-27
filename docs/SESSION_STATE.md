@@ -45,13 +45,16 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 16 | Ledger Export / Import Modal | `docs/superpowers/export-import-spec.md` | `docs/superpowers/export-import-implementation-plan.md` | ✅ Completed |
 | 17 | Storage Settings Fix (CRUD & Live Occupancy) | `docs/superpowers/storage-settings-fix-spec.md` | `docs/superpowers/storage-settings-fix-implementation-plan.md` | ✅ Completed |
 | 18 | Timber Price Database & Report Period Close | `docs/superpowers/price-database-spec.md` | `docs/superpowers/price-database-impl.md` | ✅ Completed |
+| 19 | Database Relasi & Price System Fixes (DB Fix 01–07) | `docs/superpowers/HANDOVER-db-fixes.md` | `docs/superpowers/db-fix-01..07` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-27):**
-- `npm test` → 930 passed, 0 failed (100% clean)
+- `npm test` → 949 passed, 0 failed (100% clean)
 - `npm run build:check` → 0 errors (Next.js production build clean, 25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
+- `npm run test:smoke` → ✅ Passed
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
+
 
 ---
 
@@ -332,20 +335,22 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Timber Price Database & Report Period Close (Module #18) completed and verified. All 18 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 930 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
+**Status:** Database Relasi & Price System Fixes (DB Fix 01–07, Module #19) completed and verified across 7 atomic commits. All 19 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 949 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#18).
-2. **If client clarifies DPB rakyat questions** → start Spec #19:
+1. **Monitor client feedback** on shipped features (Items #1-#19).
+2. **If client clarifies DPB rakyat questions** → start Spec #20:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
    ```
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 930 passed, 0 failed
+- `npm test` → 949 passed, 0 failed
 - `npm run build:check` → 0 errors (25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
+- `npm run test:smoke` → ✅ Passed
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 24ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
+
