@@ -1204,7 +1204,7 @@ export type PaymentFormStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'VOID';
 export interface PaymentForm {
   id: string;
   tenantId: string;
-  preprintedNumber: string;           // User-input from physical carbon book (e.g. "018532")
+  preprintedNumber: string;           // Auto-generated at ISSUED: "KWT-YYYYMM-NNNN" (ADR-0016). Empty string while DRAFT.
   issueDate: string;                  // Single date printed on form (YYYY-MM-DD)
   weekStartDate: string;              // Saturday (YYYY-MM-DD)
   weekEndDate: string;                // Friday (YYYY-MM-DD)

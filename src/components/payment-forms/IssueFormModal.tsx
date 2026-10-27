@@ -4,7 +4,7 @@
  * src/components/payment-forms/IssueFormModal.tsx
  *
  * Modal dialog for transitioning PaymentForm from DRAFT to ISSUED.
- * Enforces input of preprinted serial number (buku kwitansi) and issue date per ADR-0006.
+ * Captures issue date; form number is auto-generated (KWT-YYYYMM-NNNN) per ADR-0016.
  */
 
 import React, { useState } from 'react';
@@ -15,12 +15,11 @@ interface IssueFormModalProps {
   isOpen: boolean;
   form: PaymentFormWithLines;
   onClose: () => void;
-  onConfirm: (formId: string, data?: { preprintedNumber: string; issueDate: string }) => Promise<unknown>;
+  onConfirm: (formId: string, data?: { issueDate: string }) => Promise<unknown>;
 }
 
 export function IssueFormModal({ isOpen, form, onClose, onConfirm }: IssueFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [preprintedNumber, setPreprintedNumber] = useState(form.preprintedNumber || '');
   const [issueDate, setIssueDate] = useState(
     form.issueDate || new Date().toISOString().slice(0, 10)
   );
@@ -29,10 +28,6 @@ export function IssueFormModal({ isOpen, form, onClose, onConfirm }: IssueFormMo
   if (!isOpen) return null;
 
   const handleIssue = async () => {
-    if (!preprintedNumber.trim()) {
-      setValidationError('Nomor Kwitansi Buku fisik wajib diisi (e.g. 018532)');
-      return;
-    }
     if (!issueDate.trim()) {
       setValidationError('Tanggal terbit dokumen wajib diisi');
       return;
@@ -42,7 +37,6 @@ export function IssueFormModal({ isOpen, form, onClose, onConfirm }: IssueFormMo
     setValidationError(null);
     try {
       await onConfirm(form.id, {
-        preprintedNumber: preprintedNumber.trim(),
         issueDate: issueDate.trim(),
       });
       onClose();
@@ -78,26 +72,16 @@ export function IssueFormModal({ isOpen, form, onClose, onConfirm }: IssueFormMo
 
         <div className="p-6">
           <p className="text-xs text-gray-600 mb-4">
-            Masukkan nomor seri dari buku kwitansi fisik dan tanggal terbit untuk mengunci tagihan ini.
+            Pilih tanggal terbit untuk menerbitkan dan mengunci lembar tagihan ini.
           </p>
 
           <div className="space-y-3.5 mb-5">
-            <div>
-              <label className="block text-xs font-semibold text-gray-800 mb-1">
-                No. Kwitansi Buku Fisik (收据编号) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={preprintedNumber}
-                onChange={(e) => {
-                  setPreprintedNumber(e.target.value);
-                  setValidationError(null);
-                }}
-                placeholder="Contoh: 018532"
-                className="w-full px-3 py-2 text-sm font-mono font-bold text-gray-950 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              />
-              <span className="text-[10px] text-gray-400 mt-1 block">
-                Nomor seri tercetak di pojok kanan atas lembar kwitansi karbon
+            <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex items-center gap-2">
+              <span className="text-xs text-gray-500 shrink-0">No. Kwitansi</span>
+              <span className="text-xs font-mono font-bold text-gray-400 italic">
+                {form.preprintedNumber && form.preprintedNumber.trim()
+                  ? form.preprintedNumber
+                  : 'Akan di-generate otomatis'}
               </span>
             </div>
 

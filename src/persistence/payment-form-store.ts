@@ -72,7 +72,7 @@ class PaymentFormStore {
   public async updateStatus(
     id: string,
     status: PaymentFormStatus,
-    data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; preprintedNumber?: string; issueDate?: string },
+    data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; issueDate?: string },
     tenantId: string = 'default-tenant'
   ): Promise<PaymentFormWithLines> {
     const db = this.getDb();

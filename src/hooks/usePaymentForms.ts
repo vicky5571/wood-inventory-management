@@ -150,7 +150,7 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
     async (
       id: string,
       status: PaymentFormStatus,
-      data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; preprintedNumber?: string; issueDate?: string }
+      data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; issueDate?: string }
     ): Promise<PaymentFormWithLines> => {
       const previousForms = forms;
       setForms((prev) => prev.map((f) => (f.id === id ? { ...f, status, ...data, updatedAt: new Date().toISOString() } : f)));

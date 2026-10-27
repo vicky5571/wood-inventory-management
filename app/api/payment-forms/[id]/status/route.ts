@@ -44,7 +44,6 @@ export async function PATCH(
       paymentDate: body.paymentDate,
       paymentMethod: body.paymentMethod,
       notes: body.notes,
-      preprintedNumber: body.preprintedNumber,
       issueDate: body.issueDate,
     });
 

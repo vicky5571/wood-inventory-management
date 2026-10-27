@@ -109,7 +109,6 @@ test('Payment Forms API Endpoints Suite', async (t) => {
     const formId = (await createRes.json()).data.id;
 
     const putReq = createMockRequest(`http://localhost:3000/api/payment-forms/${formId}`, 'PUT', {
-      preprintedNumber: '018999',
       issueDate: '2026-10-22',
       notes: 'Catatan edit draft',
       lines: [
@@ -130,7 +129,6 @@ test('Payment Forms API Endpoints Suite', async (t) => {
     const putRes = await updateForm(putReq, { params: Promise.resolve({ id: formId }) });
     assert.equal(putRes.status, 200);
     const putJson = await putRes.json();
-    assert.equal(putJson.data.preprintedNumber, '018999');
     assert.equal(putJson.data.issueDate, '2026-10-22');
     assert.equal(putJson.data.lines.length, 1);
     assert.equal(putJson.data.lines[0].kategori, 'Pembelian Kayu');
@@ -147,24 +145,26 @@ test('Payment Forms API Endpoints Suite', async (t) => {
     const createRes = await createForm(createReq);
     const formId = (await createRes.json()).data.id;
 
-    // 2. Transition to ISSUED fails without preprintedNumber and issueDate
+    // 2. Transition to ISSUED fails without issueDate
     const failIssueReq = createMockRequest(`http://localhost:3000/api/payment-forms/${formId}/status`, 'PATCH', {
       status: 'ISSUED',
     }, 1);
     const failIssueRes = await updateStatus(failIssueReq, { params: Promise.resolve({ id: formId }) });
     assert.equal(failIssueRes.status, 400);
+    const failJson = await failIssueRes.json();
+    assert.match(failJson.error, /Tanggal Terbit/);
 
-    // 3. Transition to ISSUED succeeds with preprintedNumber and issueDate
+    // 3. Transition to ISSUED succeeds with auto-generated preprintedNumber
     const issueReq = createMockRequest(`http://localhost:3000/api/payment-forms/${formId}/status`, 'PATCH', {
       status: 'ISSUED',
-      preprintedNumber: '018532',
       issueDate: '2026-10-22',
     }, 1);
     const issueRes = await updateStatus(issueReq, { params: Promise.resolve({ id: formId }) });
     assert.equal(issueRes.status, 200);
     const issueJson = await issueRes.json();
     assert.equal(issueJson.data.status, 'ISSUED');
-    assert.equal(issueJson.data.preprintedNumber, '018532');
+    assert.match(issueJson.data.preprintedNumber, /^KWT-\d{6}-\d{4}$/);
+    assert.notEqual(issueJson.data.preprintedNumber.trim(), '');
 
     // 4. Transition to PAID
     const paidReq = createMockRequest(`http://localhost:3000/api/payment-forms/${formId}/status`, 'PATCH', {
@@ -178,6 +178,49 @@ test('Payment Forms API Endpoints Suite', async (t) => {
     const paidJson = await paidRes.json();
     assert.equal(paidJson.data.status, 'PAID');
     assert.equal(paidJson.data.invoiceNumber, 'INV-2026-001');
+  });
+
+  await t.test('PATCH /api/payment-forms/[id]/status increments form number sequentially per month', async () => {
+    const createReq1 = createMockRequest('http://localhost:3000/api/payment-forms', 'POST', {
+      weekStartDate: '2026-11-01',
+      supplierName: 'PT Seq Test 1',
+      woodSpecies: 'Jati',
+    }, 1);
+    const form1Id = (await (await createForm(createReq1)).json()).data.id;
+
+    const createReq2 = createMockRequest('http://localhost:3000/api/payment-forms', 'POST', {
+      weekStartDate: '2026-11-01',
+      supplierName: 'PT Seq Test 2',
+      woodSpecies: 'Jati',
+    }, 1);
+    const form2Id = (await (await createForm(createReq2)).json()).data.id;
+
+    const issue1 = await updateStatus(
+      createMockRequest(`http://localhost:3000/api/payment-forms/${form1Id}/status`, 'PATCH', {
+        status: 'ISSUED',
+        issueDate: '2026-11-05',
+      }, 1),
+      { params: Promise.resolve({ id: form1Id }) }
+    );
+    const json1 = await issue1.json();
+    assert.equal(issue1.status, 200);
+
+    const issue2 = await updateStatus(
+      createMockRequest(`http://localhost:3000/api/payment-forms/${form2Id}/status`, 'PATCH', {
+        status: 'ISSUED',
+        issueDate: '2026-11-06',
+      }, 1),
+      { params: Promise.resolve({ id: form2Id }) }
+    );
+    const json2 = await issue2.json();
+    assert.equal(issue2.status, 200);
+
+    assert.match(json1.data.preprintedNumber, /^KWT-202611-\d{4}$/);
+    assert.match(json2.data.preprintedNumber, /^KWT-202611-\d{4}$/);
+
+    const seq1 = parseInt(json1.data.preprintedNumber.split('-')[2], 10);
+    const seq2 = parseInt(json2.data.preprintedNumber.split('-')[2], 10);
+    assert.equal(seq2, seq1 + 1, 'Second form sequence should be exactly next integer');
   });
 
   await t.test('DELETE /api/payment-forms/[id] marks form as VOID', async () => {

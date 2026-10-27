@@ -232,7 +232,7 @@ function mapRowToPaymentForm(row: PaymentFormRow): PaymentForm {
   return {
     id: row.id, tenantId: row.tenant_id,
     preprintedNumber: row.preprinted_number ?? row.form_number ?? '',
-    issueDate: row.issue_date || (row.created_at ? row.created_at.slice(0, 10) : ''),
+    issueDate: row.issue_date || '',
     weekStartDate: row.week_start_date, weekEndDate: row.week_end_date,
     supplierName: row.supplier_name, supplierId: row.supplier_id || '',
     woodSpecies: row.wood_species, speciesId: row.species_id || undefined, contractNumber: row.contract_number || '', lines: [],
@@ -388,9 +388,23 @@ export function unlinkRecordsFromForm(db: DatabaseSync, formId: string): void {
   db.prepare(`UPDATE receiving_items SET payment_form_id = NULL WHERE payment_form_id = ?`).run(formId);
 }
 
+function generateFormNumber(db: DatabaseSync, tenantId: string, issueDate: string): string {
+  const yyyymm = issueDate.slice(0, 7).replace('-', ''); // "2026-11-03" → "202611"
+  const prefix = `KWT-${yyyymm}-`;
+  const row = db.prepare(`
+    SELECT COALESCE(MAX(CAST(SUBSTR(preprinted_number, ?) AS INTEGER)), 0) + 1 AS next_seq
+    FROM payment_forms
+    WHERE tenant_id = ?
+      AND preprinted_number LIKE ?
+      AND status != 'VOID'
+  `).get(prefix.length + 1, tenantId, `${prefix}%`) as { next_seq: number };
+  const seq = String(row.next_seq).padStart(4, '0');
+  return `${prefix}${seq}`;
+}
+
 export function updatePaymentFormStatus(
   db: DatabaseSync, id: string, targetStatus: PaymentFormStatus,
-  data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; preprintedNumber?: string; issueDate?: string },
+  data?: { invoiceNumber?: string; paymentDate?: string; paymentMethod?: string; notes?: string; issueDate?: string },
   tenantId: string = 'default-tenant'
 ): PaymentFormWithLines {
   const existing = getPaymentFormById(db, id, tenantId);
@@ -402,12 +416,15 @@ export function updatePaymentFormStatus(
     (current === 'PAID' && targetStatus === 'VOID');
   if (!valid) throw new Error(`Invalid status transition from ${current} to ${targetStatus}`);
 
-  const prepNum = data?.preprintedNumber !== undefined ? data.preprintedNumber : existing.preprintedNumber;
   const issDate = data?.issueDate !== undefined ? data.issueDate : existing.issueDate;
   if (targetStatus === 'ISSUED') {
-    if (!prepNum.trim()) throw new Error('No. Kwitansi Buku (preprintedNumber) wajib diisi sebelum menerbitkan form');
     if (!issDate.trim()) throw new Error('Tanggal Terbit (issueDate) wajib diisi sebelum menerbitkan form');
   }
+
+  // Auto-generate form number at ISSUED transition (ADR-0016)
+  const prepNum = (targetStatus === 'ISSUED' && !existing.preprintedNumber.trim())
+    ? generateFormNumber(db, tenantId, issDate)
+    : existing.preprintedNumber;
 
   const now = new Date().toISOString();
   let issuedAt = existing.issuedAt;
