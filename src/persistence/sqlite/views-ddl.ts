@@ -105,6 +105,7 @@ export const SQLITE_VIEWS_DDL = `
     sup.name AS supplierName,
     m.broker_id AS brokerId,
     f.species_name AS woodSpecies,
+    i.species_id AS speciesId,
     i.wood_length_m AS woodLengthM,
     COALESCE(f.kavling_number, '') AS kavlingNumber,
     COALESCE(f.storage_yard, '') AS storageYard,

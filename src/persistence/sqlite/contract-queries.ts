@@ -48,6 +48,7 @@ export function ensureContractTables(db: DatabaseSync): void {
       tenant_id TEXT NOT NULL DEFAULT 'default-tenant',
       item_sequence INTEGER NOT NULL DEFAULT 1,
       wood_species TEXT NOT NULL,
+      species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL,
       grade TEXT NOT NULL,
       wood_length_m REAL,
       volume_m3 REAL NOT NULL CHECK (volume_m3 >= 0),
@@ -103,6 +104,7 @@ function mapRowToSortiment(row: Record<string, unknown>): ContractSortimentItem 
     tenantId: String(row.tenant_id),
     itemSequence: Number(row.item_sequence),
     woodSpecies: String(row.wood_species),
+    speciesId: row.species_id ? String(row.species_id) : undefined,
     grade: String(row.grade),
     woodLengthM: row.wood_length_m !== null ? Number(row.wood_length_m) : undefined,
     volumeM3: Number(row.volume_m3),
@@ -215,13 +217,22 @@ export class ContractQueries {
     this.db.prepare(`DELETE FROM contract_sortiment_items WHERE contract_id = ?`).run(contractId);
     const stmt = this.db.prepare(`
       INSERT INTO contract_sortiment_items (
-        id, contract_id, tenant_id, item_sequence, wood_species, grade,
+        id, contract_id, tenant_id, item_sequence, wood_species, species_id, grade,
         wood_length_m, volume_m3, pieces, price_per_m3, subtotal_idr, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const item of items) {
+      let spId = item.speciesId || null;
+      if (!spId && item.woodSpecies) {
+        try {
+          const row = this.db.prepare('SELECT id FROM wood_species WHERE LOWER(common_name) = LOWER(?) LIMIT 1').get(item.woodSpecies.trim()) as { id: string } | undefined;
+          spId = row?.id || null;
+        } catch {
+          spId = null;
+        }
+      }
       stmt.run(
-        item.id, contractId, item.tenantId, item.itemSequence, item.woodSpecies, item.grade,
+        item.id, contractId, item.tenantId, item.itemSequence, item.woodSpecies, spId, item.grade,
         item.woodLengthM ?? null, item.volumeM3, item.pieces ?? null, item.pricePerM3,
         item.subtotalIDR, item.notes ?? null
       );

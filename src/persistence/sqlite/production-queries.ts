@@ -10,6 +10,11 @@ import { computeProductionYield } from '../../utils/production-calc.ts';
 
 export function ensureProductionTables(db: DatabaseSync): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS wood_species (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      common_name TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS sawmill_production_records (
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL DEFAULT 'default-tenant' REFERENCES tenants(id) ON DELETE CASCADE,
@@ -18,6 +23,7 @@ export function ensureProductionTables(db: DatabaseSync): void {
       source_storage_yard TEXT NOT NULL,
       source_kavling_number TEXT NOT NULL,
       input_species TEXT NOT NULL,
+      species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL,
       input_volume_m3 REAL NOT NULL CHECK (input_volume_m3 > 0),
       input_pieces INTEGER NOT NULL CHECK (input_pieces > 0),
       output_product TEXT NOT NULL,
@@ -41,6 +47,7 @@ interface SqliteProductionRow {
   source_storage_yard: string;
   source_kavling_number: string;
   input_species: string;
+  species_id?: string | null;
   input_volume_m3: number;
   input_pieces: number;
   output_product: string;
@@ -50,6 +57,16 @@ interface SqliteProductionRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | null {
+  if (!woodSpeciesName) return null;
+  try {
+    const row = db.prepare('SELECT id FROM wood_species WHERE LOWER(common_name) = LOWER(?) LIMIT 1').get(woodSpeciesName.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function mapRowToProductionRecord(row: SqliteProductionRow): SawmillProductionRecord {
@@ -66,6 +83,7 @@ function mapRowToProductionRecord(row: SqliteProductionRow): SawmillProductionRe
     sourceStorageYard: row.source_storage_yard,
     sourceKavlingNumber: row.source_kavling_number,
     inputSpecies: row.input_species,
+    speciesId: row.species_id || undefined,
     inputVolumeM3: Number(row.input_volume_m3),
     inputPieces: Number(row.input_pieces),
     outputProduct: row.output_product,
@@ -109,14 +127,15 @@ export class ProductionQueries {
   ): SawmillProductionRecord {
     const now = new Date().toISOString();
     const tenantId = record.tenantId || 'default-tenant';
+    const speciesId = record.speciesId || resolveSpeciesId(this.db, record.inputSpecies);
     const stmt = this.db.prepare(`
       INSERT INTO sawmill_production_records (
         id, tenant_id, production_date, shift,
         source_storage_yard, source_kavling_number,
-        input_species, input_volume_m3, input_pieces,
+        input_species, species_id, input_volume_m3, input_pieces,
         output_product, output_volume_m3, output_pieces,
         operator_name, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -127,6 +146,7 @@ export class ProductionQueries {
       record.sourceStorageYard,
       record.sourceKavlingNumber,
       record.inputSpecies,
+      speciesId,
       record.inputVolumeM3,
       record.inputPieces,
       record.outputProduct,
@@ -149,6 +169,10 @@ export class ProductionQueries {
     if (!existing) throw new Error(`Production record ${record.id} not found`);
 
     const now = new Date().toISOString();
+    const speciesId = record.speciesId !== undefined
+      ? (record.speciesId || null)
+      : (record.inputSpecies ? resolveSpeciesId(this.db, record.inputSpecies) : (existing.speciesId || null));
+
     const stmt = this.db.prepare(`
       UPDATE sawmill_production_records SET
         production_date = ?,
@@ -156,6 +180,7 @@ export class ProductionQueries {
         source_storage_yard = ?,
         source_kavling_number = ?,
         input_species = ?,
+        species_id = ?,
         input_volume_m3 = ?,
         input_pieces = ?,
         output_product = ?,
@@ -173,6 +198,7 @@ export class ProductionQueries {
       record.sourceStorageYard ?? existing.sourceStorageYard,
       record.sourceKavlingNumber ?? existing.sourceKavlingNumber,
       record.inputSpecies ?? existing.inputSpecies,
+      speciesId,
       record.inputVolumeM3 ?? existing.inputVolumeM3,
       record.inputPieces ?? existing.inputPieces,
       record.outputProduct ?? existing.outputProduct,

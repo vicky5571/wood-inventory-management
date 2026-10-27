@@ -151,6 +151,7 @@ export interface WoodReceivingRecord {
 
   // Wood Specifications & Yard Location
   woodSpecies: string;           // Jenis Kayu / 树种 (e.g. Teak, Merbau, Mahoni, Sengon)
+  speciesId?: string;            // Optional FK to WoodSpecies.id
   woodLengthM: number;           // Panjang Kayu (in meters)
   kavlingNumber: string;         // Nomer Kav / 进厂批号 (Yard Lot / Stack ID)
   storageYard: string;           // TPK / 木堆场地
@@ -982,6 +983,7 @@ export interface WoodSalesRecord {
   storageYard: string;            // TPK sumber (e.g. TPK-Timur)
   kavlingNumber: string;          // Kavling sumber (e.g. KAV-01)
   woodSpecies: string;            // Jenis Kayu (e.g. Meranti)
+  speciesId?: string;             // Optional FK to WoodSpecies.id
   pieces: number;                 // Batang terjual
   volumeM3: number;               // Volume terjual (m³)
   pricePerM3: number;             // Harga jual per m³ (IDR)
@@ -1095,6 +1097,7 @@ export interface ContractSortimentItem {
   tenantId: string;
   itemSequence: number;
   woodSpecies: string;
+  speciesId?: string;
   grade: string;
   woodLengthM?: number;
   volumeM3: number;
@@ -1208,6 +1211,7 @@ export interface PaymentForm {
   supplierName: string;
   supplierId?: string;
   woodSpecies: string;
+  speciesId?: string;
   contractNumber: string;             // Empty string for non-contract
 
   // Content references
@@ -1321,6 +1325,7 @@ export interface SawmillProductionRecord {
   sourceStorageYard: string;
   sourceKavlingNumber: string;
   inputSpecies: string;
+  speciesId?: string;
   inputVolumeM3: number;
   inputPieces: number;
 
@@ -1345,6 +1350,7 @@ export interface StockSortingRecord {
   sortingDate: string;                 // YYYY-MM-DD
 
   species: string;
+  speciesId?: string;
 
   sourceStorageYard: string;
   sourceKavlingNumber: string;

@@ -25,6 +25,7 @@ interface PaymentFormRow {
   supplier_name: string;
   supplier_id?: string | null;
   wood_species: string;
+  species_id?: string | null;
   contract_number?: string | null;
   record_ids?: string;
   item_ids?: string;
@@ -184,8 +185,22 @@ export function ensurePaymentFormTables(db: DatabaseSync): void {
       db.exec(`ALTER TABLE receiving_items ADD COLUMN payment_form_id TEXT REFERENCES payment_forms(id) ON DELETE SET NULL;`);
       db.exec(`CREATE INDEX IF NOT EXISTS idx_items_payment_form ON receiving_items(payment_form_id);`);
     }
+    const formCols = db.prepare(`PRAGMA table_info(payment_forms);`).all() as { name: string }[];
+    if (!formCols.some((c) => c.name === 'species_id')) {
+      db.exec(`ALTER TABLE payment_forms ADD COLUMN species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL;`);
+    }
   } catch (err) {
     console.warn('Payment form column migrations notice:', err);
+  }
+}
+
+function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | null {
+  if (!woodSpeciesName) return null;
+  try {
+    const row = db.prepare('SELECT id FROM wood_species WHERE LOWER(common_name) = LOWER(?) LIMIT 1').get(woodSpeciesName.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -196,7 +211,7 @@ function mapRowToPaymentForm(row: PaymentFormRow): PaymentForm {
     issueDate: row.issue_date || (row.created_at ? row.created_at.slice(0, 10) : ''),
     weekStartDate: row.week_start_date, weekEndDate: row.week_end_date,
     supplierName: row.supplier_name, supplierId: row.supplier_id || undefined,
-    woodSpecies: row.wood_species, contractNumber: row.contract_number || '', lines: [],
+    woodSpecies: row.wood_species, speciesId: row.species_id || undefined, contractNumber: row.contract_number || '', lines: [],
     recordIds: JSON.parse(row.record_ids || '[]'), itemIds: JSON.parse(row.item_ids || '[]'),
     totalAmountIDR: Number(row.total_amount_idr) || Number(row.total_timber_net_idr) || 0,
     terbilang: row.terbilang || '', totalTallyVolumeM3: Number(row.total_tally_volume_m3) || 0,
@@ -262,16 +277,17 @@ export function getPaymentFormById(db: DatabaseSync, id: string, tenantId: strin
 }
 
 export function createPaymentForm(db: DatabaseSync, form: PaymentForm): PaymentForm {
+  const speciesId = form.speciesId || resolveSpeciesId(db, form.woodSpecies);
   db.prepare(`
     INSERT INTO payment_forms (
-      id, tenant_id, preprinted_number, issue_date, week_start_date, week_end_date, supplier_name, supplier_id, wood_species,
+      id, tenant_id, preprinted_number, issue_date, week_start_date, week_end_date, supplier_name, supplier_id, wood_species, species_id,
       contract_number, record_ids, item_ids, total_amount_idr, terbilang, total_tally_volume_m3, total_tally_pieces,
       total_timber_gross_idr, total_timber_pph_idr, total_timber_net_idr, status, issued_at, paid_at, invoice_number,
       payment_date, payment_method, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     form.id, form.tenantId, form.preprintedNumber || '', form.issueDate || '', form.weekStartDate, form.weekEndDate,
-    form.supplierName, form.supplierId || null, form.woodSpecies, form.contractNumber || '',
+    form.supplierName, form.supplierId || null, form.woodSpecies, speciesId, form.contractNumber || '',
     JSON.stringify(form.recordIds), JSON.stringify(form.itemIds), form.totalAmountIDR || 0, form.terbilang || '',
     form.totalTallyVolumeM3, form.totalTallyPieces, form.totalTimberGrossIDR, form.totalTimberPphIDR, form.totalTimberNetIDR,
     form.status, form.issuedAt || null, form.paidAt || null, form.invoiceNumber || null, form.paymentDate || null,

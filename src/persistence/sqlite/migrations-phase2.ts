@@ -5,10 +5,13 @@
  * Keeps migrations.ts strictly under the 250 LOC threshold.
  */
 import type { DatabaseSync } from 'node:sqlite';
+import { SQLITE_VIEWS_DDL } from './views-ddl.ts';
 
 export function runPhase2Migrations(db: DatabaseSync): void {
   migrateTimberPriceEntries(db);
   migrateReceivingManifestsContractFk(db);
+  migrateSpeciesFkToTables(db);
+  rebuildViewsIfOutdated(db);
 }
 
 function migrateTimberPriceEntries(db: DatabaseSync): void {
@@ -105,4 +108,57 @@ function migrateReceivingManifestsContractFk(db: DatabaseSync): void {
     `);
   }
 }
+
+function migrateSpeciesFkToTables(db: DatabaseSync): void {
+  const tablesToMigrate = [
+    { table: 'sales_records', col: 'wood_species' },
+    { table: 'contract_sortiment_items', col: 'wood_species' },
+    { table: 'sawmill_production_records', col: 'input_species' },
+    { table: 'stock_sorting_records', col: 'species' },
+    { table: 'payment_forms', col: 'wood_species' },
+  ];
+
+  for (const { table, col } of tablesToMigrate) {
+    const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name=?;`).get(table) as { name: string } | undefined;
+    if (!tableCheck) continue;
+
+    const cols = (db.prepare(`PRAGMA table_info(${table});`).all() as { name: string }[]).map((c) => c.name);
+    if (!cols.includes('species_id')) {
+      db.exec(`
+        ALTER TABLE ${table}
+        ADD COLUMN species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL;
+      `);
+
+      db.prepare(`
+        UPDATE ${table}
+        SET species_id = (
+          SELECT id FROM wood_species
+          WHERE LOWER(common_name) = LOWER(${table}.${col})
+             OR LOWER(${col}) LIKE '%' || LOWER(code) || '%'
+             OR LOWER(common_name) LIKE '%' || LOWER(${table}.${col}) || '%'
+          LIMIT 1
+        )
+        WHERE species_id IS NULL AND ${col} IS NOT NULL AND ${col} != '';
+      `).run();
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_${table}_species
+        ON ${table}(species_id);
+      `);
+    }
+  }
+}
+
+function rebuildViewsIfOutdated(db: DatabaseSync): void {
+  const viewCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='view' AND name='v_buku_besar_flat';`).get() as { name: string } | undefined;
+  if (!viewCheck) {
+    db.exec(SQLITE_VIEWS_DDL);
+    return;
+  }
+  const vCols = (db.prepare(`PRAGMA table_info(v_buku_besar_flat);`).all() as { name: string }[]).map((c) => c.name);
+  if (!vCols.includes('speciesId') || !vCols.includes('contractId')) {
+    db.exec(SQLITE_VIEWS_DDL);
+  }
+}
+
 

@@ -9,11 +9,17 @@ import type { StockSortingRecord } from '../../types/index.ts';
 
 export function ensureSortingTables(db: DatabaseSync): void {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS wood_species (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      common_name TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS stock_sorting_records (
       id TEXT PRIMARY KEY,
       tenant_id TEXT NOT NULL DEFAULT 'default-tenant' REFERENCES tenants(id) ON DELETE CASCADE,
       sorting_date TEXT NOT NULL,
       species TEXT NOT NULL,
+      species_id TEXT REFERENCES wood_species(id) ON DELETE SET NULL,
       source_storage_yard TEXT NOT NULL,
       source_kavling_number TEXT NOT NULL,
       target_storage_yard TEXT NOT NULL,
@@ -38,6 +44,7 @@ interface SqliteSortingRow {
   tenant_id: string;
   sorting_date: string;
   species: string;
+  species_id?: string | null;
   source_storage_yard: string;
   source_kavling_number: string;
   target_storage_yard: string;
@@ -51,12 +58,23 @@ interface SqliteSortingRow {
   updated_at: string;
 }
 
+function resolveSpeciesId(db: DatabaseSync, woodSpeciesName?: string): string | null {
+  if (!woodSpeciesName) return null;
+  try {
+    const row = db.prepare('SELECT id FROM wood_species WHERE LOWER(common_name) = LOWER(?) LIMIT 1').get(woodSpeciesName.trim()) as { id: string } | undefined;
+    return row?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function mapRowToSortingRecord(row: SqliteSortingRow): StockSortingRecord {
   return {
     id: row.id,
     tenantId: row.tenant_id,
     sortingDate: row.sorting_date,
     species: row.species,
+    speciesId: row.species_id || undefined,
     sourceStorageYard: row.source_storage_yard,
     sourceKavlingNumber: row.source_kavling_number,
     targetStorageYard: row.target_storage_yard,
@@ -100,14 +118,15 @@ export class SortingQueries {
   ): StockSortingRecord {
     const now = new Date().toISOString();
     const tenantId = record.tenantId || 'default-tenant';
+    const speciesId = record.speciesId || resolveSpeciesId(this.db, record.species);
     const stmt = this.db.prepare(`
       INSERT INTO stock_sorting_records (
-        id, tenant_id, sorting_date, species,
+        id, tenant_id, sorting_date, species, species_id,
         source_storage_yard, source_kavling_number,
         target_storage_yard, target_kavling_number,
         volume_m3, pieces, reason,
         operator_name, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -115,6 +134,7 @@ export class SortingQueries {
       tenantId,
       record.sortingDate,
       record.species,
+      speciesId,
       record.sourceStorageYard,
       record.sourceKavlingNumber,
       record.targetStorageYard,
@@ -139,10 +159,15 @@ export class SortingQueries {
     if (!existing) throw new Error(`Sorting record ${record.id} not found`);
 
     const now = new Date().toISOString();
+    const speciesId = record.speciesId !== undefined
+      ? (record.speciesId || null)
+      : (record.species ? resolveSpeciesId(this.db, record.species) : (existing.speciesId || null));
+
     const stmt = this.db.prepare(`
       UPDATE stock_sorting_records SET
         sorting_date = ?,
         species = ?,
+        species_id = ?,
         source_storage_yard = ?,
         source_kavling_number = ?,
         target_storage_yard = ?,
@@ -159,6 +184,7 @@ export class SortingQueries {
     stmt.run(
       record.sortingDate ?? existing.sortingDate,
       record.species ?? existing.species,
+      speciesId,
       record.sourceStorageYard ?? existing.sourceStorageYard,
       record.sourceKavlingNumber ?? existing.sourceKavlingNumber,
       record.targetStorageYard ?? existing.targetStorageYard,

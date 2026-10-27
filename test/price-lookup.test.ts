@@ -187,4 +187,20 @@ describe('Price Lookup Utility Suite', () => {
     assert.equal(result.ready.length, 0);
     assert.equal(result.pending.length, 0);
   });
+
+  it('matches by speciesId even if woodSpecies string differs', () => {
+    const recordWithFk: WoodReceivingRecord = {
+      ...baseRecord,
+      speciesId: 'spc-merbau',
+      woodSpecies: 'Merbau Papua Super',
+    };
+    const res = lookupPriceForRecord(recordWithFk, sampleEntries);
+    assert.equal(res.matched, true);
+    if (res.matched) {
+      assert.equal(res.entry.id, 'tpe-merbau-global');
+      assert.equal(res.entry.pricePerM3, 4500000);
+    }
+  });
 });
+
+
