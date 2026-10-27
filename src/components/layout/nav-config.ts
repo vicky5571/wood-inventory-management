@@ -44,6 +44,8 @@ export const NAV_SECTIONS: readonly NavSectionConfig[] = [
     items: [
       { id: 'inventory', labelId: 'Inventaris', labelZh: '库存', href: '/inventory' },
       { id: 'pending-pricing', labelId: 'Pending Harga', labelZh: '待定价', href: '/pending-pricing' },
+      { id: 'prices', labelId: 'Tabel Harga', labelZh: '价格表', href: '/prices' },
+      { id: 'report-periods', labelId: 'Periode Laporan', labelZh: '结账周期', href: '/report-periods' },
       { id: 'payment-forms', labelId: 'Form Pembayaran', labelZh: '付款单', href: '/payment-forms' },
     ],
   },

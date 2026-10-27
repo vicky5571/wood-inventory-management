@@ -185,6 +185,11 @@ export interface WoodReceivingRecord {
   paymentDate?: string;          // Tanggal Bayar / 付款日期 (YYYY-MM-DD)
   paymentNotes?: string;         // Catatan Pembayaran / 付款备注
 
+  // Report Period linkage (set during period close)
+  reportPeriodId?: string;       // FK to ReportPeriod.id
+  priceEntryId?: string;         // FK to TimberPriceEntry.id used at close
+  isLocked?: boolean;            // true after period close — prevents manual price edit
+
   createdAt: string;
   updatedAt: string;
 }
@@ -799,7 +804,13 @@ export type ActivityActionType =
   | 'USER_DEACTIVATED'
   | 'USER_REACTIVATED'
   | 'USER_PASSWORD_CHANGED'
-  | 'RECORDS_IMPORTED';
+  | 'RECORDS_IMPORTED'
+  | 'CREATE_PRICE_ENTRY'
+  | 'UPDATE_PRICE_ENTRY'
+  | 'DELETE_PRICE_ENTRY'
+  | 'CREATE_REPORT_PERIOD'
+  | 'CLOSE_REPORT_PERIOD'
+  | 'REOPEN_REPORT_PERIOD';
 
 export type PricingStatus = 'PENDING' | 'PRICED';
 
@@ -1414,4 +1425,83 @@ export interface ExportImportModalProps {
   allRecords: WoodReceivingRecord[];
   onClose: () => void;
   onImportConfirm: (rows: ImportRow[]) => void;
+}
+
+// ─── Timber Price Entries ────────────────────────────────────────────────────
+
+/**
+ * A dated price entry for a wood species (optionally scoped to a supplier).
+ * Used for auto-applying prices during report period close.
+ */
+export interface TimberPriceEntry {
+  id: string;
+  tenantId: string;
+  woodSpecies: string;
+  supplierId?: string;
+  supplierName?: string;
+  effectiveFrom: string;        // YYYY-MM-DD inclusive
+  effectiveTo?: string;         // YYYY-MM-DD inclusive, undefined = still active
+  pricePerM3: number;
+  timberPphRate: number;
+  notes?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Report Periods ──────────────────────────────────────────────────────────
+
+export type ReportPeriodStatus = 'OPEN' | 'CLOSED' | 'REOPENED';
+
+/**
+ * A named reporting period. Records are assigned to a period and locked
+ * when the period is closed. Not bound to a fixed calendar week/month.
+ */
+export interface ReportPeriod {
+  id: string;
+  tenantId: string;
+  name: string;
+  status: ReportPeriodStatus;
+  startDate: string;            // YYYY-MM-DD — receiptDate range start
+  endDate: string;              // YYYY-MM-DD — receiptDate range end
+  closedAt?: string;
+  closedBy?: string;
+  totalRecords?: number;
+  totalVolumeM3?: number;
+  totalNetPayableIDR?: number;
+  priceSnapshotIds?: string[];  // TimberPriceEntry IDs used at close
+  reopenedAt?: string;
+  reopenedBy?: string;
+  reopenReason?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Result of previewing a report period close — shows which records will
+ * get a price applied and which will remain PENDING.
+ */
+export interface ReportPeriodClosePreview {
+  periodId: string;
+  readyRecords: Array<{
+    recordId: string;
+    truckPlateNumber: string;
+    woodSpecies: string;
+    supplierName: string;
+    tallyVolumeM3: number;
+    matchedPriceEntryId: string;
+    matchedPricePerM3: number;
+    estimatedNetPayableIDR: number;
+  }>;
+  pendingRecords: Array<{
+    recordId: string;
+    truckPlateNumber: string;
+    woodSpecies: string;
+    supplierName: string;
+    reason: string;
+  }>;
+  totalReadyVolumeM3: number;
+  totalEstimatedNetIDR: number;
 }

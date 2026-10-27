@@ -13,10 +13,12 @@ import { isSupabaseConfigured } from './supabase/supabase-client.ts';
 import { SupabaseRecordStore } from './supabase/supabase-record-store.ts';
 import { paginateInMemoryRecords } from './in-memory-pagination.ts';
 import { ServerMasterDataBridge } from './server-master-data-bridge.ts';
+import { ServerPriceBridge } from './server-price-bridge.ts';
 import type {
   WoodReceivingRecord, RecordQueryParams, PaginatedResult, ManifestFormInput,
   StorageYard, StorageLot, StorageLotStatus, StorageLotWithYard,
   Supplier, Broker, WoodSpecies, AppSettings, ActivityLogEntry,
+  TimberPriceEntry, ReportPeriod, ReportPeriodClosePreview,
 } from '../types/index.ts';
 
 export class ServerRecordStore {
@@ -25,6 +27,7 @@ export class ServerRecordStore {
   private supabaseStore: SupabaseRecordStore | null = null;
   private explicitFilePath?: string;
   private masterDataBridge: ServerMasterDataBridge;
+  private priceBridge: ServerPriceBridge;
 
   constructor(filePathOrStore?: string | SqliteRecordStore) {
     if (typeof filePathOrStore === 'string') {
@@ -37,6 +40,7 @@ export class ServerRecordStore {
       () => this.isFileMode(),
       () => this.getSqliteStore()
     );
+    this.priceBridge = new ServerPriceBridge(() => this.getSqliteStore());
   }
 
   private isSupabaseMode(): boolean {
@@ -157,83 +161,34 @@ export class ServerRecordStore {
     return this.isFileMode() ? this.getFileStore().reset() : this.getSqliteStore().reset();
   }
 
-  getStorageLocations(): Promise<{ yards: StorageYard[]; lots: StorageLotWithYard[] }> {
-    return this.masterDataBridge.getStorageLocations();
-  }
+  getStorageLocations() { return this.masterDataBridge.getStorageLocations(); }
+  saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }) { return this.masterDataBridge.saveStorageYard(yard); }
+  saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }) { return this.masterDataBridge.saveStorageLot(lot); }
+  updateStorageLotStatus(id: string, status: StorageLotStatus) { return this.masterDataBridge.updateStorageLotStatus(id, status); }
+  deleteStorageLot(id: string) { return this.masterDataBridge.deleteStorageLot(id); }
+  deleteStorageYard(id: string) { return this.masterDataBridge.deleteStorageYard(id); }
+  getSuppliers() { return this.masterDataBridge.getSuppliers(); }
+  saveSupplier(data: Partial<Supplier> & { name: string }) { return this.masterDataBridge.saveSupplier(data); }
+  deleteSupplier(id: string) { return this.masterDataBridge.deleteSupplier(id); }
+  getBrokers() { return this.masterDataBridge.getBrokers(); }
+  saveBroker(data: Partial<Broker> & { name: string }) { return this.masterDataBridge.saveBroker(data); }
+  deleteBroker(id: string) { return this.masterDataBridge.deleteBroker(id); }
+  getSpecies() { return this.masterDataBridge.getSpecies(); }
+  saveSpecies(species: Partial<WoodSpecies> & { code: string; commonName: string }) { return this.masterDataBridge.saveSpecies(species); }
+  getSettings() { return this.masterDataBridge.getSettings(); }
+  saveSettings(patch: Partial<AppSettings>) { return this.masterDataBridge.saveSettings(patch); }
+  getActivityLogs(actionFilter?: string, limit?: number) { return this.masterDataBridge.getActivityLogs(actionFilter, limit); }
+  getUserActivityLogs(userId: string, limit?: number) { return this.masterDataBridge.getUserActivityLogs(userId, limit); }
+  appendActivityLog(entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }) { return this.masterDataBridge.appendActivityLog(entry); }
 
-  saveStorageYard(yard: { id?: string; name: string; yardCode?: string; description?: string }): Promise<StorageYard> {
-    return this.masterDataBridge.saveStorageYard(yard);
-  }
-
-  saveStorageLot(lot: { id?: string; yardId: string; lotCode: string; status?: StorageLotStatus }): Promise<StorageLot> {
-    return this.masterDataBridge.saveStorageLot(lot);
-  }
-
-  updateStorageLotStatus(id: string, status: StorageLotStatus): Promise<StorageLot> {
-    return this.masterDataBridge.updateStorageLotStatus(id, status);
-  }
-
-  deleteStorageLot(id: string): Promise<void> {
-    return this.masterDataBridge.deleteStorageLot(id);
-  }
-
-  deleteStorageYard(id: string): Promise<void> {
-    return this.masterDataBridge.deleteStorageYard(id);
-  }
-
-  getSuppliers(): Promise<Supplier[]> {
-    return this.masterDataBridge.getSuppliers();
-  }
-
-  saveSupplier(data: Partial<Supplier> & { name: string }): Promise<Supplier> {
-    return this.masterDataBridge.saveSupplier(data);
-  }
-
-  deleteSupplier(id: string): Promise<boolean> {
-    return this.masterDataBridge.deleteSupplier(id);
-  }
-
-  getBrokers(): Promise<Broker[]> {
-    return this.masterDataBridge.getBrokers();
-  }
-
-  saveBroker(data: Partial<Broker> & { name: string }): Promise<Broker> {
-    return this.masterDataBridge.saveBroker(data);
-  }
-
-  deleteBroker(id: string): Promise<boolean> {
-    return this.masterDataBridge.deleteBroker(id);
-  }
-
-  getSpecies(): Promise<WoodSpecies[]> {
-    return this.masterDataBridge.getSpecies();
-  }
-
-  saveSpecies(species: Partial<WoodSpecies> & { code: string; commonName: string }): Promise<WoodSpecies> {
-    return this.masterDataBridge.saveSpecies(species);
-  }
-
-  getSettings(): Promise<AppSettings> {
-    return this.masterDataBridge.getSettings();
-  }
-
-  saveSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
-    return this.masterDataBridge.saveSettings(patch);
-  }
-
-  getActivityLogs(actionFilter?: string, limit?: number): Promise<ActivityLogEntry[]> {
-    return this.masterDataBridge.getActivityLogs(actionFilter, limit);
-  }
-
-  getUserActivityLogs(userId: string, limit?: number): Promise<ActivityLogEntry[]> {
-    return this.masterDataBridge.getUserActivityLogs(userId, limit);
-  }
-
-  appendActivityLog(
-    entry: Omit<ActivityLogEntry, 'id' | 'timestamp'> & { id?: string; timestamp?: string }
-  ): Promise<ActivityLogEntry> {
-    return this.masterDataBridge.appendActivityLog(entry);
-  }
+  getAllPriceEntries() { return this.priceBridge.getAllPriceEntries(); }
+  savePriceEntry(entry: Omit<TimberPriceEntry, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) { return this.priceBridge.savePriceEntry(entry); }
+  deletePriceEntry(id: string) { return this.priceBridge.deletePriceEntry(id); }
+  getAllReportPeriods() { return this.priceBridge.getAllReportPeriods(); }
+  saveReportPeriod(period: Omit<ReportPeriod, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) { return this.priceBridge.saveReportPeriod(period); }
+  previewReportPeriodClose(periodId: string, records: WoodReceivingRecord[]) { return this.priceBridge.previewReportPeriodClose(periodId, records); }
+  closeReportPeriod(periodId: string, records: WoodReceivingRecord[], closedBy: string) { return this.priceBridge.closeReportPeriod(periodId, records, closedBy); }
+  reopenReportPeriod(periodId: string, reopenedBy: string, reason: string) { return this.priceBridge.reopenReportPeriod(periodId, reopenedBy, reason); }
 
   close(): void {
     if (!this.isFileMode()) {

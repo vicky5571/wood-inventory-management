@@ -4,6 +4,8 @@ import { ensureContractTables } from './contract-queries.ts';
 import { ensurePaymentFormTables } from './payment-form-queries.ts';
 import { ensureProductionTables } from './production-queries.ts';
 import { ensureSortingTables } from './sorting-queries.ts';
+import { ensurePriceTables } from './price-queries.ts';
+import { ensureReportPeriodTables } from './report-period-queries.ts';
 import { createUsersTable } from './user-tables.ts';
 
 export { createUsersTable };
@@ -236,10 +238,9 @@ export function runMigrations(db: DatabaseSync): void {
   ensurePaymentFormTables(db);
   ensureProductionTables(db);
   ensureSortingTables(db);
+  ensurePriceTables(db);
+  ensureReportPeriodTables(db);
   createUsersTable(db);
-
-  const viewRow = db.prepare(`SELECT count(*) AS c FROM sqlite_master WHERE type='view' AND name='v_buku_besar_flat';`).get() as { c: number } | undefined;
-  if (!viewRow || viewRow.c === 0) {
-    db.exec(SQLITE_VIEWS_DDL);
-  }
+  const viewCols = db.prepare(`PRAGMA table_info(v_buku_besar_flat);`).all() as { name: string }[];
+  if (!viewCols.some((c) => c.name === 'reportPeriodId')) db.exec(SQLITE_VIEWS_DDL);
 }
