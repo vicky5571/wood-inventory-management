@@ -28,7 +28,11 @@ interface PaymentFormDetailViewProps {
 }
 
 export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
-  const { activeForm, loadFormById, updateForm, updateStatus, voidForm, isLoading, error } = usePaymentForms();
+  const { activeForm, loadFormById, updateForm, updateStatus, voidForm, error } = usePaymentForms(
+    undefined,
+    { skipListLoad: true }
+  );
+  const [localLoading, setLocalLoading] = useState(true);
 
   const [isPrintOpen, setIsPrintOpen] = useState(false);
   const [isIssueOpen, setIsIssueOpen] = useState(false);
@@ -44,7 +48,10 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
 
   useEffect(() => {
     if (formId) {
-      loadFormById(formId);
+      setLocalLoading(true);
+      loadFormById(formId).finally(() => setLocalLoading(false));
+    } else {
+      setLocalLoading(false);
     }
   }, [formId, loadFormById]);
 
@@ -87,7 +94,7 @@ export function PaymentFormDetailView({ formId }: PaymentFormDetailViewProps) {
     }
   };
 
-  if (isLoading && !activeForm) {
+  if (localLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-500">
         <Loader2 className="w-8 h-8 animate-spin text-[#ffc908] mb-3" />

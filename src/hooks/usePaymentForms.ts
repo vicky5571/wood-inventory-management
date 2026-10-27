@@ -18,7 +18,10 @@ import type {
 import { getSaturdayOfWeek } from '../utils/week-window.ts';
 import { toast } from '../utils/toast-store.ts';
 
-export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
+export function usePaymentForms(
+  initialFilter?: PaymentFormFilterCriteria,
+  opts?: { skipListLoad?: boolean }
+) {
   const [forms, setForms] = useState<PaymentForm[]>([]);
   const [activeForm, setActiveForm] = useState<PaymentFormWithLines | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string>(() =>
@@ -59,8 +62,10 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
   }, [selectedWeek, filterCriteria]);
 
   useEffect(() => {
-    refreshForms();
-  }, [refreshForms]);
+    if (!opts?.skipListLoad) {
+      refreshForms();
+    }
+  }, [refreshForms, opts?.skipListLoad]);
 
   const loadFormById = useCallback(async (id: string): Promise<PaymentFormWithLines | null> => {
     setIsLoading(true);
@@ -73,6 +78,7 @@ export function usePaymentForms(initialFilter?: PaymentFormFilterCriteria) {
         setActiveForm(json.data);
         return json.data;
       }
+      setError('Form tidak dapat dimuat.');
       return null;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gagal memuat form';

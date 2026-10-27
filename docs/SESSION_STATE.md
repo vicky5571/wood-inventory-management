@@ -47,6 +47,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 18 | Timber Price Database & Report Period Close | `docs/superpowers/price-database-spec.md` | `docs/superpowers/price-database-impl.md` | ✅ Completed |
 | 19 | Database Relasi & Price System Fixes (DB Fix 01–07) | `docs/superpowers/HANDOVER-db-fixes.md` | `docs/superpowers/db-fix-01..07` | ✅ Completed |
 | 20 | Auto-Generated Form Number (KWT-YYYYMM-NNNN) | `docs/superpowers/specs/2026-10-28-auto-form-number-design.md` | `docs/superpowers/plans/2026-10-28-auto-form-number.md` | ✅ Completed |
+| 21 | Fix Payment Form Detail View Race Condition | `docs/superpowers/specs/2026-10-28-fix-payment-form-detail-view-design.md` | `docs/superpowers/plans/2026-10-28-fix-payment-form-detail-view.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-28):**
 - `npm test` → 950 passed, 0 failed (100% clean)
@@ -336,12 +337,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Auto-Generated Form Number (KWT-YYYYMM-NNNN, Module #20) completed and verified per ADR-0016. All 20 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 950 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
+**Status:** Fix Payment Form Detail View Race Condition (Module #21) completed and verified. All 21 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 950 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#20).
-2. **If client clarifies DPB rakyat questions** → start Spec #21:
+1. **Monitor client feedback** on shipped features (Items #1-#21).
+2. **If client clarifies DPB rakyat questions** → start Spec #22:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md
