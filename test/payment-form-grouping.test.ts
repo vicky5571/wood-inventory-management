@@ -93,6 +93,20 @@ test('Payment Form Grouping Engine Suite', async (t) => {
     assert.equal(res.groups.size, 2);
   });
 
+  await t.test('buildGroupingKey prefers contractId over contractNumber string', () => {
+    const keyWithId = buildGroupingKey('PT Rimba', 'Jati', 'CTR-001', 'ctr-id-123');
+    assert.equal(keyWithId, 'pt rimba||jati||id:ctr-id-123');
+
+    const keyWithoutId = buildGroupingKey('PT Rimba', 'Jati', 'CTR-001');
+    assert.equal(keyWithoutId, 'pt rimba||jati||ctr-001');
+
+    // Records with same contractId merge even if contractNumber string casing differs
+    const rec1 = createMockRecord({ id: 'rec-1', contractNumber: 'CTR-001', contractId: 'ctr-uuid-1' });
+    const rec2 = createMockRecord({ id: 'rec-2', contractNumber: 'ctr-001-diff', contractId: 'ctr-uuid-1' });
+    const res = groupRecordsForPayment([rec1, rec2], [], weekStart, weekEnd, []);
+    assert.equal(res.groups.size, 1);
+  });
+
   await t.test('records with pending price (null) are skipped with PENDING_PRICE reason', () => {
     const recPriced = createMockRecord({ id: 'rec-priced', timberPricePerM3: 2500000 });
     const recPending = createMockRecord({ id: 'rec-pending', timberPricePerM3: null });

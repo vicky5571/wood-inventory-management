@@ -1,7 +1,7 @@
 # ADR-0003: Loose String-Match Linkage for Contract-Record Association
 
 **Date:** 2026-10-21
-**Status:** Accepted
+**Status:** Superseded by [ADR-0015](file:///Users/mac/Web%20Development/wood-inventory-management/docs/adr/0015-contract-fk-enforcement.md)
 **Deciders:** Owner + AI pair session (client Q5=C confirmed)
 
 ---

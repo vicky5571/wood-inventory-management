@@ -8,6 +8,7 @@ import type { DatabaseSync } from 'node:sqlite';
 
 export function runPhase2Migrations(db: DatabaseSync): void {
   migrateTimberPriceEntries(db);
+  migrateReceivingManifestsContractFk(db);
 }
 
 function migrateTimberPriceEntries(db: DatabaseSync): void {
@@ -76,3 +77,32 @@ function migrateTimberPriceEntries(db: DatabaseSync): void {
     `);
   }
 }
+
+function migrateReceivingManifestsContractFk(db: DatabaseSync): void {
+  const tableCheck = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='receiving_manifests';`).get() as { name: string } | undefined;
+  if (!tableCheck) return;
+
+  const rmCols = (db.prepare(`PRAGMA table_info(receiving_manifests);`).all() as { name: string }[]).map((c) => c.name);
+  if (!rmCols.includes('contract_id')) {
+    db.exec(`
+      ALTER TABLE receiving_manifests
+      ADD COLUMN contract_id TEXT REFERENCES perhutani_contracts(id) ON DELETE SET NULL;
+    `);
+
+    db.prepare(`
+      UPDATE receiving_manifests
+      SET contract_id = (
+        SELECT id FROM perhutani_contracts
+        WHERE LOWER(contract_number) = LOWER(receiving_manifests.contract_number)
+        LIMIT 1
+      )
+      WHERE contract_number IS NOT NULL AND contract_number != '' AND contract_number != '-';
+    `).run();
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_rm_contract_id
+      ON receiving_manifests(contract_id);
+    `);
+  }
+}
+

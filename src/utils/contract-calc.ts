@@ -99,6 +99,9 @@ export function computeFulfillmentSummary(
   const normContractNo = (contract.contractNumber || '').trim().toLowerCase();
 
   const matchingRecords = (receivingRecords || []).filter((r) => {
+    if (r.contractId && contract.id) {
+      return r.contractId === contract.id;
+    }
     return (r.contractNumber || '').trim().toLowerCase() === normContractNo;
   });
 

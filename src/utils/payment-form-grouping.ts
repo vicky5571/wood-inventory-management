@@ -22,11 +22,12 @@ export type { PaymentFormGroup };
 export function buildGroupingKey(
   supplierName: string,
   woodSpecies: string,
-  contractNumber: string = ''
+  contractNumber: string = '',
+  contractId?: string
 ): string {
   const sNorm = (supplierName || '').trim().toLowerCase();
   const spNorm = (woodSpecies || '').trim().toLowerCase();
-  const cNorm = (contractNumber || '').trim().toLowerCase() || '_';
+  const cNorm = contractId ? `id:${contractId}` : ((contractNumber || '').trim().toLowerCase() || '_');
   return `${sNorm}||${spNorm}||${cNorm}`;
 }
 
@@ -181,7 +182,8 @@ export function groupRecordsForPayment(
     const supplierName = record.supplierName || 'Unknown Supplier';
     const woodSpecies = record.woodSpecies || 'Kayu Campur';
     const contractNumber = record.contractNumber || '';
-    const groupKey = buildGroupingKey(supplierName, woodSpecies, contractNumber);
+    const contractId = record.contractId;
+    const groupKey = buildGroupingKey(supplierName, woodSpecies, contractNumber, contractId);
 
     let group = groups.get(groupKey);
     if (!group) {

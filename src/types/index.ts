@@ -146,6 +146,7 @@ export interface WoodReceivingRecord {
   forestryDocNumber: string;     // SKSHHK / DKP / SLK (Official Forestry Permit)
   receiptNumber: string;         // Nomor Kwitansi / 订货单号
   contractNumber: string;        // No Kontrak / 合同编号
+  contractId?: string;           // Optional FK to PerhutaniContract.id
   supplierName: string;          // Nama Pemilik Hasil Hutan / 供应商
 
   // Wood Specifications & Yard Location
@@ -265,6 +266,7 @@ export interface ReceivingManifest {
   forestryDocNumber: string;
   receiptNumber: string;
   contractNumber: string;
+  contractId?: string;
   supplierId: string;
   brokerId?: string;
   freightRatePerM3: number;
@@ -359,6 +361,7 @@ export interface ManifestFormInput {
   forestryDocNumber: string;
   receiptNumber: string;
   contractNumber: string;
+  contractId?: string;
   supplierName: string;
   brokerId?: string;
   freightRatePerM3: number;
