@@ -5,6 +5,7 @@ import { ChevronDown, Check, Plus, X, Building2 } from 'lucide-react';
 import { SupplierRepository } from '@/src/persistence/supplier-repository';
 
 export interface SupplierOption {
+  id?: string;
   name: string;
   code?: string;
 }
@@ -39,8 +40,24 @@ export function SupplierCombobox({
   useEffect(() => { setQuery(value || ''); }, [value]);
 
   const allSuppliers: SupplierOption[] = useMemo(() => {
-    if (availableSuppliers && availableSuppliers.length > 0) return availableSuppliers;
-    return repo.getAll().map((s) => ({ name: s.name, code: s.code }));
+    const source: SupplierOption[] =
+      availableSuppliers && availableSuppliers.length > 0
+        ? availableSuppliers
+        : repo.getAll().map((s) => ({ id: s.id, name: s.name, code: s.code }));
+
+    const map = new Map<string, SupplierOption>();
+    for (const s of source) {
+      const cleanName = (s.name || '').trim();
+      if (!cleanName) continue;
+      const key = cleanName.toLowerCase();
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { id: s.id, name: cleanName, code: s.code });
+      } else if (!existing.code && s.code) {
+        map.set(key, { id: s.id || existing.id, name: cleanName, code: s.code });
+      }
+    }
+    return Array.from(map.values());
   }, [availableSuppliers]);
 
   const filteredOptions = useMemo(() => {
@@ -188,10 +205,11 @@ export function SupplierCombobox({
             filteredOptions.map((opt, index) => {
               const isSelected = value.trim().toLowerCase() === opt.name.toLowerCase();
               const isHighlighted = highlightedIndex === index;
+              const itemKey = opt.id || `${opt.name}-${opt.code || index}`;
 
               return (
                 <button
-                  key={opt.name}
+                  key={itemKey}
                   type="button"
                   onClick={() => selectOption(opt.name)}
                   className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition cursor-pointer ${

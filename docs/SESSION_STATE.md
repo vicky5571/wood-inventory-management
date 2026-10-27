@@ -51,7 +51,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 22 | Real-Time Totals Footer (Payment Form DRAFT) | `docs/superpowers/specs/2026-10-28-fix-payment-form-realtime-totals-design.md` | `docs/superpowers/plans/2026-10-28-fix-payment-form-realtime-totals.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-28):**
-- `npm test` → 954 passed, 0 failed (100% clean)
+- `npm test` → 956 passed, 0 failed (100% clean)
 - `npm run build:check` → 0 errors (Next.js production build clean, 25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run test:smoke` → ✅ Passed
@@ -338,7 +338,7 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Real-Time Totals Footer (Payment Form DRAFT) (Module #22) completed and verified. All 22 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 954 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
+**Status:** Real-Time Totals Footer (Payment Form DRAFT) (Module #22) completed and verified. SupplierCombobox duplicate key console error resolved. All 22 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 956 passed, 0 failed, 25/25 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
@@ -350,7 +350,7 @@ git status && git log --oneline -5
    ```
 
 **Verification baseline (must still pass after any work):**
-- `npm test` → 954 passed, 0 failed
+- `npm test` → 956 passed, 0 failed
 - `npm run build:check` → 0 errors (25/25 routes)
 - `npm run drift:check` → ✅ No drift detected (0 violations)
 - `npm run test:smoke` → ✅ Passed
