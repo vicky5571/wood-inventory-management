@@ -59,6 +59,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 - `npm run test:smoke` → ✅ Passed
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 38ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
+- `next-env.d.ts` → Added to `.gitignore` and untracked via `git rm --cached` per official Next.js documentation.
 
 
 ---
