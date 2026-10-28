@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { NAV_ITEMS, resolveActiveNavSection, isNavItemActive } from '../src/components/layout/nav-config.ts';
 
 test('Navbar Navigation & Layout Config Suite', async (t) => {
-  await t.test('NAV_ITEMS contains bilingual configuration for all 17 required operational routes', () => {
-    assert.equal(NAV_ITEMS.length, 17);
+  await t.test('NAV_ITEMS contains bilingual configuration for all 16 required operational routes', () => {
+    assert.equal(NAV_ITEMS.length, 16);
 
     const ids = NAV_ITEMS.map((item) => item.id);
     assert.deepEqual(ids, [
@@ -16,7 +16,6 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
       'sorting',
       'inventory',
       'prices',
-      'pending-pricing',
       'report-periods',
       'payment-forms',
       'contracts',
@@ -36,11 +35,6 @@ test('Navbar Navigation & Layout Config Suite', async (t) => {
     assert.equal(ledger.href, '/ledger');
     assert.equal(ledger.labelId, 'Buku Besar');
     assert.equal(ledger.labelZh, '入库总账');
-
-    const pendingPricing = NAV_ITEMS.find((item) => item.id === 'pending-pricing')!;
-    assert.equal(pendingPricing.href, '/pending-pricing');
-    assert.equal(pendingPricing.labelId, 'Pending Harga');
-    assert.equal(pendingPricing.labelZh, '待定价');
 
     const inventory = NAV_ITEMS.find((item) => item.id === 'inventory')!;
     assert.equal(inventory.href, '/inventory');

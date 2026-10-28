@@ -8,14 +8,14 @@ import { useAuth } from '@/src/hooks/useAuth';
 import {
   Trees, LayoutDashboard, TableProperties, Truck, Building2,
   History, Settings, ClipboardCheck, Menu, X, Warehouse,
-  FileText, Users, Tag, CreditCard, Factory, ArrowLeftRight,
+  FileText, Users, CreditCard, Factory, ArrowLeftRight,
   DollarSign, CalendarCheck,
 } from 'lucide-react';
 import { NAV_SECTIONS, filterNavSections, isNavItemActive, type NavItemConfig } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  analytics: LayoutDashboard, ledger: TableProperties, 'pending-pricing': Tag,
+  analytics: LayoutDashboard, ledger: TableProperties,
   inventory: Warehouse, contracts: FileText, 'payment-forms': CreditCard,
   tally: ClipboardCheck, sales: Truck, production: Factory, sorting: ArrowLeftRight,
   prices: DollarSign, 'report-periods': CalendarCheck,

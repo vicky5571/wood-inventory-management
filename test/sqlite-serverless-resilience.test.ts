@@ -8,6 +8,15 @@ import { SqliteRecordStore } from '../src/persistence/sqlite-record-store.ts';
 test('SQLite Serverless Resilience Suite (Vercel & Read-Only Environments)', async (t) => {
   const originalVercel = process.env.VERCEL;
   const originalDbPath = process.env.WOOD_DB_PATH;
+  t.before(() => {
+    try {
+      fs.rmSync('/tmp/wood_inventory.db', { force: true });
+      fs.rmSync('/tmp/wood_inventory.db-wal', { force: true });
+      fs.rmSync('/tmp/wood_inventory.db-shm', { force: true });
+    } catch {
+      // Ignore
+    }
+  });
 
   t.after(() => {
     if (originalVercel === undefined) {

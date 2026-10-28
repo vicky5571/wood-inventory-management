@@ -1,7 +1,6 @@
 import React from 'react';
 import type { DashboardMetrics } from '@/src/types';
 import { Layers, Box, Wallet, Building2, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { KpiCardPendingPricing } from './KpiCardPendingPricing';
 import {
   formatRupiah,
   renderDiscrepancyBadge,
@@ -11,7 +10,7 @@ import {
 
 export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
       {/* 1. Total Volume Hero Card */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group">
         <div className="h-1 w-full bg-[#ffc908]" />
@@ -210,9 +209,6 @@ export function KpiCards({ metrics }: { metrics: DashboardMetrics }) {
           </SubMetricBox>
         </div>
       </div>
-
-      {/* 6. Pending Pricing Card */}
-      <KpiCardPendingPricing metrics={metrics} />
     </div>
   );
 }

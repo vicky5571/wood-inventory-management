@@ -54,6 +54,12 @@ export function createSqliteDatabase(dbPath?: string): DatabaseSync {
       if (fs.existsSync(bundledDbPath)) {
         try {
           fs.copyFileSync(bundledDbPath, tmpDbPath);
+          if (fs.existsSync(bundledDbPath + '-wal')) {
+            fs.copyFileSync(bundledDbPath + '-wal', tmpDbPath + '-wal');
+          }
+          if (fs.existsSync(bundledDbPath + '-shm')) {
+            fs.copyFileSync(bundledDbPath + '-shm', tmpDbPath + '-shm');
+          }
         } catch {
           // If copy fails, fresh initialization in /tmp will run migrations & seed
         }

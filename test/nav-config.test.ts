@@ -45,7 +45,7 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     assert.equal(NAV_SECTIONS[2].labelZh, '库存与账单');
     assert.deepEqual(
       NAV_SECTIONS[2].items.map((i) => i.id),
-      ['inventory', 'prices', 'pending-pricing', 'report-periods', 'payment-forms']
+      ['inventory', 'prices', 'report-periods', 'payment-forms']
     );
 
     // Section 4: Data Master
@@ -67,8 +67,8 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     );
   });
 
-  await t.test('NAV_ITEMS backward-compatibility export contains all 17 items derived from NAV_SECTIONS', () => {
-    assert.equal(NAV_ITEMS.length, 17);
+  await t.test('NAV_ITEMS backward-compatibility export contains all 16 items derived from NAV_SECTIONS', () => {
+    assert.equal(NAV_ITEMS.length, 16);
     const expectedIds = [
       'analytics',
       'ledger',
@@ -78,7 +78,6 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
       'sorting',
       'inventory',
       'prices',
-      'pending-pricing',
       'report-periods',
       'payment-forms',
       'contracts',
@@ -106,19 +105,19 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     const withNull = filterNavSections(NAV_SECTIONS, null);
     assert.equal(withNull.length, 5);
     const totalItemsNull = withNull.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItemsNull, 17);
+    assert.equal(totalItemsNull, 16);
 
     const withUndefined = filterNavSections(NAV_SECTIONS, undefined);
     assert.equal(withUndefined.length, 5);
     const totalItemsUndefined = withUndefined.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItemsUndefined, 17);
+    assert.equal(totalItemsUndefined, 16);
   });
 
-  await t.test('filterNavSections preserves all 5 sections and 17 items for Level 1 (Owner)', () => {
+  await t.test('filterNavSections preserves all 5 sections and 16 items for Level 1 (Owner)', () => {
     const ownerSections = filterNavSections(NAV_SECTIONS, 1);
     assert.equal(ownerSections.length, 5);
     const totalItems = ownerSections.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItems, 17);
+    assert.equal(totalItems, 16);
 
     const adminSection = ownerSections.find((s) => s.id === 'admin');
     assert.ok(adminSection);
@@ -132,7 +131,7 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     const staffSections = filterNavSections(NAV_SECTIONS, 2);
     assert.equal(staffSections.length, 5);
     const totalItems = staffSections.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItems, 15);
+    assert.equal(totalItems, 14);
 
     const adminSection = staffSections.find((s) => s.id === 'admin');
     assert.ok(adminSection);
@@ -148,7 +147,7 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     const monitorSections = filterNavSections(NAV_SECTIONS, 3);
     assert.equal(monitorSections.length, 5);
     const totalItems = monitorSections.reduce((sum, s) => sum + s.items.length, 0);
-    assert.equal(totalItems, 15);
+    assert.equal(totalItems, 14);
 
     const adminSection = monitorSections.find((s) => s.id === 'admin');
     assert.ok(adminSection);

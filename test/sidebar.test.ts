@@ -13,7 +13,7 @@ import { NAV_ITEMS, isNavItemActive } from '../src/components/layout/nav-config.
 
 test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
   await t.test('NAV_ITEMS contains all operational routes with bilingual labels', () => {
-    assert.strictEqual(NAV_ITEMS.length, 17);
+    assert.strictEqual(NAV_ITEMS.length, 16);
     const expectedRoutes = [
       '/',
       '/ledger',
@@ -23,7 +23,6 @@ test('Sidebar Navigation & Layout Architecture Suite', async (t) => {
       '/sorting',
       '/inventory',
       '/prices',
-      '/pending-pricing',
       '/report-periods',
       '/payment-forms',
       '/contracts',

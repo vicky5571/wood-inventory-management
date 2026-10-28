@@ -6,13 +6,13 @@ import { usePathname } from 'next/navigation';
 import {
   Trees, Menu, X, LayoutDashboard, TableProperties, Truck,
   Building2, History, Settings, ChevronRight, Warehouse,
-  FileText, ClipboardCheck, Users, Tag, CreditCard, Factory, ArrowLeftRight,
+  FileText, ClipboardCheck, Users, CreditCard, Factory, ArrowLeftRight,
 } from 'lucide-react';
 import { NAV_ITEMS, isNavItemActive } from './nav-config';
 import { UserNav } from './UserNav';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  analytics: LayoutDashboard, ledger: TableProperties, 'pending-pricing': Tag,
+  analytics: LayoutDashboard, ledger: TableProperties,
   inventory: Warehouse, contracts: FileText, 'payment-forms': CreditCard,
   tally: ClipboardCheck, sales: Truck, production: Factory, sorting: ArrowLeftRight,
   suppliers: Building2, brokers: Users, activity: History, settings: Settings,
