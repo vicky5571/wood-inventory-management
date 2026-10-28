@@ -41,7 +41,7 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
     handleSpeciesPillClick('Jati / Teak (柚木)');
     assert.strictEqual(currentFilters.species, 'Jati / Teak (柚木)');
     const jatiFiltered = applyFilters(records, currentFilters);
-    assert.strictEqual(jatiFiltered.length, 5);
+    assert.strictEqual(jatiFiltered.length, 4);
     assert.strictEqual(jatiFiltered[0].woodSpecies, 'Jati / Teak (柚木)');
 
     // 2. Select another species "Merbau (菠萝格)"
@@ -79,7 +79,7 @@ test('Toolbar Quick-Filter Pills & Search State Suite', async (t) => {
     handleClearSearch();
     assert.strictEqual(currentFilters.searchQuery, '');
     assert.strictEqual(currentFilters.species, 'Jati / Teak (柚木)');
-    assert.strictEqual(applyFilters(records, currentFilters).length, 5);
+    assert.strictEqual(applyFilters(records, currentFilters).length, 4);
   });
 
   await t.test('combined quick-pill and text search filters with high precision', () => {

@@ -52,6 +52,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 | 23 | Price Auto-Fill on Receiving Input | `docs/superpowers/specs/2026-10-28-price-autofill-receiving-design.md` | `docs/superpowers/plans/2026-10-28-price-autofill-receiving.md` | ✅ Completed |
 | 24 | Species Name Canonical Sync | `docs/superpowers/specs/2026-10-28-species-name-sync-design.md` | `docs/superpowers/plans/2026-10-28-species-name-sync.md` | ✅ Completed |
 | 25 | Remove Pending Pricing Page (ADR-0020) | `docs/superpowers/specs/2026-10-28-remove-pending-pricing-design.md` | `docs/superpowers/plans/2026-10-28-remove-pending-pricing.md` | ✅ Completed |
+| 26 | Fix Seed Pending Pricing & Species Canonical | `docs/superpowers/specs/2026-10-28-fix-seed-pending-pricing-design.md` | `docs/superpowers/plans/2026-10-28-fix-seed-pending-pricing.md` | ✅ Completed |
 
 **Verification evidence (as of 2026-10-28):**
 - `npm test` → 961 passed, 0 failed (100% clean)
@@ -344,12 +345,12 @@ git status && git log --oneline -5
 
 ## 📌 Pickup Instructions for Next Session
 
-**Status:** Remove Pending Pricing Page (Module #25, ADR-0020) completed and verified. Redundant /pending-pricing route removed in favor of single-source pricing on Buku Besar and Payment Form. All 25 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 961 passed, 0 failed, 24/24 routes compiled clean, zero drift detected.
+**Status:** Fix Seed Pending Pricing & Species Canonical (Module #26) completed and verified. All 8 pending pricing seed records populated with standard timber prices from the price table, and species names synced to canonical names. All 26 modules are 100% complete and verified. Zero technical debt. No active in-progress task. Database fully seedable via both `npm run db:seed` (SQLite) and `npm run db:seed:supabase` (Supabase). Baseline: 961 passed, 0 failed, 24/24 routes compiled clean, zero drift detected.
 
 **Suggested next actions (in priority order):**
 
-1. **Monitor client feedback** on shipped features (Items #1-#25).
-2. **If client clarifies DPB rakyat questions** → start Spec #26:
+1. **Monitor client feedback** on shipped features (Items #1-#26).
+2. **If client clarifies DPB rakyat questions** → start Spec #27:
    ```
    docs/superpowers/specs/YYYY-MM-DD-dpb-rakyat-procurement-design.md
    docs/superpowers/plans/YYYY-MM-DD-dpb-rakyat-procurement.md

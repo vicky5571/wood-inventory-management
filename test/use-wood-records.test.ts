@@ -292,7 +292,7 @@ test('useWoodRecords Hook & Storage Invariants Test Suite', async (t) => {
     // Filter by species
     const speciesFilter: RecordFilterCriteria = { species: 'Jati / Teak (柚木)' };
     const jatiOnly = records.filter((r) => !speciesFilter.species || r.woodSpecies === speciesFilter.species);
-    assert.strictEqual(jatiOnly.length, 5);
+    assert.strictEqual(jatiOnly.length, 4);
     assert.strictEqual(jatiOnly[0].woodSpecies, 'Jati / Teak (柚木)');
 
     // Filter by kavling

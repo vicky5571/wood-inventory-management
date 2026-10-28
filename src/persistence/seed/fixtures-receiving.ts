@@ -470,7 +470,7 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     updatedAt: '2026-09-22T13:40:00.000Z',
   },
 
-  // Manifest 8: MFT-2026-W39-008 (2 items — Pending Pricing!)
+  // Manifest 8: MFT-2026-W39-008 (2 items)
   {
     id: 'ITM-W39-008-1',
     manifestId: 'MFT-2026-W39-008',
@@ -483,9 +483,9 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     deliveredVolumeM3: 12.0,
     tallyPieces: 30,
     tallyVolumeM3: 12.0,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 4_500_000,
     timberPphRate: 0.5,
-    notes: 'Menunggu kesepakatan harga grading A1',
+    notes: 'Harga standar Jati 2026',
     createdAt: '2026-09-28T14:15:00.000Z',
     updatedAt: '2026-09-28T14:15:00.000Z',
   },
@@ -501,14 +501,14 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     deliveredVolumeM3: 7.5,
     tallyPieces: 20,
     tallyVolumeM3: 7.5,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 4_500_000,
     timberPphRate: 0.5,
-    notes: 'Menunggu kesepakatan harga sortir pendek',
+    notes: 'Harga standar Jati 2026',
     createdAt: '2026-09-28T14:15:00.000Z',
     updatedAt: '2026-09-28T14:15:00.000Z',
   },
 
-  // Manifest 9: MFT-2026-W40-009 (2 items — Pending Pricing!)
+  // Manifest 9: MFT-2026-W40-009 (2 items)
   {
     id: 'ITM-W40-009-1',
     manifestId: 'MFT-2026-W40-009',
@@ -521,9 +521,9 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     deliveredVolumeM3: 14.0,
     tallyPieces: 30,
     tallyVolumeM3: 14.0,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 2_400_000,
     timberPphRate: 0.5,
-    notes: 'Keruing dalam proses negosiasi harga',
+    notes: 'Harga standar Keruing 2026',
     createdAt: '2026-10-06T10:30:00.000Z',
     updatedAt: '2026-10-06T10:30:00.000Z',
   },
@@ -539,14 +539,14 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     deliveredVolumeM3: 11.5,
     tallyPieces: 25,
     tallyVolumeM3: 11.5,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 2_600_000,
     timberPphRate: 0.5,
-    notes: 'Meranti dalam proses negosiasi harga',
+    notes: 'Harga standar Meranti 2026',
     createdAt: '2026-10-06T10:30:00.000Z',
     updatedAt: '2026-10-06T10:30:00.000Z',
   },
 
-  // Manifest 10: MFT-2026-W41-010 (1 item — Pending Pricing!)
+  // Manifest 10: MFT-2026-W41-010 (1 item)
   {
     id: 'ITM-W41-010-1',
     manifestId: 'MFT-2026-W41-010',
@@ -559,9 +559,9 @@ export const SEED_RECEIVING_ITEMS: readonly ReceivingItem[] = [
     deliveredVolumeM3: 9.8,
     tallyPieces: 75,
     tallyVolumeM3: 9.8,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 950_000,
     timberPphRate: 0.5,
-    notes: 'Sengon kiriman terbaru menunggu harga lelang',
+    notes: 'Harga standar Sengon 2026',
     createdAt: '2026-10-14T09:45:00.000Z',
     updatedAt: '2026-10-14T09:45:00.000Z',
   },
@@ -799,7 +799,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     receiptNumber: 'KW-2026-008',
     contractNumber: 'CTR-JMS-2026-01',
     supplierName: 'CV Jati Makmur Sentosa',
-    woodSpecies: 'Jati / Teak (柚木)',
+    woodSpecies: 'Teak / Jati (柚木)',
     woodLengthM: 2.8,
     kavlingNumber: 'KAV-05',
     storageYard: 'TPK-Timur',
@@ -807,7 +807,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     deliveredVolumeM3: 19.5,
     tallyPieces: 50,
     tallyVolumeM3: 19.5,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 4_500_000,
     timberPphRate: 0.5,
     freightRatePerM3: 200000,
     freightPphRate: 2.0,
@@ -825,7 +825,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     receiptNumber: 'KW-2026-009',
     contractNumber: 'CTR-WMA-KRG-01',
     supplierName: 'PT Wana Mitra Abadi',
-    woodSpecies: 'Keruing (克鲁)',
+    woodSpecies: 'Keruing (克隆木)',
     woodLengthM: 3.8,
     kavlingNumber: 'KAV-14',
     storageYard: 'TPK-Barat',
@@ -833,7 +833,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     deliveredVolumeM3: 25.5,
     tallyPieces: 55,
     tallyVolumeM3: 25.5,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 2_400_000,
     timberPphRate: 0.5,
     freightRatePerM3: 310000,
     freightPphRate: 2.0,
@@ -851,7 +851,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     receiptNumber: 'KW-2026-010',
     contractNumber: 'CTR-KOP-SGN-03',
     supplierName: 'Koperasi Tani Hutan Rakyat Blora',
-    woodSpecies: 'Sengon / Albasia (南洋楹)',
+    woodSpecies: 'Sengon / Albizia (南洋楹)',
     woodLengthM: 2.6,
     kavlingNumber: 'KAV-06',
     storageYard: 'TPK-Utara',
@@ -859,7 +859,7 @@ export const SEED_WOOD_RECORDS: WoodReceivingRecord[] = [
     deliveredVolumeM3: 9.8,
     tallyPieces: 75,
     tallyVolumeM3: 9.8,
-    timberPricePerM3: null, // PENDING PRICING
+    timberPricePerM3: 950_000,
     timberPphRate: 0.5,
     freightRatePerM3: 125000,
     freightPphRate: 2.0,
