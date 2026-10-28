@@ -60,6 +60,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 - `npm run db:seed` → ✅ Idempotent SQLite seeding in 38ms
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
 - `next-env.d.ts` → Added to `.gitignore` and untracked via `git rm --cached` per official Next.js documentation.
+- `Sidebar Nav Order` → Swapped positions of "Tabel Harga" (`/prices`) and "Pending Harga" (`/pending-pricing`) in `src/components/layout/nav-config.ts` so price reference table precedes unpriced pending items.
 
 
 ---

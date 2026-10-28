@@ -45,7 +45,7 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
     assert.equal(NAV_SECTIONS[2].labelZh, '库存与账单');
     assert.deepEqual(
       NAV_SECTIONS[2].items.map((i) => i.id),
-      ['inventory', 'pending-pricing', 'prices', 'report-periods', 'payment-forms']
+      ['inventory', 'prices', 'pending-pricing', 'report-periods', 'payment-forms']
     );
 
     // Section 4: Data Master
@@ -77,8 +77,8 @@ test('Nav Configuration & Semantic Grouping Suite', async (t) => {
       'production',
       'sorting',
       'inventory',
-      'pending-pricing',
       'prices',
+      'pending-pricing',
       'report-periods',
       'payment-forms',
       'contracts',
