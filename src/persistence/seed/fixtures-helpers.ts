@@ -22,6 +22,7 @@ import type {
   StockSortingRecord,
   PaymentForm,
   PaymentFormLineItem,
+  ReportPeriod,
 } from '../../types/index.ts';
 
 export const SEED_DATE_RANGE_START = '2026-07-22';
@@ -44,6 +45,7 @@ export interface FixtureValidationInput {
   sorting: readonly StockSortingRecord[];
   paymentForms: readonly PaymentForm[];
   paymentFormLines: readonly PaymentFormLineItem[];
+  reportPeriods?: readonly ReportPeriod[];
 }
 
 export interface FixtureValidationResult {
@@ -247,6 +249,18 @@ export function validateFixtureConsistency(data?: FixtureValidationInput): Fixtu
     }
     if (sort.volumeM3 <= 0) {
       errors.push(`Sorting record '${sort.id}' has non-positive volumeM3`);
+    }
+  }
+
+  // 12. Report Periods (if provided)
+  if (data.reportPeriods) {
+    for (const rp of data.reportPeriods) {
+      if (rp.startDate > rp.endDate) {
+        errors.push(`ReportPeriod '${rp.id}' has startDate (${rp.startDate}) after endDate (${rp.endDate})`);
+      }
+      if (!['OPEN', 'CLOSED', 'REOPENED'].includes(rp.status)) {
+        errors.push(`ReportPeriod '${rp.id}' has invalid status '${rp.status}'`);
+      }
     }
   }
 

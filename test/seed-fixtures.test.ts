@@ -37,6 +37,7 @@ describe('Seed Fixtures Validation', () => {
     assert.equal(fixtures.SEED_SORTING.length, 5, 'StockSortingRecord count');
     assert.equal(fixtures.SEED_PAYMENT_FORMS.length, 6, 'PaymentForm count');
     assert.equal(fixtures.SEED_PAYMENT_FORM_LINES.length, 15, 'PaymentFormLineItem count');
+    assert.equal(fixtures.SEED_REPORT_PERIODS.length, 3, 'ReportPeriod count');
   });
 
   it('preserves backward-compatible aliases', () => {

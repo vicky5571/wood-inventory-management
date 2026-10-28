@@ -32,6 +32,7 @@ export interface SupabaseSeedResult {
   sorting: number;
   users: number;
   prices: number;
+  reportPeriods: number;
 }
 
 export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
@@ -408,6 +409,26 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     created_by: p.createdBy || null,
   })));
 
+  await upsert('report_periods', fixtures.SEED_REPORT_PERIODS.map((r) => ({
+    id: r.id,
+    tenant_id: r.tenantId,
+    name: r.name,
+    status: r.status,
+    start_date: r.startDate,
+    end_date: r.endDate,
+    closed_at: r.closedAt || null,
+    closed_by: r.closedBy || null,
+    total_records: r.totalRecords ?? null,
+    total_volume_m3: r.totalVolumeM3 ?? null,
+    total_net_payable_idr: r.totalNetPayableIDR ?? null,
+    price_snapshot_ids: r.priceSnapshotIds ? JSON.stringify(r.priceSnapshotIds) : null,
+    reopened_at: r.reopenedAt || null,
+    reopened_by: r.reopenedBy || null,
+    reopen_reason: r.reopenReason || null,
+    notes: r.notes || null,
+    created_by: r.createdBy || null,
+  })));
+
   return {
     tenants: fixtures.SEED_TENANTS.length,
     settings: 1,
@@ -418,6 +439,7 @@ export async function seedSupabaseDatabase(): Promise<SupabaseSeedResult> {
     brokers: fixtures.SEED_BROKERS.length,
     users: fixtures.SEED_USERS.length,
     prices: fixtures.SEED_TIMBER_PRICES.length,
+    reportPeriods: fixtures.SEED_REPORT_PERIODS.length,
     contracts: fixtures.SEED_CONTRACTS.length,
     sortimentItems: fixtures.SEED_SORTIMENT_ITEMS.length,
     contractReceipts: fixtures.SEED_CONTRACT_RECEIPTS.length,

@@ -61,6 +61,7 @@ All 7 client feedback items from October 2026, the Lembar Tagihan Refactor, Side
 - `npm run db:seed:supabase` → ✅ Idempotent Supabase seeding across 18 entities
 - `next-env.d.ts` → Added to `.gitignore` and untracked via `git rm --cached` per official Next.js documentation.
 - `Sidebar Nav Order` → Swapped positions of "Tabel Harga" (`/prices`) and "Pending Harga" (`/pending-pricing`) in `src/components/layout/nav-config.ts` so price reference table precedes unpriced pending items.
+- `Report Period DB Seed` → Added `SEED_REPORT_PERIODS` in `src/persistence/seed/fixtures-report-periods.ts` with 3 lifecycle periods (`CLOSED` Agustus 2026, `REOPENED` September 2026, `OPEN` Oktober 2026), integrated into `scripts/seed-db.ts` (SQLite) and `scripts/seed-supabase.ts` (Supabase).
 
 
 ---

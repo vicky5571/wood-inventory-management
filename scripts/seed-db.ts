@@ -13,6 +13,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createSqliteDatabase } from '../src/persistence/sqlite/db.ts';
 import { runMigrations } from '../src/persistence/sqlite/migrations.ts';
 import { ensureSalesTable } from '../src/persistence/sqlite/sales-queries.ts';
+import { ensureReportPeriodTables } from '../src/persistence/sqlite/report-period-queries.ts';
 import * as fixtures from '../src/persistence/seed/fixtures.ts';
 
 export interface SeedResult {
@@ -24,6 +25,7 @@ export interface SeedResult {
   suppliers: number;
   brokers: number;
   prices: number;
+  reportPeriods: number;
   contracts: number;
   sortimentItems: number;
   contractReceipts: number;
@@ -61,6 +63,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     upsertSuppliers(db);
     upsertBrokers(db);
     upsertPriceEntries(db);
+    upsertReportPeriods(db);
 
     // Contracts
     upsertContracts(db);
@@ -112,6 +115,7 @@ export function seedDatabase(customDbPath?: string): SeedResult {
     suppliers: count('suppliers'),
     brokers: count('brokers'),
     prices: count('timber_price_entries'),
+    reportPeriods: count('report_periods'),
     contracts: count('perhutani_contracts'),
     sortimentItems: count('contract_sortiment_items'),
     contractReceipts: count('contract_receipts'),
@@ -252,6 +256,59 @@ function upsertPriceEntries(db: DatabaseSync) {
       p.createdBy || null,
       p.createdAt,
       p.updatedAt
+    );
+  }
+}
+
+function upsertReportPeriods(db: DatabaseSync) {
+  ensureReportPeriodTables(db);
+  const stmt = db.prepare(`
+    INSERT INTO report_periods (
+      id, tenant_id, name, status, start_date, end_date,
+      closed_at, closed_by, total_records, total_volume_m3,
+      total_net_payable_idr, price_snapshot_ids,
+      reopened_at, reopened_by, reopen_reason,
+      notes, created_by, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name                  = excluded.name,
+      status                = excluded.status,
+      start_date            = excluded.start_date,
+      end_date              = excluded.end_date,
+      closed_at             = excluded.closed_at,
+      closed_by             = excluded.closed_by,
+      total_records         = excluded.total_records,
+      total_volume_m3       = excluded.total_volume_m3,
+      total_net_payable_idr = excluded.total_net_payable_idr,
+      price_snapshot_ids    = excluded.price_snapshot_ids,
+      reopened_at           = excluded.reopened_at,
+      reopened_by           = excluded.reopened_by,
+      reopen_reason         = excluded.reopen_reason,
+      notes                 = excluded.notes,
+      updated_at            = excluded.updated_at;
+  `);
+
+  for (const r of fixtures.SEED_REPORT_PERIODS) {
+    stmt.run(
+      r.id,
+      r.tenantId,
+      r.name,
+      r.status,
+      r.startDate,
+      r.endDate,
+      r.closedAt ?? null,
+      r.closedBy ?? null,
+      r.totalRecords ?? null,
+      r.totalVolumeM3 ?? null,
+      r.totalNetPayableIDR ?? null,
+      r.priceSnapshotIds ? JSON.stringify(r.priceSnapshotIds) : null,
+      r.reopenedAt ?? null,
+      r.reopenedBy ?? null,
+      r.reopenReason ?? null,
+      r.notes ?? null,
+      r.createdBy ?? null,
+      r.createdAt,
+      r.updatedAt
     );
   }
 }
@@ -550,6 +607,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   console.log(`   - Suppliers:                ${stats.suppliers}`);
   console.log(`   - Brokers:                  ${stats.brokers}`);
   console.log(`   - Timber Prices:            ${stats.prices}`);
+  console.log(`   - Report Periods:           ${stats.reportPeriods}`);
   console.log(`   - Users:                    ${stats.users}`);
   console.log(`   - Perhutani Contracts:      ${stats.contracts}`);
   console.log(`   - Contract Sortiment Items: ${stats.sortimentItems}`);

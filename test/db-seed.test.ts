@@ -33,6 +33,7 @@ test('Database Seeding Suite', async (t) => {
     assert.strictEqual(stats.yards, 3);
     assert.strictEqual(stats.suppliers, 7);
     assert.strictEqual(stats.prices, 11);
+    assert.strictEqual(stats.reportPeriods, 3);
     assert.strictEqual(stats.manifests, 10);
     assert.strictEqual(stats.items, 18);
     assert.strictEqual(stats.sales, 10);

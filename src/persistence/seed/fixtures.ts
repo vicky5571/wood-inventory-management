@@ -51,6 +51,9 @@ import {
   SEED_TIMBER_PRICES,
 } from './fixtures-prices.ts';
 import {
+  SEED_REPORT_PERIODS,
+} from './fixtures-report-periods.ts';
+import {
   SEED_DATE_RANGE_START,
   SEED_DATE_RANGE_END,
 } from './fixtures-helpers.ts';
@@ -66,6 +69,7 @@ export {
   SEED_BROKERS,
   SEED_USERS,
   SEED_TIMBER_PRICES,
+  SEED_REPORT_PERIODS,
   type UserSeedRow,
 };
 
@@ -132,6 +136,7 @@ export function validateFixtureConsistency(customData?: FixtureValidationInput):
       sorting: SEED_SORTING,
       paymentForms: SEED_PAYMENT_FORMS,
       paymentFormLines: SEED_PAYMENT_FORM_LINES,
+      reportPeriods: SEED_REPORT_PERIODS,
     }
   );
 }
